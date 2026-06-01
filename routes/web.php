@@ -9,21 +9,37 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AffiliateController;
+use App\Livewire\SearchProducts;
+use App\Livewire\CartCount;
+use App\Livewire\WishlistButton;
+use App\Livewire\ProductSuggestions;
+use App\Livewire\ReferralLink;
+use App\Livewire\NotificationBell;
+use App\Livewire\PopupModal;
+use App\Livewire\BannerAd;
+use App\Livewire\AdminNotifications;
+use App\Livewire\AdminAdvertisements;
+use App\Livewire\AdminPopups;
+use App\Livewire\AdminAffiliates;
 
 // Guest routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Catch referral code on registration
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/search', SearchProducts::class)->name('products.search');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Cart routes
@@ -37,6 +53,7 @@ Route::middleware('auth')->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
     Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
 
     // Orders
@@ -57,6 +74,11 @@ Route::middleware('auth')->group(function () {
     // Product download & review
     Route::post('/products/{product}/download', [ProductController::class, 'download'])->name('products.download');
     Route::post('/products/{product}/review', [ProductController::class, 'storeReview'])->name('products.review');
+
+    // Affiliate / Referral
+    Route::get('/affiliate', [AffiliateController::class, 'index'])->name('affiliate.index');
+    Route::get('/affiliate/payouts', [AffiliateController::class, 'payouts'])->name('affiliate.payouts');
+    Route::post('/affiliate/request-payout', [AffiliateController::class, 'requestPayout'])->name('affiliate.request-payout');
 });
 
 // Admin Routes
@@ -95,4 +117,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/reviews/{review}/approve', [App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
     Route::post('/reviews/{review}/reject', [App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('reviews.reject');
     Route::delete('/reviews/{review}', [App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // Admin Livewire pages
+    Route::get('/notifications', AdminNotifications::class)->name('notifications');
+    Route::get('/advertisements', AdminAdvertisements::class)->name('advertisements');
+    Route::get('/popups', AdminPopups::class)->name('popups');
+    Route::get('/affiliates', AdminAffiliates::class)->name('affiliates');
 });

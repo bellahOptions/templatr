@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Order Details - CreativeMarket')
 @section('header', 'Order #' . $order->order_number)
 
@@ -13,18 +15,18 @@
         <div class="divide-y divide-gray-100">
             @foreach($order->items as $item)
             <div class="flex items-center justify-between p-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                <div class="flex items-center space-x-4 min-w-0">
+                    <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span class="text-sm font-bold">{{ substr($item->product->title, 0, 2) }}</span>
                     </div>
-                    <div>
-                        <p class="font-semibold text-sm">{{ $item->product->title }}</p>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-sm truncate">{{ $item->product->title }}</p>
                         <p class="text-xs text-gray-500">by {{ $item->product->author->name }}</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <span class="font-bold text-sm">${{ number_format($item->price, 2) }}</span>
-                    <p class="text-xs text-gray-500">Author earns: ${{ number_format($item->author_earnings, 2) }}</p>
+                <div class="text-right flex-shrink-0 ml-3">
+                    <span class="font-bold text-sm whitespace-nowrap">{{ CurrencyHelper::format($item->price) }}</span>
+                    <p class="text-xs text-gray-500 whitespace-nowrap">Author earns: {{ CurrencyHelper::format($item->author_earnings) }}</p>
                 </div>
             </div>
             @endforeach
@@ -48,8 +50,13 @@
             </div>
 
             <div>
+                <span class="text-xs text-gray-500 uppercase tracking-wider">Payment Method</span>
+                <p class="font-semibold mt-1 capitalize">{{ $order->payment_method }}</p>
+            </div>
+
+            <div>
                 <span class="text-xs text-gray-500 uppercase tracking-wider">Total Amount</span>
-                <p class="text-2xl font-bold text-[#FFC300] mt-1">${{ number_format($order->total_amount, 2) }}</p>
+                <p class="text-2xl font-bold text-[#FFC300] mt-1">{{ CurrencyHelper::format($order->total_amount) }}</p>
             </div>
 
             <hr class="border-gray-200">

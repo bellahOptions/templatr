@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Manage Products - CreativeMarket')
 @section('header', 'Products')
 
@@ -44,20 +46,20 @@
                             <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                 <span class="text-xs font-bold">{{ substr($product->title, 0, 2) }}</span>
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold">{{ $product->title }}</p>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold truncate">{{ $product->title }}</p>
                                 <p class="text-xs text-gray-500">{{ $product->file_type }}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $product->category->name }}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $product->author->name }}</td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 whitespace-nowrap">
                         @if($product->sale_price)
-                            <span class="text-sm line-through text-gray-400">${{ number_format($product->price, 2) }}</span>
-                            <span class="text-sm font-bold text-red-600">${{ number_format($product->sale_price, 2) }}</span>
+                            <span class="text-sm line-through text-gray-400">{{ CurrencyHelper::format($product->price) }}</span>
+                            <span class="text-sm font-bold text-red-600">{{ CurrencyHelper::format($product->sale_price) }}</span>
                         @else
-                            <span class="text-sm font-bold">${{ number_format($product->price, 2) }}</span>
+                            <span class="text-sm font-bold">{{ CurrencyHelper::format($product->price) }}</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ number_format($product->download_count) }}</td>
@@ -69,7 +71,7 @@
                             {{ $product->is_published ? 'Published' : 'Draft' }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
                         <a href="{{ route('admin.products.edit', $product) }}" class="text-sm text-[#FFC300] hover:text-black font-semibold mr-3">Edit</a>
                         <form method="POST" action="{{ route('admin.products.destroy', $product) }}" class="inline" onsubmit="return confirm('Delete this product?')">
                             @csrf

@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Admin Dashboard - CreativeMarket')
 @section('header', 'Dashboard')
 
@@ -43,7 +45,7 @@
                 <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
         </div>
-        <p class="text-3xl font-bold">${{ number_format($totalRevenue, 2) }}</p>
+        <p class="text-3xl font-bold">{{ CurrencyHelper::format($totalRevenue) }}</p>
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-200 p-6">
@@ -53,7 +55,7 @@
                 <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
             </div>
         </div>
-        <p class="text-3xl font-bold">${{ number_format($monthlyRevenue, 2) }}</p>
+        <p class="text-3xl font-bold">{{ CurrencyHelper::format($monthlyRevenue) }}</p>
         <p class="text-xs text-gray-500 mt-1">This month</p>
     </div>
 </div>
@@ -73,7 +75,7 @@
                     <p class="text-xs text-gray-500">{{ $order->user->name }} · {{ $order->created_at->diffForHumans() }}</p>
                 </div>
                 <div class="text-right">
-                    <span class="font-bold text-sm">${{ number_format($order->total_amount, 2) }}</span>
+                    <span class="font-bold text-sm">{{ CurrencyHelper::format($order->total_amount) }}</span>
                     <p class="text-xs">
                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold
                             @if($order->status == 'completed') bg-green-100 text-green-700
@@ -98,16 +100,16 @@
         <div class="divide-y divide-gray-100">
             @foreach($topProducts as $product)
             <div class="flex items-center justify-between px-6 py-4">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span class="text-xs font-bold">{{ substr($product->title, 0, 2) }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm font-semibold">{{ $product->title }}</p>
-                        <p class="text-xs text-gray-500">{{ $product->category->name }}</p>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold truncate">{{ $product->title }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ $product->category->name }}</p>
                     </div>
                 </div>
-                <div class="text-right">
+                <div class="text-right flex-shrink-0 ml-3">
                     <span class="font-bold text-sm">{{ number_format($product->download_count) }}</span>
                     <p class="text-xs text-gray-500">downloads</p>
                 </div>

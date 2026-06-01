@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Orders - CreativeMarket')
 @section('header', 'Orders')
 
@@ -42,7 +44,7 @@
                     <td class="px-6 py-4 text-sm font-semibold">#{{ $order->order_number }}</td>
                     <td class="px-6 py-4 text-sm">{{ $order->user->name }}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $order->items_count ?? $order->items->count() ?? 0 }}</td>
-                    <td class="px-6 py-4 text-sm font-bold">${{ number_format($order->total_amount, 2) }}</td>
+                    <td class="px-6 py-4 text-sm font-bold whitespace-nowrap">{{ CurrencyHelper::format($order->total_amount) }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded-full text-xs font-semibold
                             @if($order->status == 'completed') bg-green-100 text-green-700
@@ -57,7 +59,7 @@
                             @else bg-red-100 text-red-700
                             @endif">{{ ucfirst($order->payment_status) }}</span>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $order->created_at->format('M d, Y') }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $order->created_at->format('M d, Y') }}</td>
                     <td class="px-6 py-4 text-right">
                         <a href="{{ route('admin.orders.show', $order) }}" class="text-sm text-[#FFC300] hover:text-black font-semibold">View</a>
                     </td>

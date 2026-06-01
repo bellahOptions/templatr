@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'My Orders - CreativeMarket')
 
 @section('content')
@@ -10,7 +12,7 @@
                 <h1 class="text-3xl font-bold">My <span class="text-[#FFC300]">Orders</span></h1>
                 <p class="text-gray-600 mt-1">View your purchase history</p>
             </div>
-            <a href="{{ route('products.index') }}" class="bg-black text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
+            <a href="{{ route('products.index') }}" class="bg-black text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
                 Browse Items
             </a>
         </div>
@@ -56,7 +58,7 @@
                         @endforeach
                         <span class="text-sm text-gray-600">{{ $order->items->count() }} item(s)</span>
                     </div>
-                    <span class="font-bold text-lg">${{ number_format($order->total_amount, 2) }}</span>
+                    <span class="font-bold text-lg">{{ CurrencyHelper::format($order->total_amount) }}</span>
                 </div>
             </a>
             @endforeach

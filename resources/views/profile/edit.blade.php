@@ -5,6 +5,13 @@
 @section('content')
 <section class="py-12">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center space-x-2 text-sm mb-6">
+            <a href="{{ route('profile.index') }}" class="text-gray-500 hover:text-[#FFC300]">Profile</a>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-gray-900 font-medium">Edit Profile</span>
+        </div>
+
         <div class="mb-8">
             <h1 class="text-3xl font-bold">Edit <span class="text-[#FFC300]">Profile</span></h1>
             <p class="text-gray-600 mt-1">Update your account information</p>
@@ -79,7 +86,7 @@
                 <div>
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
                     <input id="password_confirmation" type="password" name="password_confirmation" required
-                        class="block w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                        class="block w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                 </div>
 
                 <button type="submit" class="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors">

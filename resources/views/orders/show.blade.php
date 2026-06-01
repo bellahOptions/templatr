@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Order Details - CreativeMarket')
 
 @section('content')
@@ -33,20 +35,20 @@
             </div>
             <div class="divide-y divide-gray-200">
                 @foreach($order->items as $item)
-                <div class="flex items-center justify-between p-6">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex items-center justify-between p-4 md:p-6">
+                    <div class="flex items-center space-x-4 min-w-0">
+                        <div class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 md:w-8 md:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
                         </div>
-                        <div>
-                            <a href="{{ route('products.show', $item->product) }}" class="font-semibold hover:text-[#FFC300] transition-colors">{{ $item->product->title }}</a>
+                        <div class="min-w-0">
+                            <a href="{{ route('products.show', $item->product) }}" class="font-semibold hover:text-[#FFC300] transition-colors text-sm md:text-base">{{ $item->product->title }}</a>
                             <p class="text-sm text-gray-500">by {{ $item->product->author->name }}</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="font-bold">${{ number_format($item->price, 2) }}</span>
+                    <div class="text-right flex-shrink-0 ml-3">
+                        <span class="font-bold">{{ CurrencyHelper::format($item->price) }}</span>
                         <div>
                             <a href="{{ route('products.download', $item->product) }}" class="text-xs text-[#FFC300] hover:text-black font-semibold">Download</a>
                         </div>
@@ -62,22 +64,26 @@
             <div class="space-y-3">
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
-                    <span>${{ number_format($order->total_amount, 2) }}</span>
+                    <span>{{ CurrencyHelper::format($order->total_amount) }}</span>
                 </div>
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Tax</span>
-                    <span>$0.00</span>
+                    <span>{{ CurrencyHelper::format(0) }}</span>
                 </div>
                 <hr class="border-gray-200">
                 <div class="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span class="text-[#FFC300]">${{ number_format($order->total_amount, 2) }}</span>
+                    <span class="text-[#FFC300]">{{ CurrencyHelper::format($order->total_amount) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Payment Status</span>
                     <span class="font-semibold {{ $order->payment_status == 'paid' ? 'text-green-600' : 'text-red-600' }}">
                         {{ ucfirst($order->payment_status) }}
                     </span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Payment Method</span>
+                    <span class="font-semibold capitalize">{{ $order->payment_method }}</span>
                 </div>
             </div>
         </div>

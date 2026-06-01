@@ -1,5 +1,7 @@
 @extends('admin.layouts.admin')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'Users - CreativeMarket')
 @section('header', 'Users')
 
@@ -34,12 +36,12 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-[#FFC300] to-[#FFD633] rounded-full flex items-center justify-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-[#FFC300] to-[#FFD633] rounded-full flex items-center justify-center flex-shrink-0">
                                 <span class="text-sm font-bold text-black">{{ substr($user->name, 0, 1) }}</span>
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold">{{ $user->name }}</p>
-                                <p class="text-xs text-gray-500">{{ $user->email }}</p>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold truncate">{{ $user->name }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
                             </div>
                         </div>
                     </td>
@@ -51,9 +53,9 @@
                             @endif capitalize">{{ $user->role }}</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $user->products_count ?? $user->products->count() ?? 0 }}</td>
-                    <td class="px-6 py-4 text-sm font-semibold">${{ number_format($user->balance, 2) }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $user->created_at->format('M d, Y') }}</td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4 text-sm font-semibold whitespace-nowrap">{{ CurrencyHelper::format($user->balance) }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $user->created_at->format('M d, Y') }}</td>
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
                         <a href="{{ route('admin.users.edit', $user) }}" class="text-sm text-[#FFC300] hover:text-black font-semibold mr-3">Edit</a>
                         @if(!$user->isAdmin() || \App\Models\User::where('role', 'admin')->count() > 1)
                         <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline" onsubmit="return confirm('Delete this user?')">

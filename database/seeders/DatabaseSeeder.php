@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'John Doe',
             'email' => 'user@creativemarket.com',
             'password' => Hash::make('password'),
-            'role' => 'user',
+            'role' => 'admin',
         ]);
 
         // Seed categories

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\CurrencyHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,6 +64,20 @@ class Product extends Model
     {
         return Attribute::make(
             get: fn() => $this->sale_price ?? $this->price
+        );
+    }
+
+    public function formattedPrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => CurrencyHelper::format($this->sale_price ?? $this->price)
+        );
+    }
+
+    public function formattedOriginalPrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->sale_price ? CurrencyHelper::format($this->price) : null
         );
     }
 

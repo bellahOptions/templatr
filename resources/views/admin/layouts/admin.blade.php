@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div class="flex h-screen">
@@ -16,12 +20,7 @@
             <div class="flex flex-col flex-grow bg-black pt-5 pb-4 overflow-y-auto">
                 <div class="flex items-center justify-between px-6 mb-8">
                     <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-[#FFC300] rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-bold text-white">Creative<span class="text-[#FFC300]">Market</span></span>
+                        <img src="/templatr.svg" alt="CreativeMarket" class="h-7 w-auto max-w-[140px]">
                     </a>
                 </div>
                 <nav class="flex-1 px-4 space-y-1">
@@ -92,13 +91,15 @@
             @if(session('success') || session('error'))
             <div class="px-6 pt-4">
                 @if(session('success'))
-                <div class="bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-                    {{ session('success') }}
+                <div class="bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+                    <span>{{ session('success') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-green-500 hover:text-green-700 ml-2"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button>
                 </div>
                 @endif
                 @if(session('error'))
-                <div class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {{ session('error') }}
+                <div class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+                    <span>{{ session('error') }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button>
                 </div>
                 @endif
             </div>

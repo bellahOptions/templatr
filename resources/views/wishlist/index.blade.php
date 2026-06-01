@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@php use App\Helpers\CurrencyHelper; @endphp
+
 @section('title', 'My Wishlist - CreativeMarket')
 
 @section('content')
@@ -10,7 +12,7 @@
                 <h1 class="text-3xl font-bold">My <span class="text-[#FFC300]">Wishlist</span></h1>
                 <p class="text-gray-600 mt-1">Items you've saved for later</p>
             </div>
-            <a href="{{ route('products.index') }}" class="bg-black text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
+            <a href="{{ route('products.index') }}" class="bg-black text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
                 Browse Items
             </a>
         </div>
@@ -28,9 +30,9 @@
             </a>
         </div>
         @else
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($wishlists as $wishlist)
-            <div class="group bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-lg transition-all duration-300">
+            <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-lg transition-all duration-300">
                 <a href="{{ route('products.show', $wishlist->product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative">
                         <div class="absolute inset-0 flex items-center justify-center">
@@ -40,7 +42,7 @@
                         </div>
                         <form method="POST" action="{{ route('wishlist.remove', $wishlist->product) }}" class="absolute top-3 right-3">
                             @csrf
-                            <button type="submit" class="bg-white/90 p-2 rounded-full hover:bg-red-50 transition-colors">
+                            <button type="submit" class="bg-white/90 p-2 rounded-full hover:bg-red-50 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
                                 </svg>
@@ -56,9 +58,9 @@
                         <span class="text-sm text-gray-500">{{ $wishlist->product->category->name }}</span>
                         <div class="text-right">
                             @if($wishlist->product->sale_price)
-                                <span class="text-xs text-gray-400 line-through">${{ number_format($wishlist->product->price, 2) }}</span>
+                                <span class="text-xs text-gray-400 line-through">{{ CurrencyHelper::format($wishlist->product->price) }}</span>
                             @endif
-                            <span class="font-bold">${{ number_format($wishlist->product->sale_price ?? $wishlist->product->price, 2) }}</span>
+                            <span class="font-bold">{{ CurrencyHelper::format($wishlist->product->sale_price ?? $wishlist->product->price) }}</span>
                         </div>
                     </div>
                 </div>
