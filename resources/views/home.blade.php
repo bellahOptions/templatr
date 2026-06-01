@@ -373,3 +373,33 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12 reveal">
             <h2 class="text-3xl md:text-4xl font-bold">Top <span class="text-[#FFC300]">Authors</span></h2>
+            <p class="mt-4 text-gray-500 max-w-xl mx-auto">Creators bringing fresh themes, plugins, templates, and digital resources to the marketplace.</p>
+        </div>
+
+        @if($topAuthors->isNotEmpty())
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($topAuthors as $index => $author)
+            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
+                <div class="flex items-start space-x-4">
+                    <div class="w-14 h-14 bg-[#FFC300] rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <span class="text-black font-bold text-lg">{{ strtoupper(substr($author->name, 0, 1)) }}</span>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-lg text-gray-900 truncate">{{ $author->name }}</h3>
+                        <p class="text-xs text-gray-500 mt-1">{{ number_format($author->products_count) }} {{ Str::plural('item', $author->products_count) }}</p>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-gray-500 leading-relaxed line-clamp-3">
+                    {{ $author->bio ?: 'Premium digital resource creator on Templatr.' }}
+                </p>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center reveal">
+            <p class="text-sm text-gray-500">Top authors will appear here once creators publish products.</p>
+        </div>
+        @endif
+    </div>
+</section>
+@endsection
