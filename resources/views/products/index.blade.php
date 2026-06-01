@@ -1,0 +1,166 @@
+@extends('layouts.app')
+
+@section('title', 'Browse Products - CreativeMarket')
+
+@section('content')
+<!-- Header -->
+<section class="bg-black text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold">Browse <span class="text-[#FFC300]">Marketplace</span></h1>
+            <p class="mt-4 text-gray-400 max-w-xl mx-auto">Discover thousands of premium digital resources for your creative projects</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="max-w-2xl mx-auto mt-8">
+            <form method="GET" action="{{ route('products.index') }}">
+                <div class="flex">
+                    <div class="flex-1 relative">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search items, authors, or categories..." 
+                            class="w-full px-4 py-3 pl-12 rounded-l-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FFC300] text-sm">
+                        <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <button type="submit" class="bg-[#FFC300] text-black px-6 rounded-r-xl font-semibold hover:bg-[#FFD633] transition-colors text-sm">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Filters & Products -->
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+            <!-- Filters Sidebar -->
+            <div class="hidden lg:block">
+                <div class="bg-white border border-gray-200 rounded-xl p-6 sticky top-24">
+                    <h3 class="font-semibold text-lg mb-4">Filters</h3>
+                    
+                    <!-- Categories -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Categories</h4>
+                        <div class="space-y-2">
+                            <a href="{{ route('products.index', array_merge(request()->except('category'), ['category' => ''])) }}" class="block text-sm {{ !request('category') ? 'text-[#FFC300] font-semibold' : 'text-gray-600 hover:text-black' }} transition-colors">All Categories</a>
+                            @foreach($categories as $category)
+                            <a href="{{ route('products.index', array_merge(request()->except('category'), ['category' => $category->slug])) }}" class="block text-sm {{ request('category') == $category->slug ? 'text-[#FFC300] font-semibold' : 'text-gray-600 hover:text-black' }} transition-colors">
+                                {{ $category->name }}
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Type -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">File Type</h4>
+                        <div class="space-y-2">
+                            <a href="{{ route('products.index', array_merge(request()->except('type'), ['type' => ''])) }}" class="block text-sm {{ !request('type') ? 'text-[#FFC300] font-semibold' : 'text-gray-600 hover:text-black' }} transition-colors">All Types</a>
+                            @foreach($types as $key => $type)
+                            <a href="{{ route('products.index', array_merge(request()->except('type'), ['type' => $key])) }}" class="block text-sm {{ request('type') == $key ? 'text-[#FFC300] font-semibold' : 'text-gray-600 hover:text-black' }} transition-colors">{{ $type }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Price Range</h4>
+                        <form method="GET" action="{{ route('products.index') }}" class="space-y-2">
+                            @foreach(request()->except('min_price', 'max_price') as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="flex space-x-2">
+                                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                                <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                            </div>
+                            <button type="submit" class="w-full bg-black text-white text-sm py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors">Apply</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="lg:col-span-3">
+                <!-- Sort and Mobile Filter -->
+                <div class="flex items-center justify-between mb-6">
+                    <p class="text-sm text-gray-600">Showing <span class="font-semibold">{{ $products->firstItem() ?? 0 }}</span> - <span class="font-semibold">{{ $products->lastItem() ?? 0 }}</span> of <span class="font-semibold">{{ $products->total() }}</span> items</p>
+                    <div class="flex items-center space-x-3">
+                        <form method="GET" action="{{ route('products.index') }}">
+                            @foreach(request()->except('sort') as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <select name="sort" onchange="this.form.submit()" class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                                <option value="">Latest</option>
+                                <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
+                                <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
+                                <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Most Popular</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                @if($products->isEmpty())
+                <div class="text-center py-20">
+                    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">No items found</h3>
+                    <p class="text-gray-500 text-sm">Try adjusting your search or filter criteria</p>
+                </div>
+                @else
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    @foreach($products as $product)
+                    <div class="group bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300">
+                        <a href="{{ route('products.show', $product) }}">
+                            <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                </div>
+                                @if($product->sale_price)
+                                <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">SALE</div>
+                                @endif
+                                <span class="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">{{ ucfirst($product->file_type) }}</span>
+                            </div>
+                        </a>
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-500">{{ $product->category->name }}</span>
+                                <div class="flex items-center text-yellow-400">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    <span class="text-xs text-gray-600 ml-1">{{ number_format($product->average_rating, 1) }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ route('products.show', $product) }}">
+                                <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1">{{ $product->title }}</h3>
+                            </a>
+                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <span class="text-xs font-bold">{{ substr($product->author->name, 0, 1) }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ $product->author->name }}</span>
+                                </div>
+                                <div class="text-right">
+                                    @if($product->sale_price)
+                                        <span class="text-xs text-gray-400 line-through">${{ number_format($product->price, 2) }}</span>
+                                    @endif
+                                    <span class="font-bold text-gray-900">${{ number_format($product->sale_price ?? $product->price, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-10">
+                    {{ $products->links() }}
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
