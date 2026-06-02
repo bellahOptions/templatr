@@ -13,11 +13,24 @@
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Create your account</h2>
             <p class="mt-2 text-gray-600">Join CreativeMarket today</p>
+
+            @if($referralCode ?? false)
+                <div class="mt-3 inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-xl">
+                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-sm text-green-700 font-medium">You were referred by a friend! 🎉</span>
+                </div>
+            @endif
         </div>
 
         <div class="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">
             <form method="POST" action="{{ route('register') }}" class="space-y-5">
                 @csrf
+
+                @if($referralCode ?? false)
+                    <input type="hidden" name="referral_code" value="{{ $referralCode }}">
+                @endif
 
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>

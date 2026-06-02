@@ -38,7 +38,8 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return view('auth.register');
+        $referralCode = request('ref');
+        return view('auth.register', compact('referralCode'));
     }
 
     public function register(Request $request)
@@ -47,6 +48,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'referral_code' => 'nullable|string|exists:users,referral_code',
         ]);
 
         $user = User::create([
@@ -56,8 +58,26 @@ class AuthController extends Controller
             'role' => 'user',
         ]);
 
-        Auth::login($user);
+        // Handle referral
+        if ($referralCode = $validated['referral_code'] ?? $request->query('ref')) {
+            $referrer = User::where('referral_code', $referralCode)->first();
+            if ($referrer && $referrer->id !== $user->id) {
+                // Link the user to the referrer
+                $user->update(['referred_by' => $referrer->id]);
 
+                // Create referral record
+                \App\Models\Referral::create([
+                    'referrer_id' => $referrer->id,
+                    'referred_user_id' => $user->id,
+                    'email' => $user->email,
+                    'code' => $referralCode,
+                    'status' => 'joined',
+                    'joined_at' => now(),
+                ]);
+            }
+        }
+
+        Auth::login($user);
         return redirect('/');
     }
 
@@ -69,3 +89,4 @@ class AuthController extends Controller
         return redirect('/');
     }
 }
+

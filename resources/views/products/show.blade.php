@@ -26,11 +26,15 @@
             <div class="lg:col-span-2">
                 <!-- Preview Image -->
                 <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden relative mb-8">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
+                    @if($product->preview_image)
+                    <img src="{{ Storage::url($product->preview_image) }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
+                    @elseif($product->thumbnail)
+                    <img src="{{ Storage::url($product->thumbnail) }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
+                    @else
+                    <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
+                        <img src="/templatr-logo.svg" class="w-32 h-auto" alt="CreativeMarket" loading="lazy">
                     </div>
+                    @endif
                     @if($product->sale_price)
                     <div class="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-lg">SALE - Save {{ CurrencyHelper::format($product->price - $product->sale_price) }}</div>
                     @endif
@@ -269,10 +273,16 @@
             @foreach($relatedProducts as $related)
             <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-lg transition-all duration-300">
                 <a href="{{ route('products.show', $related) }}">
-                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                        @if($related->thumbnail)
+                        <img src="{{ Storage::url($related->thumbnail) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
+                        @elseif($related->preview_image)
+                        <img src="{{ Storage::url($related->preview_image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
+                        @else
+                        <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
+                            <img src="/templatr-logo.svg" class="w-14 h-auto" alt="CreativeMarket" loading="lazy">
                         </div>
+                        @endif
                     </div>
                 </a>
                 <div class="p-4">

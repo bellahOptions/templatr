@@ -43,9 +43,13 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-3">
+                            @if($product->thumbnail)
+                            <img src="{{ Storage::url($product->thumbnail) }}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0" alt="{{ $product->title }}">
+                            @else
                             <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                 <span class="text-xs font-bold">{{ substr($product->title, 0, 2) }}</span>
                             </div>
+                            @endif
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold truncate">{{ $product->title }}</p>
                                 <p class="text-xs text-gray-500">{{ $product->file_type }}</p>

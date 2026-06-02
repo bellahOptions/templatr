@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductController extends Controller
 {
@@ -58,10 +60,36 @@ class ProductController extends Controller
             'demo_url' => 'nullable|url',
             'version' => 'nullable|string|max:50',
             'requirements' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'preview_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(5);
         $validated['tags'] = $request->tags ? json_encode(explode(',', $request->tags)) : null;
+
+        // Handle secure thumbnail upload with optimization
+        if ($request->hasFile('thumbnail')) {
+            $validated['thumbnail'] = $this->uploadOptimizedImage($request->file('thumbnail'), 'products/thumbnails', 600, 450);
+        }
+
+        // Handle secure preview image upload with optimization
+        if ($request->hasFile('preview_image')) {
+            $validated['preview_image'] = $this->uploadOptimizedImage($request->file('preview_image'), 'products/previews', 1200, 900);
+        }
+
+        // Handle secure file upload
+        if ($request->hasFile('file_path')) {
+            $file = $request->file('file_path');
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $sanitizedName = Str::slug($originalName) . '-' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
+            
+            // Auto-calculate file size if not provided
+            if (empty($validated['file_size'])) {
+                $validated['file_size'] = $file->getSize();
+            }
+        }
 
         Product::create($validated);
 
@@ -94,9 +122,65 @@ class ProductController extends Controller
             'demo_url' => 'nullable|url',
             'version' => 'nullable|string|max:50',
             'requirements' => 'nullable|string',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'preview_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
+            'remove_thumbnail' => 'nullable|boolean',
+            'remove_preview' => 'nullable|boolean',
+            'remove_file' => 'nullable|boolean',
         ]);
 
         $validated['tags'] = $request->tags ? json_encode(explode(',', $request->tags)) : null;
+
+        // Handle thumbnail removal
+        if ($request->boolean('remove_thumbnail') && $product->thumbnail) {
+            Storage::disk('public')->delete($product->thumbnail);
+            $validated['thumbnail'] = null;
+        }
+
+        // Handle preview removal
+        if ($request->boolean('remove_preview') && $product->preview_image) {
+            Storage::disk('public')->delete($product->preview_image);
+            $validated['preview_image'] = null;
+        }
+
+        // Handle file removal
+        if ($request->boolean('remove_file') && $product->file_path) {
+            Storage::disk('public')->delete($product->file_path);
+            $validated['file_path'] = null;
+        }
+
+        // Handle new thumbnail upload
+        if ($request->hasFile('thumbnail')) {
+            // Delete old thumbnail
+            if ($product->thumbnail) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $validated['thumbnail'] = $this->uploadOptimizedImage($request->file('thumbnail'), 'products/thumbnails', 600, 450);
+        }
+
+        // Handle new preview image upload
+        if ($request->hasFile('preview_image')) {
+            if ($product->preview_image) {
+                Storage::disk('public')->delete($product->preview_image);
+            }
+            $validated['preview_image'] = $this->uploadOptimizedImage($request->file('preview_image'), 'products/previews', 1200, 900);
+        }
+
+        // Handle new file upload
+        if ($request->hasFile('file_path')) {
+            if ($product->file_path) {
+                Storage::disk('public')->delete($product->file_path);
+            }
+            $file = $request->file('file_path');
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $sanitizedName = Str::slug($originalName) . '-' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
+            
+            if (empty($validated['file_size'])) {
+                $validated['file_size'] = $file->getSize();
+            }
+        }
 
         $product->update($validated);
 
@@ -105,7 +189,60 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Clean up associated files
+        if ($product->thumbnail) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+        if ($product->preview_image) {
+            Storage::disk('public')->delete($product->preview_image);
+        }
+        if ($product->file_path) {
+            Storage::disk('public')->delete($product->file_path);
+        }
+
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Upload and optimize an image with secure validation.
+     */
+    private function uploadOptimizedImage($file, string $path, int $width, int $height): string
+    {
+        // Generate a secure, unique filename
+        $filename = Str::random(20) . '.webp';
+        $storagePath = "{$path}/{$filename}";
+
+        try {
+            // Use Intervention Image for optimization (if installed)
+            if (class_exists('Intervention\Image\ImageManager')) {
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($file->getRealPath());
+                
+                // Resize maintaining aspect ratio, crop to fit
+                $image->cover($width, $height);
+                
+                // Encode as WebP for optimal compression
+                $encoded = $image->toWebp(80);
+                
+                Storage::disk('public')->put($storagePath, $encoded);
+            } else {
+                // Fallback: store original with sanitized name
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $sanitizedName = Str::slug($originalName) . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $storagePath = "{$path}/{$sanitizedName}";
+                $file->storeAs($path, basename($storagePath), 'public');
+            }
+
+            return $storagePath;
+        } catch (\Exception $e) {
+            // Fallback to simple store
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $sanitizedName = Str::slug($originalName) . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $storagePath = "{$path}/{$sanitizedName}";
+            $file->storeAs($path, basename($storagePath), 'public');
+            
+            return $storagePath;
+        }
     }
 }

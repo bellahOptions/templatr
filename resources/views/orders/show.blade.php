@@ -50,7 +50,10 @@
                     <div class="text-right flex-shrink-0 ml-3">
                         <span class="font-bold">{{ CurrencyHelper::format($item->price) }}</span>
                         <div>
-                            <a href="{{ route('products.download', $item->product) }}" class="text-xs text-[#FFC300] hover:text-black font-semibold">Download</a>
+                            <form method="POST" action="{{ route('products.download', $item->product) }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-xs text-[#FFC300] hover:text-black font-semibold">Download</button>
+                            </form>
                         </div>
                     </div>
                 </div>
