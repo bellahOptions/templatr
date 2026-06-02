@@ -49,12 +49,20 @@
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">
                         <span class="font-bold">{{ CurrencyHelper::format($item->price) }}</span>
+                        @if($item->isDownloadable())
                         <div>
                             <form method="POST" action="{{ route('products.download', $item->product) }}" class="inline">
                                 @csrf
-                                <button type="submit" class="text-xs text-[#FFC300] hover:text-black font-semibold">Download</button>
+                                <button type="submit" class="text-xs text-[#FFC300] hover:text-black font-semibold">
+                                    Download ({{ $item->remaining_downloads }} left)
+                                </button>
                             </form>
                         </div>
+                        @else
+                        <div>
+                            <span class="text-xs text-red-500 font-semibold">Expired</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @endforeach

@@ -83,7 +83,7 @@
             <div>
                 <div class="inline-flex items-center px-4 py-1.5 bg-[#FFC300]/10 rounded-full text-[#FFC300] text-xs font-semibold mb-6 border border-[#FFC300]/20 animate-fade-in">
                     <span class="w-2 h-2 bg-[#FFC300] rounded-full mr-2 animate-pulse"></span>
-                    A Product of <strong class="ml-1">Bellah Options</strong>
+                    Premium Digital Marketplace
                 </div>
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] animate-fade-in-up">
                     Get Premium Creative & 
@@ -161,41 +161,101 @@
     </div>
 </section>
 
-<!-- Why Templatr Section (NEW - Replaces Pricing Section) -->
+<!-- Payment Methods & Popular Tools Section -->
 <section class="py-16 md:py-20 bg-white overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12 reveal">
-            <h2 class="text-3xl md:text-4xl font-bold">Why Choose <span class="text-[#FFC300]">Templatr</span>?</h2>
-            <p class="mt-4 text-gray-500 max-w-2xl mx-auto">Templatr is a product of <a href="https://www.bellahoptions.com" target="_blank" class="text-[#FFC300] hover:text-black font-semibold">Bellah Options</a> — your trusted source for premium digital resources at prices that won't break the bank.</p>
+            <p class="mt-4 text-gray-500 max-w-2xl mx-auto">Download resources compatible with industry-leading creative tools.</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-1">
-                <div class="w-14 h-14 bg-[#FFC300]/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#FFC300] group-hover:scale-110 transition-all duration-300">
-                    <svg class="w-7 h-7 text-[#FFC300] group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+
+        <!-- Popular Creative Tools -->
+        <div class="reveal stagger-2">
+            <p class="text-center text-sm font-semibold text-gray-600 uppercase tracking-wider mb-5">Compatible with Popular Creative Tools</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#9999FF]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Adobe After Effects</p>
                 </div>
-                <h3 class="font-bold text-lg mb-2">Affordable Pricing</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Get premium resources starting from as low as {{ CurrencyHelper::formatInt(3000) }}. No hidden fees, no subscriptions — just one-time payments.</p>
-            </div>
-            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-2">
-                <div class="w-14 h-14 bg-[#FFC300]/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#FFC300] group-hover:scale-110 transition-all duration-300">
-                    <svg class="w-7 h-7 text-[#FFC300] group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#E06B8B]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Adobe Premiere Pro</p>
                 </div>
-                <h3 class="font-bold text-lg mb-2">Secure Payments</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Pay securely via Paystack, Flutterwave, or Interswitch. Your transactions are 100% safe and encrypted.</p>
-            </div>
-            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-3">
-                <div class="w-14 h-14 bg-[#FFC300]/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#FFC300] group-hover:scale-110 transition-all duration-300">
-                    <svg class="w-7 h-7 text-[#FFC300] group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#31A8FF]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Adobe Photoshop</p>
                 </div>
-                <h3 class="font-bold text-lg mb-2">Instant Downloads</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Get instant access to your purchased resources. Download and start using them immediately in your projects.</p>
-            </div>
-            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-4">
-                <div class="w-14 h-14 bg-[#FFC300]/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#FFC300] group-hover:scale-110 transition-all duration-300">
-                    <svg class="w-7 h-7 text-[#FFC300] group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#21759B]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">WordPress</p>
                 </div>
-                <h3 class="font-bold text-lg mb-2">Community & Support</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Join a thriving community of creatives. Get support from our team and connect with fellow creators.</p>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#F1572E]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">CorelDRAW</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#00D084]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Elementor</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#F15A24]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Figma</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#E44D26]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">HTML/CSS</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#764ABC]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Bootstrap</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#0071B5]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Sketch</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#00A98F]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Canva</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#05192D]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Framer</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#2396F3]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Blender</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
+                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#0D0D0D]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
+                    </div>
+                    <p class="text-[10px] font-semibold text-gray-700">Laravel</p>
+                </div>
             </div>
         </div>
     </div>

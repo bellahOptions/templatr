@@ -223,7 +223,13 @@
                                     <span>Download Now</span>
                                 </button>
                             </form>
-                            <p class="text-xs text-green-600 text-center">✓ Purchased</p>
+                            @if($downloadInfo)
+                                <p class="text-xs text-center {{ $downloadInfo['is_downloadable'] ? 'text-green-600' : 'text-red-500' }}">
+                                    {{ $downloadInfo['is_downloadable'] ? '✓ Purchased (' . $downloadInfo['remaining_downloads'] . ' download(s) left)' : '✗ Download limit reached (max ' . $downloadInfo['max_downloads'] . ')' }}
+                                </p>
+                            @else
+                                <p class="text-xs text-green-600 text-center">✓ Purchased</p>
+                            @endif
                         @else
                             <form method="POST" action="{{ route('cart.add', $product) }}">
                                 @csrf

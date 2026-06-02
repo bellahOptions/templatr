@@ -140,7 +140,7 @@
         </div>
         <div class="email-body">
             <h1>🎉 Order Confirmed!</h1>
-            <p>Thank you, <strong>{{ $order->user->name }}</strong>! Your order has been placed successfully.</p>
+            <p>Thank you, <strong>{{ $order->customer_name }}</strong>! Your order has been placed successfully.</p>
 
             <div class="order-info">
                 <div class="order-info-row">
@@ -150,6 +150,14 @@
                 <div class="order-info-row">
                     <span class="label">Date</span>
                     <span class="value">{{ $order->created_at->format('F j, Y \a\t g:i A') }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="label">Customer</span>
+                    <span class="value">{{ $order->customer_name }}</span>
+                </div>
+                <div class="order-info-row">
+                    <span class="label">Email</span>
+                    <span class="value">{{ $order->customer_email }}</span>
                 </div>
                 <div class="order-info-row">
                     <span class="label">Status</span>
@@ -214,7 +222,7 @@
             <p style="margin:0 0 8px;">
                 <strong>CreativeMarket</strong> — A product of <a href="https://www.bellahoptions.com">Bellah Options</a>
             </p>
-            <p style="margin:0;">This email was sent to {{ $order->user->email }}. If you didn't make this purchase, please contact us immediately.</p>
+            <p style="margin:0;">This email was sent to {{ $order->customer_email }}. If you didn't make this purchase, please contact us immediately.</p>
         </div>
     </div>
 </body>

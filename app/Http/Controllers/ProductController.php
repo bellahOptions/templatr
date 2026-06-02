@@ -5,11 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Review;
+use App\Models\OrderItem;
+use App\Services\Download\DownloadSecurityManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductController extends Controller
 {
+    protected DownloadSecurityManager $downloadSecurity;
+
+    public function __construct(DownloadSecurityManager $downloadSecurity)
+    {
+        $this->downloadSecurity = $downloadSecurity;
+    }
+
     public function index(Request $request)
     {
         $query = Product::published()->with(['category', 'author']);
@@ -91,27 +103,104 @@ class ProductController extends Controller
             $q->where('product_id', $product->id);
         })->where('payment_status', 'paid')->exists() : false;
 
-        return view('products.show', compact('product', 'relatedProducts', 'reviews', 'userReview', 'isInWishlist', 'hasPurchased'));
+        // Get download info for the current user
+        $downloadInfo = null;
+        if (Auth::check()) {
+            $orderItem = OrderItem::where('product_id', $product->id)
+                ->whereHas('order', function ($q) {
+                    $q->where('user_id', Auth::id())
+                      ->where('payment_status', 'paid');
+                })
+                ->first();
+
+            if ($orderItem) {
+                $downloadInfo = [
+                    'remaining_downloads' => $orderItem->remaining_downloads,
+                    'download_count' => $orderItem->download_count,
+                    'is_downloadable' => $orderItem->isDownloadable(),
+                    'max_downloads' => 2,
+                ];
+            }
+        }
+
+        return view('products.show', compact(
+            'product', 'relatedProducts', 'reviews', 'userReview',
+            'isInWishlist', 'hasPurchased', 'downloadInfo'
+        ));
     }
 
+    /**
+     * Secure download method with multi-layer security checks.
+     *
+     * Security layers:
+     * 1. IP rate limiting (10 attempts per 15 minutes)
+     * 2. Product existence and published status
+     * 3. File existence on storage
+     * 4. Authentication check
+     * 5. Purchase verification (order + payment_status)
+     * 6. Payment gateway double-verification (re-verify with Paystack/Flutterwave/Interswitch)
+     * 7. Download limit enforcement (1 for guests, 2 for authenticated users)
+     * 8. Token expiration check
+     * 9. CSRF protection for authenticated users
+     */
     public function download(Product $product)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
+        try {
+            // Run through all security layers
+            $authorization = $this->downloadSecurity->authorizeDownload($product);
+
+            // Determine file path and serve
+            $filePath = $product->file_path;
+            $fileName = $product->slug . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+            $fileTitle = $product->title;
+
+            // Record the download with audit trail
+            $this->downloadSecurity->recordDownload($authorization);
+
+            // Log successful download
+            Log::info("Download authorized: product #{$product->id} by " .
+                (Auth::check() ? "user #" . Auth::id() : "guest (token-based)"));
+
+            // If admin bypass, just let them know
+            if ($authorization->isAdminBypass) {
+                return back()->with('success', 'Admin download bypass: File is ready. [Storage path: ' . $filePath . ']');
+            }
+
+            // Serve the actual file securely
+            if (!Storage::exists($filePath)) {
+                Log::error("Download failed: File missing at {$filePath} for product #{$product->id}");
+                return back()->with('error', 'The file could not be found on the server. Please contact support.');
+            }
+
+            return Storage::download($filePath, $fileName, [
+                'Content-Type' => 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]);
+
+        } catch (HttpException $e) {
+            // Handle security exceptions with user-friendly messages
+            $message = match($e->getStatusCode()) {
+                429 => 'Too many download attempts. Please wait 15 minutes before trying again.',
+                401 => 'Authentication required. Please sign in to download this item.',
+                403 => $e->getMessage() ?: 'You are not authorized to download this item.',
+                404 => 'This product could not be found.',
+                410 => 'Your download link has expired. Please contact support for assistance.',
+                default => 'An error occurred while processing your download request.',
+            };
+
+            return back()->with('error', $message);
+        } catch (\Exception $e) {
+            Log::error('Download exception: ' . $e->getMessage(), [
+                'product_id' => $product->id,
+                'user_id' => Auth::id(),
+                'ip' => request()->ip(),
+            ]);
+
+            return back()->with('error', 'An unexpected error occurred. Please try again or contact support.');
         }
-
-        $hasPurchased = Auth::user()->orders()->whereHas('items', function ($q) use ($product) {
-            $q->where('product_id', $product->id);
-        })->where('payment_status', 'paid')->exists();
-
-        if (!$hasPurchased && !Auth::user()->isAdmin()) {
-            return back()->with('error', 'You need to purchase this item first.');
-        }
-
-        $product->increment('download_count');
-
-        // In a real app, this would return the actual file
-        return back()->with('success', 'Download started!');
     }
 
     public function storeReview(Request $request, Product $product)

@@ -36,6 +36,71 @@
 
             <hr class="border-gray-200 my-6">
 
+            {{-- Guest Info Form --}}
+            <div id="guest-info-section" class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold">Your Information</h2>
+                    @auth
+                    <div class="flex items-center space-x-2 text-sm text-green-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span>Signed in as <strong>{{ Auth::user()->name }}</strong></span>
+                    </div>
+                    @endauth
+                </div>
+
+                @guest
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-sm text-amber-800">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="font-semibold">Checking out as a guest?</p>
+                            <p class="mt-1">You are about to make a purchase as a guest. Please provide your details below so we can send you your order receipt and download links.</p>
+                            <a href="{{ route('login') }}" class="inline-flex items-center mt-2 text-amber-900 font-semibold hover:text-black transition-colors text-xs">
+                                <span>Already have an account?</span>
+                                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="guest_name" form="paymentForm" value="{{ old('guest_name', session('guest_data.guest_name')) }}" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]"
+                            placeholder="e.g. John Doe">
+                        @error('guest_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="guest_email" form="paymentForm" value="{{ old('guest_email', session('guest_data.guest_email')) }}" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]"
+                            placeholder="e.g. john@example.com">
+                        @error('guest_email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Phone Number <span class="text-red-500">*</span>
+                        </label>
+                        <input type="tel" name="guest_phone" form="paymentForm" value="{{ old('guest_phone', session('guest_data.guest_phone')) }}" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]"
+                            placeholder="e.g. +234 801 234 5678">
+                        @error('guest_phone')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+                @endguest
+            </div>
+
+            <hr class="border-gray-200 my-6">
+
             <!-- Total -->
             <div class="flex items-center justify-between mb-8">
                 <span class="text-lg font-bold">Total</span>

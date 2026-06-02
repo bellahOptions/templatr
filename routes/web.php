@@ -23,6 +23,8 @@ use App\Livewire\AdminAdvertisements;
 use App\Livewire\AdminPopups;
 use App\Livewire\AdminAffiliates;
 
+use App\Http\Controllers\UserDashboardController;
+
 // Guest routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -44,18 +46,18 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 
 // Cart routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add')->middleware('auth');
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
 Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
+// Checkout routes (guest users can also purchase)
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
+Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
+
 // Authenticated user routes
 Route::middleware('auth')->group(function () {
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
-    Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
-
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -70,6 +72,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/edit', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // User Dashboard
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
     // Product download & review
     Route::post('/products/{product}/download', [ProductController::class, 'download'])->name('products.download');
