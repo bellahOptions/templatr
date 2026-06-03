@@ -161,12 +161,28 @@
     </div>
 </section>
 
-<!-- Payment Methods & Popular Tools Section -->
-<section class="py-16 md:py-20 bg-white overflow-hidden">
+<!-- Payment Methods Section -->
+<section class="py-12 bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-            <p class="mt-4 text-gray-500 max-w-2xl mx-auto">Download resources compatible with industry-leading creative tools.</p>
+        <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 reveal">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Secure Payments via</span>
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                    <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM8 15H6.5l-2.09-2.5L6.5 10H8v5zm-1-3.5l-1 1.5H6l-1-1.5L6 9.5h1.5L9 12l-1.5 2.5L6 12zm6.5 2.5H11v-5h2.5c.8 0 1.5.7 1.5 1.5v2c0 .8-.7 1.5-1.5 1.5zm0-4H12v3h1.5c.3 0 .5-.2.5-.5v-2c0-.3-.2-.5-.5-.5zm5-1h-2v1h2v1.5h-2v1h2V15h-3.5v-5H18v1.5z"/></svg>
+                    <span class="text-sm font-semibold text-gray-800">Verve</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                    <svg class="w-5 h-5 text-blue-700" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M22 4H2v16h20V4zm-2 14H4V6h16v12zM6 8h2v2H6V8zm0 4h2v2H6v-2zm4-4h8v2h-8V8zm0 4h8v2h-8v-2z"/></svg>
+                    <span class="text-sm font-semibold text-gray-800">Mastercard</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                    <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                    <span class="text-sm font-semibold text-gray-800">Visa</span>
+                </div>
+            </div>
         </div>
+    </div>
+</section>
 
         <!-- Popular Creative Tools -->
         <div class="reveal stagger-2">
@@ -463,3 +479,18 @@
     </div>
 </section>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    });
+</script>

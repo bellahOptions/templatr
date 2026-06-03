@@ -379,10 +379,10 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="{{ route('products.index') }}"
-                        class="text-gray-300 hover:text-[#FFC300] transition-colors text-sm font-medium">Browse</a>
+                        class="{{ request()->routeIs('products.*') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] transition-colors text-sm font-medium">Browse</a>
                     <div class="relative group">
                         <button
-                            class="text-gray-300 hover:text-[#FFC300] transition-colors text-sm font-medium flex items-center">
+                            class="{{ request()->routeIs('products.index') && request()->has('category') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] transition-colors text-sm font-medium flex items-center">
                             Categories
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -557,7 +557,7 @@
                     </a>
                 @endauth
                 <a href="{{ route('products.index') }}"
-                    class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm font-medium">Browse All Items</a>
+                    class="block {{ request()->routeIs('products.*') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] py-2.5 text-sm font-medium">Browse All Items</a>
                 @foreach(\App\Models\Category::orderBy('order')->get() as $cat)
                     <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
                         class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">{{ $cat->name }}</a>
@@ -592,6 +592,27 @@
             </div>
         </div>
     </nav>
+
+    <!-- Category Navigation Header Bar -->
+    <div class="bg-gray-100 border-b border-gray-200 hidden md:block">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-1 overflow-x-auto scrollbar-hide py-2">
+                <a href="{{ route('products.index') }}"
+                    class="px-4 py-1.5 text-xs font-semibold rounded-full bg-black text-white hover:bg-gray-800 transition-colors whitespace-nowrap">
+                    All Items
+                </a>
+                @php
+                    $headerCategories = \App\Models\Category::orderBy('order')->get();
+                @endphp
+                @foreach($headerCategories as $cat)
+                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
+                        class="px-4 py-1.5 text-xs font-medium text-gray-600 rounded-full hover:bg-[#FFC300]/10 hover:text-black hover:font-semibold transition-all whitespace-nowrap {{ request('category') === $cat->slug ? 'bg-[#FFC300]/20 text-black font-semibold' : '' }}">
+                        {{ $cat->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
 
     <!-- Flash Messages -->
     @if(session('success') || session('error') || session('info') || session('warning'))
@@ -743,12 +764,11 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Company</h3>
-                    <li><a href="https://www.bellahoptions.com" target="_blank"
-                            class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">Bellah Options</a></li>
-                    <li><a href="{{ route('products.index') }}"
-                            class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">Marketplace</a></li>
-                    <li><a href="mailto:support@bellahoptions.com"
-                            class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">Support</a></li>
+                    <ul class="space-y-3">
+                        <li><a href="{{ route('products.index') }}"
+                                class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">Marketplace</a></li>
+                        <li><a href="mailto:support@templatr.site"
+                                class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">Support</a></li>
                     </ul>
                 </div>
             </div>
