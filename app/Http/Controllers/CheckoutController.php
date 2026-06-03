@@ -8,21 +8,30 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\NewPurchaseAdminNotification;
 use App\Services\Download\DownloadSecurityManager;
 use App\Services\Payment\PaymentManager;
+use App\Services\Webhook\WebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
     protected PaymentManager $paymentManager;
     protected DownloadSecurityManager $downloadSecurity;
+    protected WebhookService $webhookService;
 
-    public function __construct(PaymentManager $paymentManager, DownloadSecurityManager $downloadSecurity)
-    {
+    public function __construct(
+        PaymentManager $paymentManager,
+        DownloadSecurityManager $downloadSecurity,
+        WebhookService $webhookService
+    ) {
         $this->paymentManager = $paymentManager;
         $this->downloadSecurity = $downloadSecurity;
+        $this->webhookService = $webhookService;
     }
 
     public function index()
@@ -226,10 +235,53 @@ class CheckoutController extends Controller
 
             // Send order receipt email via queue
             try {
-                \Illuminate\Support\Facades\Mail::to($order->customer_email)
+                Mail::to($order->customer_email)
                     ->queue(new OrderReceipt($order));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to queue order receipt email: ' . $e->getMessage());
+                Log::warning('Failed to queue order receipt email: ' . $e->getMessage());
+            }
+
+            // Send new purchase notification to admin and the specified email
+            try {
+                $adminUsers = User::where('role', 'admin')->get();
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new NewPurchaseAdminNotification($order));
+                }
+                // Also notify the specified email
+                Mail::mailer('log')->raw('', function ($message) use ($order) {
+                    // We'll send via a direct notification approach
+                });
+                // Use Notification facade to send to the specified email
+                $specificEmail = 'muyiwadavis65@gmail.com';
+                if (filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
+                    \Illuminate\Support\Facades\Notification::route('mail', $specificEmail)
+                        ->notify(new NewPurchaseAdminNotification($order));
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to send new purchase notification: ' . $e->getMessage());
+            }
+
+            // Fire webhooks for order.paid event
+            try {
+                $this->webhookService->fire('order.paid', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'amount' => (float) $totalAmount,
+                    'currency' => 'NGN',
+                    'payment_method' => $paymentMethod,
+                    'customer_email' => $order->customer_email,
+                    'customer_name' => $order->customer_name ?? ($order->user?->name ?? 'Guest'),
+                    'items' => $products->map(function ($p) {
+                        return [
+                            'product_id' => $p->id,
+                            'title' => $p->title,
+                            'price' => (float) ($p->sale_price ?? $p->price),
+                        ];
+                    })->toArray(),
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fire webhook: ' . $e->getMessage());
             }
 
             return $order;

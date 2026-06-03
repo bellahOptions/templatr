@@ -113,6 +113,34 @@ class User extends Authenticatable
         return $query->whereIn('role', ['author', 'admin']);
     }
 
+    // =====================
+    // Email Verification
+    // =====================
+
+    public function emailVerifications(): HasMany
+    {
+        return $this->hasMany(EmailVerification::class);
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    public function markEmailAsVerified(): void
+    {
+        $this->update(['email_verified_at' => now()]);
+    }
+
+    // =====================
+    // Admin 2FA
+    // =====================
+
+    public function admin2faTokens(): HasMany
+    {
+        return $this->hasMany(Admin2faToken::class);
+    }
+
     /**
      * Award coins to referrer when referred user makes a purchase
      */

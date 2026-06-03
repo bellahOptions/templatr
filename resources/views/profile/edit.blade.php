@@ -31,13 +31,18 @@
                     @enderror
                 </div>
 
-                <div>
+                                <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                    <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required
-                        class="block w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300] @error('email') border-red-500 @enderror">
-                    @error('email')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <div class="relative">
+                        <input id="email" type="email" value="{{ $user->email }}" readonly disabled
+                            class="block w-full px-4 py-3 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-500 cursor-not-allowed">
+                        <div class="absolute inset-y-0 right-3 flex items-center">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m9.364-7.364A9 9 0 1112 3a9 9 0 017.364 4.636z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Email address cannot be changed. Contact support if you need to update it.</p>
                 </div>
 
                 <div>

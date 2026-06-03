@@ -10,6 +10,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AffiliateController;
+use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\Admin2faController;
 use App\Livewire\SearchProducts;
 use App\Livewire\CartCount;
 use App\Livewire\WishlistButton;
@@ -39,6 +41,21 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Email Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->name('verification.resend');
+});
+Route::get('/email/verify/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
+
+// Admin 2FA Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/admin/2fa', [Admin2faController::class, 'showForm'])->name('admin.2fa.form');
+    Route::post('/admin/2fa/send', [Admin2faController::class, 'sendCode'])->name('admin.2fa.send');
+    Route::post('/admin/2fa/verify', [Admin2faController::class, 'verify'])->name('admin.2fa.verify');
+    Route::post('/admin/2fa/cancel', [Admin2faController::class, 'cancel'])->name('admin.2fa.cancel');
+});
+
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/search', SearchProducts::class)->name('products.search');
@@ -56,8 +73,8 @@ Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout
 Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
 Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
 
-// Authenticated user routes
-Route::middleware('auth')->group(function () {
+// Authenticated user routes (require verified email)
+Route::middleware(['auth', 'verified'])->group(function () {
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -128,4 +145,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/advertisements', AdminAdvertisements::class)->name('advertisements');
     Route::get('/popups', AdminPopups::class)->name('popups');
     Route::get('/affiliates', AdminAffiliates::class)->name('affiliates');
+
+    // Webhooks
+    Route::get('/webhooks', [App\Http\Controllers\Admin\WebhookController::class, 'index'])->name('webhooks.index');
+    Route::get('/webhooks/create', [App\Http\Controllers\Admin\WebhookController::class, 'create'])->name('webhooks.create');
+    Route::post('/webhooks', [App\Http\Controllers\Admin\WebhookController::class, 'store'])->name('webhooks.store');
+    Route::get('/webhooks/{webhook}/edit', [App\Http\Controllers\Admin\WebhookController::class, 'edit'])->name('webhooks.edit');
+    Route::put('/webhooks/{webhook}', [App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('webhooks.update');
+    Route::delete('/webhooks/{webhook}', [App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('webhooks.destroy');
+    Route::get('/webhooks/{webhook}/logs', [App\Http\Controllers\Admin\WebhookController::class, 'logs'])->name('webhooks.logs');
+    Route::post('/webhooks/{webhook}/test', [App\Http\Controllers\Admin\WebhookController::class, 'test'])->name('webhooks.test');
+    Route::post('/webhooks/logs/{log}/retry', [App\Http\Controllers\Admin\WebhookController::class, 'retry'])->name('webhooks.retry');
 });

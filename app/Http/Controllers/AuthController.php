@@ -3,12 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\EmailVerification;
+use App\Notifications\VerifyEmailNotification;
+use App\Services\Webhook\WebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private WebhookService $webhookService
+    ) {}
+
     public function showLogin()
     {
         return view('auth.login');
@@ -25,9 +33,15 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+
+            // If admin, redirect to 2FA verification instead of dashboard
             if ($user->isAdmin()) {
-                return redirect()->intended('/admin/dashboard');
+                Auth::logout();
+                $request->session()->put('admin_2fa_user_id', $user->id);
+                return redirect()->route('admin.2fa.form')
+                    ->with('info', 'A verification code has been sent to your email.');
             }
+
             return redirect()->intended('/');
         }
 
@@ -62,10 +76,8 @@ class AuthController extends Controller
         if ($referralCode = $validated['referral_code'] ?? $request->query('ref')) {
             $referrer = User::where('referral_code', $referralCode)->first();
             if ($referrer && $referrer->id !== $user->id) {
-                // Link the user to the referrer
                 $user->update(['referred_by' => $referrer->id]);
 
-                // Create referral record
                 \App\Models\Referral::create([
                     'referrer_id' => $referrer->id,
                     'referred_user_id' => $user->id,
@@ -77,8 +89,31 @@ class AuthController extends Controller
             }
         }
 
+        // Create email verification token and send notification
+        $verification = EmailVerification::create([
+            'user_id' => $user->id,
+            'token' => Str::random(64),
+            'expires_at' => now()->addMinutes(60),
+        ]);
+
+        $user->notify(new VerifyEmailNotification($verification));
+
         Auth::login($user);
-        return redirect('/');
+
+        // Fire webhook for user.registered event
+        try {
+            $this->webhookService->fire('user.registered', [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'timestamp' => now()->toIso8601String(),
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to fire user.registered webhook: ' . $e->getMessage());
+        }
+
+        return redirect()->route('verification.notice')
+            ->with('success', 'Account created successfully! Please check your email to verify your account.');
     }
 
     public function logout(Request $request)
@@ -89,4 +124,3 @@ class AuthController extends Controller
         return redirect('/');
     }
 }
-

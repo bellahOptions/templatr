@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -29,11 +30,11 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'bio' => 'nullable|string|max:1000',
             'paypal_email' => 'nullable|email|max:255',
         ]);
 
+        // Email change is NOT allowed — remove from validated data
         $user->update($validated);
 
         return redirect()->route('profile.edit')->with('success', 'Profile updated successfully.');
@@ -50,6 +51,10 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Notify user about password change
+        Auth::user()->notify(new PasswordChangedNotification());
+
         return back()->with('success', 'Password updated successfully.');
     }
 }
+

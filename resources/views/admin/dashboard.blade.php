@@ -87,7 +87,7 @@
                 @foreach($revenueChart as $item)
                 <div class="flex-1 flex flex-col items-center justify-end h-full">
                     <div class="w-full bg-[#FFC300]/80 hover:bg-[#FFC300] rounded-t-lg transition-all duration-300 group relative"
-                         style="height: {{ max(4, ($item['revenue'] / max(array_column($revenueChart, 'revenue') ?: [1])) * 100) }}%">
+                         style="height: {{ max(4, $item['revenue'] > 0 ? ($item['revenue'] / max(array_column($revenueChart, 'revenue') ?: [1])) * 100 : 0) }}%">
                         <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                             {{ CurrencyHelper::format($item['revenue']) }}
                         </div>
@@ -112,8 +112,8 @@
             <div class="absolute inset-0 flex items-end space-x-1">
                 @foreach($ordersChart as $item)
                 <div class="flex-1 flex flex-col items-center justify-end h-full">
-                    <div class="w-full bg-blue-500/70 hover:bg-blue-500 rounded-t-lg transition-all duration-300 group relative"
-                         style="height: {{ max(4, ($item['count'] / max(array_column($ordersChart, 'count') ?: [1])) * 100) }}%">
+                                        <div class="w-full bg-blue-500/70 hover:bg-blue-500 rounded-t-lg transition-all duration-300 group relative"
+                         style="height: {{ max(4, $item['count'] > 0 ? ($item['count'] / max(array_column($ordersChart, 'count') ?: [1])) * 100 : 0) }}%">
                         <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                             {{ $item['count'] }}
                         </div>
@@ -138,8 +138,8 @@
             <div class="absolute inset-0 flex items-end space-x-1.5">
                 @foreach($userChart as $item)
                 <div class="flex-1 flex flex-col items-center justify-end h-full">
-                    <div class="w-full bg-purple-400/70 hover:bg-purple-500 rounded-t-lg transition-all duration-300 group relative"
-                         style="height: {{ max(4, ($item['count'] / max(array_column($userChart, 'count') ?: [1])) * 100) }}%">
+                                        <div class="w-full bg-purple-400/70 hover:bg-purple-500 rounded-t-lg transition-all duration-300 group relative"
+                         style="height: {{ max(4, $item['count'] > 0 ? ($item['count'] / max(array_column($userChart, 'count') ?: [1])) * 100 : 0) }}%">
                         <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                             {{ $item['count'] }}
                         </div>
