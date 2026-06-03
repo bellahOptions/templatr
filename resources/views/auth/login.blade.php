@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sign In - CreativeMarket')
+@section('title', 'Sign In - Templatr')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -12,7 +12,7 @@
                 </svg>
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Welcome back</h2>
-            <p class="mt-2 text-gray-600">Sign in to your CreativeMarket account</p>
+            <p class="mt-2 text-gray-600">Sign in to your Templatr account</p>
         </div>
 
         <div class="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">

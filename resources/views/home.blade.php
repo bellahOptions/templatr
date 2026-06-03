@@ -79,12 +79,7 @@
     <div class="absolute inset-0 bg-gradient-to-br from-[#FFC300]/10 via-black to-black animate-gradient"></div>
     <div class="absolute inset-0 opacity-[0.03]" style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFC300' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 lg:py-36">
-        <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-                <div class="inline-flex items-center px-4 py-1.5 bg-[#FFC300]/10 rounded-full text-[#FFC300] text-xs font-semibold mb-6 border border-[#FFC300]/20 animate-fade-in">
-                    <span class="w-2 h-2 bg-[#FFC300] rounded-full mr-2 animate-pulse"></span>
-                    Premium Digital Marketplace
-                </div>
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] animate-fade-in-up">
                     Get Premium Creative & 
                     <span class="text-[#FFC300]">Web Resources</span>
@@ -106,31 +101,6 @@
                     <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Instant Download</span>
                     <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lifetime Updates</span>
                     <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Secure Payment</span>
-                </div>
-            </div>
-            <div class="hidden lg:flex items-center justify-center animate-fade-in stagger-3">
-                <div class="relative">
-                    <div class="w-80 h-80 rounded-full bg-gradient-to-br from-[#FFC300]/30 via-[#FFC300]/10 to-transparent animate-float"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-black/60 backdrop-blur-xl rounded-2xl p-5 border border-gray-800 text-center">
-                                <div class="text-3xl font-bold text-[#FFC300]">{{ \App\Models\Product::count() }}+</div>
-                                <div class="text-xs text-gray-400 mt-1">Premium Items</div>
-                            </div>
-                            <div class="bg-black/60 backdrop-blur-xl rounded-2xl p-5 border border-gray-800 text-center">
-                                <div class="text-3xl font-bold text-[#FFC300]">{{ \App\Models\User::count() }}+</div>
-                                <div class="text-xs text-gray-400 mt-1">Happy Users</div>
-                            </div>
-                            <div class="bg-black/60 backdrop-blur-xl rounded-2xl p-5 border border-gray-800 text-center">
-                                <div class="text-3xl font-bold text-[#FFC300]">{{ \App\Models\User::authors()->count() }}+</div>
-                                <div class="text-xs text-gray-400 mt-1">Expert Authors</div>
-                            </div>
-                            <div class="bg-black/60 backdrop-blur-xl rounded-2xl p-5 border border-gray-800 text-center">
-                                <div class="text-3xl font-bold text-[#FFC300]">{{ number_format(\App\Models\Product::sum('download_count')) }}+</div>
-                                <div class="text-xs text-gray-400 mt-1">Downloads</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -161,122 +131,7 @@
     </div>
 </section>
 
-<!-- Payment Methods Section -->
-<section class="py-12 bg-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 reveal">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Secure Payments via</span>
-            <div class="flex items-center space-x-6">
-                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
-                    <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM8 15H6.5l-2.09-2.5L6.5 10H8v5zm-1-3.5l-1 1.5H6l-1-1.5L6 9.5h1.5L9 12l-1.5 2.5L6 12zm6.5 2.5H11v-5h2.5c.8 0 1.5.7 1.5 1.5v2c0 .8-.7 1.5-1.5 1.5zm0-4H12v3h1.5c.3 0 .5-.2.5-.5v-2c0-.3-.2-.5-.5-.5zm5-1h-2v1h2v1.5h-2v1h2V15h-3.5v-5H18v1.5z"/></svg>
-                    <span class="text-sm font-semibold text-gray-800">Verve</span>
-                </div>
-                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
-                    <svg class="w-5 h-5 text-blue-700" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0z" fill="none"/><path d="M22 4H2v16h20V4zm-2 14H4V6h16v12zM6 8h2v2H6V8zm0 4h2v2H6v-2zm4-4h8v2h-8V8zm0 4h8v2h-8v-2z"/></svg>
-                    <span class="text-sm font-semibold text-gray-800">Mastercard</span>
-                </div>
-                <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
-                    <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-                    <span class="text-sm font-semibold text-gray-800">Visa</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-        <!-- Popular Creative Tools -->
-        <div class="reveal stagger-2">
-            <p class="text-center text-sm font-semibold text-gray-600 uppercase tracking-wider mb-5">Compatible with Popular Creative Tools</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#9999FF]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Adobe After Effects</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#E06B8B]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Adobe Premiere Pro</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#31A8FF]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Adobe Photoshop</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#21759B]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">WordPress</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#F1572E]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">CorelDRAW</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#00D084]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Elementor</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#F15A24]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Figma</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#E44D26]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">HTML/CSS</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#764ABC]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Bootstrap</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#0071B5]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Sketch</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#00A98F]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Canva</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#05192D]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Framer</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#2396F3]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Blender</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center hover:border-[#FFC300] hover:bg-[#FFC300]/5 transition-all duration-300 group">
-                    <div class="w-10 h-10 mx-auto mb-2 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#0D0D0D]" fill="currentColor" viewBox="0 0 24 24"><path d="M10.6 2.2l-7.5 7.5c-.8.8-.8 2 0 2.8l7.5 7.5c.8.8 2 .8 2.8 0l7.5-7.5c.8-.8.8-2 0-2.8l-7.5-7.5c-.8-.8-2-.8-2.8 0z"/></svg>
-                    </div>
-                    <p class="text-[10px] font-semibold text-gray-700">Laravel</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
+    
 <!-- Featured Products -->
 <section id="featured" class="py-16 md:py-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -444,40 +299,7 @@
     </div>
 </section>
 
-<!-- Top Authors -->
-<section class="py-16 md:py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-            <h2 class="text-3xl md:text-4xl font-bold">Top <span class="text-[#FFC300]">Authors</span></h2>
-            <p class="mt-4 text-gray-500 max-w-xl mx-auto">Creators bringing fresh themes, plugins, templates, and digital resources to the marketplace.</p>
-        </div>
 
-        @if($topAuthors->isNotEmpty())
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            @foreach($topAuthors as $index => $author)
-            <div class="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
-                <div class="flex items-start space-x-4">
-                    <div class="w-14 h-14 bg-[#FFC300] rounded-2xl flex items-center justify-center flex-shrink-0">
-                        <span class="text-black font-bold text-lg">{{ strtoupper(substr($author->name, 0, 1)) }}</span>
-                    </div>
-                    <div class="min-w-0">
-                        <h3 class="font-bold text-lg text-gray-900 truncate">{{ $author->name }}</h3>
-                        <p class="text-xs text-gray-500 mt-1">{{ number_format($author->products_count) }} {{ Str::plural('item', $author->products_count) }}</p>
-                    </div>
-                </div>
-                <p class="mt-4 text-sm text-gray-500 leading-relaxed line-clamp-3">
-                    {{ $author->bio ?: 'Premium digital resource creator on Templatr.' }}
-                </p>
-            </div>
-            @endforeach
-        </div>
-        @else
-        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center reveal">
-            <p class="text-sm text-gray-500">Top authors will appear here once creators publish products.</p>
-        </div>
-        @endif
-    </div>
-</section>
 @endsection
 
 <script>

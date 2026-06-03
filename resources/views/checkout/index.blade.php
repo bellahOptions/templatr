@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'Checkout - CreativeMarket')
+@section('title', 'Checkout - Templatr')
 
 @section('content')
 <section class="py-12">

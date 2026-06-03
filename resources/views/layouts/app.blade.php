@@ -594,7 +594,7 @@
     </nav>
 
     <!-- Category Navigation Header Bar -->
-    <div class="bg-gray-100 border-b border-gray-200 hidden md:block">
+    <div class="bg-[#FFC300] border-b border-gray-200 hidden md:block">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center space-x-1 overflow-x-auto scrollbar-hide py-2">
                 <a href="{{ route('products.index') }}"

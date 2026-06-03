@@ -50,7 +50,7 @@ class InterswitchGateway implements PaymentGateway
                 'redirect_url' => $data['callback_url'],
                 'customer_email' => $data['email'],
                 'customer_name' => $data['name'] ?? 'Customer',
-                'description' => 'CreativeMarket Purchase - Order #' . ($data['order_id'] ?? ''),
+                'description' => 'Templatr Purchase - Order #' . ($data['order_id'] ?? ''),
                 'pay_item_id' => env('INTERSWITCH_PAY_ITEM_ID', '101'),
             ];
 

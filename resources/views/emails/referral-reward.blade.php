@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You earned a referral reward! - CreativeMarket</title>
+    <title>You earned a referral reward! - Templatr</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -83,7 +83,7 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('templatr.svg') }}" alt="CreativeMarket">
+            <img src="{{ asset('templatr.svg') }}" alt="Templatr">
         </div>
         <div class="email-body">
             <div style="font-size:56px; margin-bottom:16px;">🎉</div>
@@ -119,7 +119,7 @@
             </p>
         </div>
         <div class="email-footer">
-            <p style="margin:0 0 4px;">CreativeMarket — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
+            <p style="margin:0 0 4px;">Templatr — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
             <p style="margin:0;">{{ $user->email }} · <a href="{{ route('affiliate.index') }}">Referral Dashboard</a></p>
         </div>
     </div>

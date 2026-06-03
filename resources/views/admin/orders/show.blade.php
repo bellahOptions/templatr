@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'Order Details - CreativeMarket')
+@section('title', 'Order Details - Templatr')
 @section('header', 'Order #' . $order->order_number)
 
 @section('content')

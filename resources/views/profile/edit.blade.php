@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Profile - CreativeMarket')
+@section('title', 'Edit Profile - Templatr')
 
 @section('content')
 <section class="py-12">

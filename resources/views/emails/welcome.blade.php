@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to CreativeMarket!</title>
+    <title>Welcome to Templatr!</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -85,12 +85,12 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('templatr.svg') }}" alt="CreativeMarket">
+            <img src="{{ asset('templatr.svg') }}" alt="Templatr">
         </div>
         <div class="email-body">
             <div style="text-align:center;">
                 <div style="font-size:56px; margin-bottom:16px;">👋</div>
-                <h1>Welcome to CreativeMarket, {{ $user->name }}!</h1>
+                <h1>Welcome to Templatr, {{ $user->name }}!</h1>
                 <p>We're thrilled to have you join our community of creators and innovators. Get ready to discover premium digital resources at unbeatable prices.</p>
             </div>
 
@@ -134,7 +134,7 @@
             @endif
         </div>
         <div class="email-footer">
-            <p style="margin:0 0 4px;">CreativeMarket — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
+            <p style="margin:0 0 4px;">Templatr — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
             <p style="margin:0;">{{ $user->email }} · <a href="{{ route('profile.edit') }}">Manage preferences</a></p>
         </div>
     </div>

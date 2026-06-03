@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Receipt - CreativeMarket</title>
+    <title>Order Receipt - Templatr</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -136,7 +136,7 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('templatr.svg') }}" alt="CreativeMarket">
+            <img src="{{ asset('templatr.svg') }}" alt="Templatr">
         </div>
         <div class="email-body">
             <h1>🎉 Order Confirmed!</h1>
@@ -220,7 +220,7 @@
         </div>
         <div class="email-footer">
             <p style="margin:0 0 8px;">
-                <strong>CreativeMarket</strong> — A product of <a href="https://www.bellahoptions.com">Bellah Options</a>
+                <strong>Templatr</strong> — A product of <a href="https://www.bellahoptions.com">Bellah Options</a>
             </p>
             <p style="margin:0;">This email was sent to {{ $order->customer_email }}. If you didn't make this purchase, please contact us immediately.</p>
         </div>

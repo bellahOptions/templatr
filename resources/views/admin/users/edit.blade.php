@@ -1,6 +1,6 @@
 price is @extends('admin.layouts.admin')
 
-@section('title', 'Edit User - CreativeMarket')
+@section('title', 'Edit User - Templatr')
 @section('header', 'Edit User')
 
 @section('content')

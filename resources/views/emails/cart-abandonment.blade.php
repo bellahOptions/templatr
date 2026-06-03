@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You left something behind! - CreativeMarket</title>
+    <title>You left something behind! - Templatr</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -115,7 +115,7 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('templatr.svg') }}" alt="CreativeMarket">
+            <img src="{{ asset('templatr.svg') }}" alt="Templatr">
         </div>
         <div class="email-body">
             <div style="text-align:center;">
@@ -167,7 +167,7 @@
             </div>
         </div>
         <div class="email-footer">
-            <p style="margin:0 0 4px;">CreativeMarket — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
+            <p style="margin:0 0 4px;">Templatr — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
             <p style="margin:0;">{{ $user->email }}</p>
         </div>
     </div>

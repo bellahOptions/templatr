@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'Admin Dashboard - CreativeMarket')
+@section('title', 'Admin Dashboard - Templatr')
 @section('header', 'Dashboard')
 
 @section('content')

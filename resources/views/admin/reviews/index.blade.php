@@ -1,6 +1,6 @@
 ₦@extends('admin.layouts.admin')
 
-@section('title', 'Reviews - CreativeMarket')
+@section('title', 'Reviews - Templatr')
 @section('header', 'Reviews')
 
 @section('content')

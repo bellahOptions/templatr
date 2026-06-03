@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', $product->title . ' - CreativeMarket')
+@section('title', $product->title . ' - Templatr')
 
 @section('content')
 <!-- Breadcrumb -->
@@ -32,7 +32,7 @@
                     <img src="{{ Storage::url($product->thumbnail) }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
                     @else
                     <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
-                        <img src="/templatr-logo.svg" class="w-32 h-auto" alt="CreativeMarket" loading="lazy">
+                        <img src="/templatr-logo.svg" class="w-32 h-auto" alt="Templatr" loading="lazy">
                     </div>
                     @endif
                     @if($product->sale_price)
@@ -286,7 +286,7 @@
                         <img src="{{ Storage::url($related->preview_image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
                         @else
                         <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
-                            <img src="/templatr-logo.svg" class="w-14 h-auto" alt="CreativeMarket" loading="lazy">
+                            <img src="/templatr-logo.svg" class="w-14 h-auto" alt="Templatr" loading="lazy">
                         </div>
                         @endif
                     </div>

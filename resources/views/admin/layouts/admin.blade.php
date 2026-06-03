@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Dashboard - CreativeMarket')</title>
+    <title>@yield('title', 'Admin Dashboard - Templatr')</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -49,7 +49,7 @@
         <div class="flex flex-col bg-black h-full pt-5 pb-4 overflow-y-auto">
             <div class="flex items-center justify-between px-6 mb-8">
                 <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                    <img src="/templatr.svg" alt="CreativeMarket" class="h-7 w-auto max-w-[140px]">
+                    <img src="/templatr.svg" alt="Templatr" class="h-7 w-auto max-w-[140px]">
                 </a>
                 <button @click="sidebarOpen = false" class="text-gray-400 hover:text-white p-1">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -124,7 +124,7 @@
             <div class="flex flex-col flex-grow bg-black pt-5 pb-4 overflow-y-auto">
                 <div class="flex items-center justify-between px-6 mb-8">
                     <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                        <img src="/templatr.svg" alt="CreativeMarket" class="h-7 w-auto max-w-[140px]">
+                        <img src="/templatr.svg" alt="Templatr" class="h-7 w-auto max-w-[140px]">
                     </a>
                 </div>
                 <nav class="flex-1 px-4 space-y-1">

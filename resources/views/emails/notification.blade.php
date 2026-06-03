@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Notification - CreativeMarket</title>
+    <title>New Notification - Templatr</title>
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -79,12 +79,12 @@
 <body>
     <div class="email-wrapper">
         <div class="email-header">
-            <img src="{{ asset('templatr.svg') }}" alt="CreativeMarket">
+            <img src="{{ asset('templatr.svg') }}" alt="Templatr">
         </div>
         <div class="email-body">
             <div style="font-size:56px; margin-bottom:16px;">🔔</div>
             <h1>{{ $notification->title ?? 'New Notification' }}</h1>
-            <p>Hi <strong>{{ $user->name }}</strong>, you have a new notification from CreativeMarket.</p>
+            <p>Hi <strong>{{ $user->name }}</strong>, you have a new notification from Templatr.</p>
 
             <div class="notification-card">
                 <div class="icon">{{ $notification->icon ?? '📌' }}</div>
@@ -103,7 +103,7 @@
             </p>
         </div>
         <div class="email-footer">
-            <p style="margin:0 0 4px;">CreativeMarket — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
+            <p style="margin:0 0 4px;">Templatr — A product of <a href="https://www.bellahoptions.com">Bellah Options</a></p>
             <p style="margin:0;">{{ $user->email }} · <a href="{{ route('profile.edit') }}">Preferences</a></p>
         </div>
     </div>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create Account - CreativeMarket')
+@section('title', 'Create Account - Templatr')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -12,7 +12,7 @@
                 </svg>
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Create your account</h2>
-            <p class="mt-2 text-gray-600">Join CreativeMarket today</p>
+            <p class="mt-2 text-gray-600">Join Templatr today</p>
 
             @if($referralCode ?? false)
                 <div class="mt-3 inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-xl">

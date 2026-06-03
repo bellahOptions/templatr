@@ -1,6 +1,6 @@
 @extends('admin.layouts.admin')
 
-@section('title', 'Edit Product - CreativeMarket')
+@section('title', 'Edit Product - Templatr')
 @section('header', 'Edit Product')
 
 @section('content')

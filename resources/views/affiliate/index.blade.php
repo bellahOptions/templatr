@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Affiliate Dashboard - CreativeMarket')
+@section('title', 'Affiliate Dashboard - Templatr')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-10">

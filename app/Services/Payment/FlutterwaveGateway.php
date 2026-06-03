@@ -50,7 +50,7 @@ class FlutterwaveGateway implements PaymentGateway
                         'phonenumber' => $data['phone'] ?? '',
                     ],
                     'customizations' => [
-                        'title' => 'CreativeMarket Purchase',
+                        'title' => 'Templatr Purchase',
                         'description' => 'Payment for digital items',
                         'logo' => url('/templatr.svg'),
                     ],
