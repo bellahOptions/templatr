@@ -41,12 +41,20 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Email Verification Routes
+// Email Verification Routes (Laravel Standard - Signed URLs)
 Route::middleware('auth')->group(function () {
     Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->name('verification.resend');
 });
-Route::get('/email/verify/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
+Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify')
+    ->middleware(['signed', 'throttle:6,1']);
+
+// User 2FA Login
+Route::middleware('auth')->group(function () {
+    Route::get('/2fa/login', [App\Http\Controllers\User2faLoginController::class, 'showForm'])->name('profile.2fa.login');
+    Route::post('/2fa/login/verify', [App\Http\Controllers\User2faLoginController::class, 'verify'])->name('profile.2fa.login.verify');
+    Route::get('/2fa/login/resend', [App\Http\Controllers\User2faLoginController::class, 'resend'])->name('profile.2fa.login.resend');
+});
 
 // Admin 2FA Routes
 Route::middleware('guest')->group(function () {
@@ -89,6 +97,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/edit', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Profile 2FA
+    Route::get('/profile/2fa', [App\Http\Controllers\Profile2faController::class, 'index'])->name('profile.2fa');
+    Route::post('/profile/2fa/enable', [App\Http\Controllers\Profile2faController::class, 'enable'])->name('profile.2fa.enable');
+    Route::post('/profile/2fa/confirm', [App\Http\Controllers\Profile2faController::class, 'confirmEnable'])->name('profile.2fa.confirm');
+    Route::post('/profile/2fa/disable', [App\Http\Controllers\Profile2faController::class, 'disable'])->name('profile.2fa.disable');
 
     // User Dashboard
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');

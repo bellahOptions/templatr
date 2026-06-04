@@ -4,10 +4,11 @@ namespace App\Notifications;
 
 use App\Helpers\CurrencyHelper;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class MonthlySalesReportNotification extends Notification
+class MonthlySalesReportNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -27,9 +28,14 @@ class MonthlySalesReportNotification extends Notification
 
         $mail = (new MailMessage)
             ->subject('Monthly Sales Report - ' . $report['month'] . ' - Templatr')
-            ->greeting('Monthly Sales Report')
-            ->line('Here is your sales summary for **' . $report['month'] . '**:')
-            ->line('---')
+            ->view('emails.notification', [
+                'user' => $notifiable,
+                'title' => 'Monthly Sales Report',
+                'icon' => '📊',
+                'message' => 'Here is your sales summary for **' . $report['month'] . '**:',
+                'actionUrl' => route('admin.dashboard'),
+                'actionText' => 'View Full Dashboard',
+            ])
             ->line('**Total Revenue:** ' . CurrencyHelper::format($report['total_revenue']))
             ->line('**Total Orders:** ' . number_format($report['total_orders']))
             ->line('**Products Sold:** ' . number_format($report['products_sold']))
@@ -51,10 +57,7 @@ class MonthlySalesReportNotification extends Notification
             }
         }
 
-        $mail->line('---')
-            ->action('View Full Dashboard', route('admin.dashboard'))
-            ->line('Thank you for using Templatr!')
-            ->salutation('Best regards, Templatr System');
+        $mail->line('Thank you for using Templatr!');
 
         return $mail;
     }

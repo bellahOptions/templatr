@@ -2,16 +2,17 @@
 
 namespace App\Notifications;
 
-use App\Models\EmailVerification;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\URL;
 
-class VerifyEmailNotification extends Notification
+class VerifyEmailNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public EmailVerification $verification)
+    public function __construct()
     {
     }
 
@@ -22,19 +23,29 @@ class VerifyEmailNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = route('verification.verify', [
-            'token' => $this->verification->token,
-            'email' => $notifiable->email,
-        ]);
+        $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
             ->subject('Verify Your Email - Templatr')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Thank you for creating an account on Templatr.')
-            ->line('Please click the button below to verify your email address and get full access to your account.')
-            ->action('Verify Email Address', $url)
-            ->line('This verification link will expire in 60 minutes.')
-            ->line('If you did not create an account, no further action is required.')
-            ->salutation('Best regards, The Templatr Team');
+            ->view('emails.notification', [
+                'user' => $notifiable,
+                'title' => 'Verify Your Email Address',
+                'icon' => '✉️',
+                'message' => 'Thank you for creating an account on Templatr! Please click the button below to verify your email address and get full access to your account.',
+                'actionUrl' => $verificationUrl,
+                'actionText' => 'Verify Email Address',
+            ]);
+    }
+
+    protected function verificationUrl($notifiable): string
+    {
+        return URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $notifiable->getKey(),
+                'hash' => sha1($notifiable->getEmailForVerification()),
+            ]
+        );
     }
 }

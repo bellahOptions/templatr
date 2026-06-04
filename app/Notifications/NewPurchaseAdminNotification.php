@@ -5,10 +5,11 @@ namespace App\Notifications;
 use App\Models\Order;
 use App\Helpers\CurrencyHelper;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class NewPurchaseAdminNotification extends Notification
+class NewPurchaseAdminNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -32,16 +33,20 @@ class NewPurchaseAdminNotification extends Notification
 
         return (new MailMessage)
             ->subject('New Purchase - ' . CurrencyHelper::format($this->order->total_amount) . ' - Templatr')
-            ->greeting('New Purchase Received!')
-            ->line('A new purchase has been made on Templatr.')
+            ->view('emails.notification', [
+                'user' => $notifiable,
+                'title' => 'New Purchase Received!',
+                'icon' => '💰',
+                'message' => 'A new purchase has been made on Templatr.',
+                'actionUrl' => route('admin.orders.show', $this->order),
+                'actionText' => 'View Order',
+            ])
             ->line('**Customer:** ' . $customerName . ' (' . $customerEmail . ')')
             ->line('**Order Number:** ' . $this->order->order_number)
             ->line('**Amount:** ' . CurrencyHelper::format($this->order->total_amount))
             ->line('**Items:** ' . $items)
             ->line('**Payment Method:** ' . ucfirst($this->order->payment_method))
             ->line('**Date:** ' . $this->order->created_at->format('F j, Y g:i A'))
-            ->action('View Order', route('admin.orders.show', $this->order))
-            ->line('Thank you for managing Templatr!')
-            ->salutation('Best regards, Templatr System');
+            ->line('Thank you for managing Templatr!');
     }
 }

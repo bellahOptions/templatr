@@ -10,11 +10,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'balance', 'referral_code', 'coins', 'pending_commission'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'balance', 'referral_code', 'coins', 'pending_commission', 'two_factor_enabled', 'two_factor_code', 'two_factor_expires_at'])]
+#[Hidden(['password', 'remember_token', 'two_factor_code'])]
+class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -27,6 +28,8 @@ class User extends Authenticatable
             'balance' => 'decimal:2',
             'coins' => 'integer',
             'pending_commission' => 'decimal:2',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_expires_at' => 'datetime',
         ];
     }
     
@@ -114,8 +117,17 @@ class User extends Authenticatable
     }
 
     // =====================
-    // Email Verification
+    // Email Verification (Laravel Standard)
     // =====================
+
+    /**
+     * Send the email verification notification.
+     * Uses our custom VerifyEmailNotification with signed URLs.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailNotification());
+    }
 
     public function emailVerifications(): HasMany
     {
@@ -132,8 +144,53 @@ class User extends Authenticatable
         $this->update(['email_verified_at' => now()]);
     }
 
+    public function getEmailForVerification(): string
+    {
+        return $this->email;
+    }
+
     // =====================
-    // Admin 2FA
+    // User 2FA (Optional - not admin)
+    // =====================
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_enabled;
+    }
+
+    public function generateTwoFactorCode(): string
+    {
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $this->update([
+            'two_factor_code' => Hash::make($code),
+            'two_factor_expires_at' => now()->addMinutes(10),
+        ]);
+        return $code;
+    }
+
+    public function validateTwoFactorCode(string $code): bool
+    {
+        if (!$this->two_factor_code || !$this->two_factor_expires_at) {
+            return false;
+        }
+
+        if ($this->two_factor_expires_at->isPast()) {
+            return false;
+        }
+
+        return Hash::check($code, $this->two_factor_code);
+    }
+
+    public function resetTwoFactorCode(): void
+    {
+        $this->update([
+            'two_factor_code' => null,
+            'two_factor_expires_at' => null,
+        ]);
+    }
+
+    // =====================
+    // Admin 2FA (mandatory for admins)
     // =====================
 
     public function admin2faTokens(): HasMany

@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\EmailVerification;
-use App\Notifications\VerifyEmailNotification;
 use App\Services\Webhook\WebhookService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -89,14 +87,8 @@ class AuthController extends Controller
             }
         }
 
-        // Create email verification token and send notification
-        $verification = EmailVerification::create([
-            'user_id' => $user->id,
-            'token' => Str::random(64),
-            'expires_at' => now()->addMinutes(60),
-        ]);
-
-        $user->notify(new VerifyEmailNotification($verification));
+        // Create email verification token and send - using Laravel's standard approach
+        event(new Registered($user));
 
         Auth::login($user);
 
