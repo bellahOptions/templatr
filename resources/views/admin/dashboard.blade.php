@@ -132,25 +132,29 @@
     {{-- User Growth Chart --}}
     <div class="bg-white border border-gray-200 rounded-2xl p-6">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="font-bold">User Growth <span class="text-gray-500 font-normal text-sm">(12 months)</span></h2>
+            <h2 class="font-bold">User Growth <span class="text-gray-500 font-normal text-sm">(16 weeks)</span></h2>
         </div>
         <div class="relative h-36">
             <div class="absolute inset-0 flex items-end space-x-1.5">
                 @foreach($userChart as $item)
                 <div class="flex-1 flex flex-col items-center justify-end h-full">
-                                        <div class="w-full bg-purple-400/70 hover:bg-purple-500 rounded-t-lg transition-all duration-300 group relative"
+                    <div class="w-full bg-purple-400/70 hover:bg-purple-500 rounded-t-lg transition-all duration-300 group relative"
                          style="height: {{ max(4, $item['count'] > 0 ? ($item['count'] / max(array_column($userChart, 'count') ?: [1])) * 100 : 0) }}%">
                         <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {{ $item['count'] }}
+                            {{ $item['count'] }} new
                         </div>
                     </div>
                 </div>
                 @endforeach
             </div>
         </div>
-        <div class="flex justify-between mt-2 text-[10px] text-gray-400">
-            @foreach($userChart as $item)
-            <span>{{ substr($item['month'], 0, 3) }}</span>
+        <div class="flex justify-between mt-2 text-[10px] text-gray-400 overflow-hidden">
+            @foreach($userChart as $index => $item)
+            @if($index % 4 === 0 || $loop->last)
+            <span>{{ substr($item['week'], 0, 5) }}</span>
+            @else
+            <span></span>
+            @endif
             @endforeach
         </div>
     </div>
@@ -186,6 +190,7 @@
 
         <hr class="border-gray-200 my-4">
         <h3 class="text-sm font-semibold mb-3">Payment Gateway Usage</h3>
+
         <div class="space-y-2">
             @foreach(['paystack' => 'Paystack', 'flutterwave' => 'Flutterwave', 'interswitch' => 'Interswitch', 'direct' => 'Direct'] as $key => $label)
             <div class="flex items-center justify-between text-sm">
@@ -199,6 +204,37 @@
             </div>
             @endforeach
         </div>
+    </div>
+
+    {{-- Flutterwave Balance --}}
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                </div>
+                <h2 class="font-bold">Flutterwave Balance</h2>
+            </div>
+            <span class="text-xs text-gray-500">Auto-refreshes every 5 min</span>
+        </div>
+        @if(isset($flutterwaveBalance['error']))
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-700">
+            <p class="font-semibold">Flutterwave not connected</p>
+            <p class="text-xs mt-1">Set <code class="bg-orange-100 px-1 rounded">FLW_SECRET_KEY</code> in .env to see balance.</p>
+        </div>
+        @else
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Available Balance</p>
+                <p class="text-2xl font-bold text-green-600">{{ CurrencyHelper::format($flutterwaveBalance['available']) }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-500">Ledger Balance</p>
+                <p class="text-2xl font-bold">{{ CurrencyHelper::format($flutterwaveBalance['ledger'] ?? 0) }}</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3 text-center">Currency: {{ $flutterwaveBalance['currency'] ?? 'NGN' }}</p>
+        @endif
     </div>
 </div>
 

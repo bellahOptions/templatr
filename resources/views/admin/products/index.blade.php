@@ -98,3 +98,16 @@
     </div>
 </div>
 @endsection
+
+@push('fab')
+<a href="{{ route('admin.products.create') }}"
+   title="Add New Product"
+   class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#FFC300] text-black rounded-full shadow-lg hover:bg-[#FFD633] hover:shadow-xl transition-all flex items-center justify-center group">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+    </svg>
+    <span class="absolute right-16 bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        New Product
+    </span>
+</a>
+@endpush

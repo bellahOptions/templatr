@@ -1,4 +1,4 @@
-price is @extends('admin.layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', 'Edit User - Templatr')
 @section('header', 'Edit User')

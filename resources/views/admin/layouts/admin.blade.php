@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard - Templatr')</title>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -40,7 +41,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased bg-gray-50" x-data="{ sidebarOpen: false }">
+<body class="font-sans antialiased bg-gray-50" style="font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;" x-data="{ sidebarOpen: false }">
     {{-- Mobile Sidebar Overlay --}}
     <div class="sidebar-overlay" :class="{ 'active': sidebarOpen }" @click="sidebarOpen = false"></div>
 
@@ -204,16 +205,11 @@
                         </button>
                         <h1 class="text-xl font-bold">@yield('header', 'Dashboard')</h1>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('admin.products.create') }}" class="bg-[#FFC300] text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#FFD633] transition-colors">
-                            + New Product
-                        </a>
-                        <div class="flex items-center space-x-2 text-sm">
-                            <div class="w-8 h-8 bg-[#FFC300] rounded-full flex items-center justify-center">
-                                <span class="text-black font-bold text-sm">{{ substr(auth()->user()->name, 0, 1) }}</span>
-                            </div>
-                            <span class="font-medium">{{ auth()->user()->name }}</span>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-[#FFC300] rounded-full flex items-center justify-center">
+                            <span class="text-black font-bold text-sm">{{ substr(auth()->user()->name, 0, 1) }}</span>
                         </div>
+                        <span class="hidden sm:block text-sm font-medium">{{ auth()->user()->name }}</span>
                     </div>
                 </div>
             </div>
@@ -242,6 +238,9 @@
             </main>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    {{-- Floating Action Button slot --}}
+    @stack('fab')
+
+    @livewireScripts
 </body>
 </html>

@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TwoFactorMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,10 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'twofactor' => \App\Http\Middleware\TwoFactorMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'verified' => EnsureEmailIsVerified::class,
+            'twofactor' => TwoFactorMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

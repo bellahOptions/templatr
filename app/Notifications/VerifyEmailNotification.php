@@ -3,18 +3,15 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
-class VerifyEmailNotification extends Notification implements ShouldQueue
+class VerifyEmailNotification extends Notification
 {
     use Queueable;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function via(object $notifiable): array
     {
@@ -27,13 +24,9 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Verify Your Email - Templatr')
-            ->view('emails.notification', [
+            ->markdown('emails.verification', [
                 'user' => $notifiable,
-                'title' => 'Verify Your Email Address',
-                'icon' => '✉️',
-                'message' => 'Thank you for creating an account on Templatr! Please click the button below to verify your email address and get full access to your account.',
-                'actionUrl' => $verificationUrl,
-                'actionText' => 'Verify Email Address',
+                'verificationUrl' => $verificationUrl,
             ]);
     }
 

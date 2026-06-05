@@ -11,6 +11,64 @@
         <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-6 text-sm">{{ session('message') }}</div>
     @endif
 
+    {{-- View Details Panel --}}
+    @if($viewingId)
+        @php $viewed = $popups->find($viewingId) ?? \App\Models\Popup::find($viewingId) @endphp
+        @if($viewed)
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
+            <div class="flex items-start justify-between mb-4">
+                <h3 class="text-lg font-semibold">Popup Details</h3>
+                <button wire:click="closeView" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @if($viewed->image_url)
+                    <div class="md:col-span-2">
+                        <img src="{{ $viewed->image_url }}" alt="{{ $viewed->title }}" class="w-full max-h-40 object-cover rounded-xl" />
+                    </div>
+                @endif
+                <div>
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Title</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ $viewed->title }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Status</p>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $viewed->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                        {{ $viewed->is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+                <div class="md:col-span-2">
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Content</p>
+                    <p class="text-sm text-gray-600 leading-relaxed">{{ $viewed->content }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Trigger</p>
+                    <p class="text-sm text-gray-700 capitalize">{{ $viewed->trigger_type }} after {{ $viewed->trigger_delay }}s</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Frequency</p>
+                    <p class="text-sm text-gray-700 capitalize">{{ str_replace('_', ' ', $viewed->display_frequency) }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 font-medium uppercase mb-1">Views / Clicks</p>
+                    <p class="text-sm text-gray-700">{{ $viewed->display_count }} views / {{ $viewed->click_count }} clicks</p>
+                </div>
+                @if($viewed->button_url)
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase mb-1">Button URL</p>
+                        <a href="{{ $viewed->button_url }}" target="_blank" rel="noopener" class="text-sm text-[#FFC300] hover:underline break-all">{{ $viewed->button_url }}</a>
+                    </div>
+                @endif
+            </div>
+            <div class="mt-4 flex space-x-3">
+                <button wire:click="edit({{ $viewed->id }})" class="bg-[#FFC300] hover:bg-black hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">Edit</button>
+                <button wire:click="closeView" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200">Close</button>
+            </div>
+        </div>
+        @endif
+    @endif
+
     @if($showForm)
         <div class="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
             <h3 class="text-lg font-semibold mb-4">{{ $editingId ? 'Edit' : 'Create' }} Popup</h3>
@@ -27,15 +85,15 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                    <input type="text" wire:model="image_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
+                    <input type="url" wire:model="image_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
                     <input type="text" wire:model="button_text" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Learn More" />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Button URL</label>
-                    <input type="text" wire:model="button_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Button URL <span class="text-gray-400 font-normal">(must start with https://)</span></label>
+                    <input type="url" wire:model="button_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Trigger Type</label>
@@ -86,7 +144,7 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($popups as $popup)
-                    <tr class="hover:bg-gray-50">
+                    <tr wire:click="view({{ $popup->id }})" class="hover:bg-gray-50 cursor-pointer">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $popup->title }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 capitalize">{{ $popup->trigger_type }} ({{ $popup->trigger_delay }}s)</td>
                         <td class="px-4 py-3 text-sm text-gray-500">{{ $popup->display_count }}</td>
@@ -96,9 +154,9 @@
                                 {{ $popup->is_active ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right" wire:click.stop>
                             <button wire:click="edit({{ $popup->id }})" class="text-[#FFC300] hover:text-black text-sm font-medium mr-3">Edit</button>
-                            <button wire:click="delete({{ $popup->id }})" class="text-red-400 hover:text-red-600 text-sm font-medium">Delete</button>
+                            <button wire:click="delete({{ $popup->id }})" class="text-red-400 hover:text-red-600 text-sm font-medium" onclick="return confirm('Delete this popup?')">Delete</button>
                         </td>
                     </tr>
                 @endforeach

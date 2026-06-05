@@ -2,9 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\User;
-use App\Models\Referral;
 use App\Models\AffiliatePayout;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,8 +12,11 @@ class AdminAffiliates extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?int $payoutUserId = null;
+
     public int $payoutCoins = 0;
+
     public bool $showPayoutForm = false;
 
     public function selectUser($userId)
@@ -30,8 +32,9 @@ class AdminAffiliates extends Component
     public function processPayout()
     {
         $user = User::find($this->payoutUserId);
-        if (!$user || $user->coins < $this->payoutCoins) {
+        if (! $user || $user->coins < $this->payoutCoins) {
             session()->flash('error', 'Insufficient coins.');
+
             return;
         }
 
@@ -52,7 +55,7 @@ class AdminAffiliates extends Component
         $this->payoutUserId = null;
         $this->payoutCoins = 0;
 
-        session()->flash('message', 'Payout of ₦' . number_format($amount, 2) . ' processed successfully.');
+        session()->flash('message', 'Payout of ₦'.number_format($amount, 2).' processed successfully.');
     }
 
     public function render()
@@ -61,7 +64,7 @@ class AdminAffiliates extends Component
             ->when($this->search, function ($q) {
                 $q->where(function ($q) {
                     $q->where('name', 'LIKE', "%{$this->search}%")
-                      ->orWhere('email', 'LIKE', "%{$this->search}%");
+                        ->orWhere('email', 'LIKE', "%{$this->search}%");
                 });
             })
             ->orderBy('coins', 'DESC')
@@ -76,6 +79,7 @@ class AdminAffiliates extends Component
             'payouts' => $payouts,
             'totalCoins' => $totalCoins,
             'totalPayouts' => $totalPayouts,
-        ]);
+            'payoutUser' => $this->payoutUserId ? User::find($this->payoutUserId) : null,
+        ])->extends('admin.layouts.admin')->section('content');
     }
 }

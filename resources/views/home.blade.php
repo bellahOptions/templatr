@@ -3,105 +3,34 @@
 @php use App\Helpers\CurrencyHelper; @endphp
 
 @section('content')
-<style>
-    /* ========== Animations ========== */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    @keyframes slideInLeft {
-        from { opacity: 0; transform: translateX(-40px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes slideInRight {
-        from { opacity: 0; transform: translateX(40px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-    @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-    }
-    @keyframes pulseGlow {
-        0%, 100% { box-shadow: 0 0 20px rgba(255, 195, 0, 0.2); }
-        50% { box-shadow: 0 0 40px rgba(255, 195, 0, 0.4); }
-    }
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-    .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-    .animate-slide-in-left { animation: slideInLeft 0.8s ease-out forwards; }
-    .animate-slide-in-right { animation: slideInRight 0.8s ease-out forwards; }
-    .animate-scale-in { animation: scaleIn 0.6s ease-out forwards; }
-    .animate-float { animation: float 3s ease-in-out infinite; }
-    .animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); background-size: 200% 100%; animation: shimmer 2s infinite; }
-    .animate-gradient { background-size: 200% 200%; animation: gradientShift 3s ease infinite; }
-    .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-
-    .stagger-1 { animation-delay: 0.1s; animation-fill-mode: both; }
-    .stagger-2 { animation-delay: 0.2s; animation-fill-mode: both; }
-    .stagger-3 { animation-delay: 0.3s; animation-fill-mode: both; }
-    .stagger-4 { animation-delay: 0.4s; animation-fill-mode: both; }
-    .stagger-5 { animation-delay: 0.5s; animation-fill-mode: both; }
-    .stagger-6 { animation-delay: 0.6s; animation-fill-mode: both; }
-
-    .reveal {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.8s ease-out;
-    }
-    .reveal.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-</style>
 
 <!-- Hero Section -->
 <section class="relative bg-black text-white overflow-hidden min-h-[80vh] flex items-center">
     <div class="absolute inset-0 bg-gradient-to-br from-[#FFC300]/10 via-black to-black animate-gradient"></div>
     <div class="absolute inset-0 opacity-[0.03]" style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFC300' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 lg:py-36">
-            <div>
-                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] animate-fade-in-up">
-                    Get Premium Creative & 
-                    <span class="text-[#FFC300]">Web Resources</span>
-                    <br>for as Affordable as 
-                    <span class="text-[#FFC300]">{{ CurrencyHelper::formatInt(3000) }}</span>
-                </h1>
-                <p class="mt-6 text-base sm:text-lg md:text-xl text-gray-400 leading-relaxed max-w-xl animate-fade-in-up stagger-2">
-                    Unlock thousands of premium WordPress themes, plugins, design templates, and digital assets crafted by world-class creators. Start building your dream projects today without breaking the bank.
-                </p>
-                <div class="mt-8 flex flex-wrap items-center gap-4 animate-fade-in-up stagger-3">
-                    <a href="{{ route('products.index') }}" class="bg-[#FFC300] text-black px-8 py-4 rounded-xl text-base font-bold hover:bg-[#FFD633] transition-all transform hover:scale-105 shadow-lg shadow-[#FFC300]/25 w-full sm:w-auto text-center animate-pulse-glow">
-                        Explore Marketplace
-                    </a>
-                    <a href="#featured" class="border border-gray-700 text-white px-8 py-4 rounded-xl text-base font-semibold hover:border-[#FFC300] hover:text-[#FFC300] transition-all w-full sm:w-auto text-center">
-                        View Featured Items
-                    </a>
-                </div>
-                <div class="mt-8 flex items-center space-x-6 text-sm text-gray-500 animate-fade-in-up stagger-4">
-                    <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Instant Download</span>
-                    <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lifetime Updates</span>
-                    <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Secure Payment</span>
-                </div>
+        <div>
+            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] animate-fade-in-up">
+                Get Premium Creative &
+                <span class="text-[#FFC300]">Web Resources</span>
+                <br>for as Affordable as
+                <span class="text-[#FFC300]">{{ CurrencyHelper::formatInt(3000) }}</span>
+            </h1>
+            <p class="mt-6 text-base sm:text-lg md:text-xl text-gray-400 leading-relaxed max-w-xl animate-fade-in-up stagger-2">
+                Unlock thousands of premium WordPress themes, plugins, design templates, and digital assets crafted by world-class creators. Start building your dream projects today without breaking the bank.
+            </p>
+            <div class="mt-8 flex flex-wrap items-center gap-4 animate-fade-in-up stagger-3">
+                <a href="{{ route('products.index') }}" class="bg-[#FFC300] text-black px-8 py-4 rounded-xl text-base font-bold hover:bg-[#FFD633] transition-all transform hover:scale-105 shadow-lg shadow-[#FFC300]/25 w-full sm:w-auto text-center animate-pulse-glow">
+                    Explore Marketplace
+                </a>
+                <a href="#featured" class="border border-gray-700 text-white px-8 py-4 rounded-xl text-base font-semibold hover:border-[#FFC300] hover:text-[#FFC300] transition-all w-full sm:w-auto text-center">
+                    View Featured Items
+                </a>
+            </div>
+            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 animate-fade-in-up stagger-4">
+                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Instant Download</span>
+                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lifetime Updates</span>
+                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Secure Payment</span>
             </div>
         </div>
     </div>
@@ -152,11 +81,18 @@
             <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                        </div>
+                        @if($product->thumbnail)
+                            <img src="{{ \App\Helpers\CloudinaryHelper::imageUrl($product->thumbnail, 400) }}"
+                                 alt="{{ $product->title }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy">
+                        @else
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                        @endif
                         @if($product->sale_price)
                         <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
                         @endif
@@ -222,11 +158,18 @@
             <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                        </div>
+                        @if($product->thumbnail)
+                            <img src="{{ \App\Helpers\CloudinaryHelper::imageUrl($product->thumbnail, 400) }}"
+                                 alt="{{ $product->title }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy">
+                        @else
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                        @endif
                         <span class="absolute top-3 left-3 bg-[#FFC300] text-black text-xs font-bold px-2.5 py-1 rounded-lg">NEW</span>
                         <span class="absolute bottom-3 left-3 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm font-medium">{{ ucfirst($product->file_type) }}</span>
                     </div>
@@ -302,17 +245,18 @@
 
 @endsection
 
+@push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Smooth scroll for anchor links
+    document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
+                    e.preventDefault();
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
     });
 </script>
+@endpush

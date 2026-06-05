@@ -12,7 +12,7 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
         $products = collect();
 
-        if (!empty($cart)) {
+        if (! empty($cart)) {
             $products = Product::whereIn('id', array_keys($cart))->get();
             $total = 0;
             foreach ($products as $product) {
@@ -26,11 +26,15 @@ class CartController extends Controller
         return view('cart.index', compact('products', 'cart', 'total'));
     }
 
-    public function add(Product $product)
+    public function add(Request $request, Product $product)
     {
         $cart = session()->get('cart', []);
 
         if (isset($cart[$product->id])) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Already in cart', 'cart_count' => count($cart)]);
+            }
+
             return back()->with('info', 'This item is already in your cart.');
         }
 
@@ -42,6 +46,10 @@ class CartController extends Controller
         ];
 
         session()->put('cart', $cart);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Added to cart!', 'cart_count' => count($cart)]);
+        }
 
         return back()->with('success', 'Item added to cart!');
     }
@@ -61,6 +69,7 @@ class CartController extends Controller
     public function clear()
     {
         session()->forget('cart');
+
         return redirect()->route('cart.index')->with('success', 'Cart cleared.');
     }
 }

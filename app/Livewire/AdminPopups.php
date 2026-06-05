@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Popup;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,16 +12,28 @@ class AdminPopups extends Component
     use WithPagination;
 
     public string $title = '';
+
     public string $content = '';
+
     public string $image_url = '';
+
     public string $button_text = '';
+
     public string $button_url = '';
+
     public string $trigger_type = 'timed';
+
     public int $trigger_delay = 5;
+
     public string $display_frequency = 'once';
+
     public bool $is_active = false;
+
     public ?int $editingId = null;
+
     public bool $showForm = false;
+
+    public ?int $viewingId = null;
 
     protected $rules = [
         'title' => 'required|min:3',
@@ -28,6 +41,17 @@ class AdminPopups extends Component
         'trigger_type' => 'required',
         'display_frequency' => 'required',
     ];
+
+    public function view($id): void
+    {
+        $this->viewingId = $id;
+        $this->showForm = false;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingId = null;
+    }
 
     public function create()
     {
@@ -85,10 +109,10 @@ class AdminPopups extends Component
         session()->flash('message', 'Popup deleted.');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.admin-popups', [
             'popups' => Popup::latest()->paginate(10),
-        ]);
+        ])->extends('admin.layouts.admin')->section('content');
     }
 }

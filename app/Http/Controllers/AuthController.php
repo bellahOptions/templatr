@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Referral;
 use App\Models\User;
 use App\Services\Webhook\WebhookService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -36,6 +37,7 @@ class AuthController extends Controller
             if ($user->isAdmin()) {
                 Auth::logout();
                 $request->session()->put('admin_2fa_user_id', $user->id);
+
                 return redirect()->route('admin.2fa.form')
                     ->with('info', 'A verification code has been sent to your email.');
             }
@@ -51,6 +53,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         $referralCode = request('ref');
+
         return view('auth.register', compact('referralCode'));
     }
 
@@ -76,7 +79,7 @@ class AuthController extends Controller
             if ($referrer && $referrer->id !== $user->id) {
                 $user->update(['referred_by' => $referrer->id]);
 
-                \App\Models\Referral::create([
+                Referral::create([
                     'referrer_id' => $referrer->id,
                     'referred_user_id' => $user->id,
                     'email' => $user->email,
@@ -87,8 +90,8 @@ class AuthController extends Controller
             }
         }
 
-        // Create email verification token and send - using Laravel's standard approach
-        event(new Registered($user));
+        // Send email verification notification
+        $user->sendEmailVerificationNotification();
 
         Auth::login($user);
 
@@ -101,7 +104,7 @@ class AuthController extends Controller
                 'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to fire user.registered webhook: ' . $e->getMessage());
+            Log::warning('Failed to fire user.registered webhook: '.$e->getMessage());
         }
 
         return redirect()->route('verification.notice')
@@ -113,6 +116,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     }
 }

@@ -231,11 +231,40 @@
                                 <p class="text-xs text-green-600 text-center">✓ Purchased</p>
                             @endif
                         @else
-                            <form method="POST" action="{{ route('cart.add', $product) }}">
+                            <form
+                                method="POST"
+                                action="{{ route('cart.add', $product) }}"
+                                x-data="{ loading: false, added: false }"
+                                @submit.prevent="
+                                    if (loading || added) return;
+                                    loading = true;
+                                    fetch($el.action, {
+                                        method: 'POST',
+                                        body: new FormData($el),
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                    })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        loading = false;
+                                        added = true;
+                                        window.dispatchEvent(new CustomEvent('cart-updated'));
+                                        window.dispatchEvent(new CustomEvent('show-toast', {
+                                            detail: { message: data.message || 'Added to cart!', type: data.success ? 'success' : 'info' }
+                                        }));
+                                    })
+                                    .catch(() => { loading = false; $el.submit(); })
+                                "
+                            >
                                 @csrf
-                                <button type="submit" class="w-full bg-[#FFC300] text-black py-3.5 rounded-xl font-bold hover:bg-[#FFD633] transition-colors flex items-center justify-center space-x-2 mb-3">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                                    <span>Add to Cart - {{ CurrencyHelper::format($product->sale_price ?? $product->price) }}</span>
+                                <button
+                                    type="submit"
+                                    :disabled="loading || added"
+                                    class="w-full bg-[#FFC300] text-black py-3.5 rounded-xl font-bold hover:bg-[#FFD633] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 mb-3 disabled:opacity-70"
+                                >
+                                    <svg x-show="!loading && !added" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                                    <svg x-show="added" class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <svg x-show="loading" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                                    <span x-text="added ? 'In Cart ✓' : loading ? 'Adding...' : 'Add to Cart - {{ CurrencyHelper::format($product->sale_price ?? $product->price) }}'"></span>
                                 </button>
                             </form>
                         @endif

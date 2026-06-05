@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Notification;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,20 +12,41 @@ class AdminNotifications extends Component
     use WithPagination;
 
     public string $title = '';
+
     public string $message = '';
+
     public string $type = 'info';
+
     public string $action_url = '';
+
     public string $action_text = '';
+
     public bool $is_global = true;
+
     public ?int $user_id = null;
+
     public ?int $editingId = null;
+
     public bool $showForm = false;
+
+    public ?int $viewingId = null;
 
     protected $rules = [
         'title' => 'required|min:3',
         'message' => 'required|min:10',
         'type' => 'required|in:info,success,warning,alert',
     ];
+
+    public function view($id): void
+    {
+        $this->viewingId = $id;
+        $this->showForm = false;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingId = null;
+    }
 
     public function create()
     {
@@ -57,7 +79,7 @@ class AdminNotifications extends Component
             'action_url' => $this->action_url ?: null,
             'action_text' => $this->action_text ?: null,
             'is_global' => $this->is_global,
-            'user_id' => !$this->is_global ? $this->user_id : null,
+            'user_id' => ! $this->is_global ? $this->user_id : null,
         ];
 
         if ($this->editingId) {
@@ -78,10 +100,10 @@ class AdminNotifications extends Component
         session()->flash('message', 'Notification deleted.');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.admin-notifications', [
             'notifications' => Notification::latest()->paginate(10),
-        ]);
+        ])->extends('admin.layouts.admin')->section('content');
     }
 }

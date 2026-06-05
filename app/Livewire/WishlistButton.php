@@ -9,6 +9,7 @@ use Livewire\Component;
 class WishlistButton extends Component
 {
     public Product $product;
+
     public bool $isInWishlist = false;
 
     public function mount(Product $product)
@@ -23,7 +24,7 @@ class WishlistButton extends Component
 
     public function toggle()
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login');
         }
 
@@ -33,6 +34,7 @@ class WishlistButton extends Component
                 ->delete();
             $this->isInWishlist = false;
             $this->dispatch('wishlistUpdated');
+            $this->dispatch('show-toast', message: 'Removed from wishlist', type: 'info');
         } else {
             Wishlist::create([
                 'user_id' => auth()->id(),
@@ -40,6 +42,7 @@ class WishlistButton extends Component
             ]);
             $this->isInWishlist = true;
             $this->dispatch('wishlistUpdated');
+            $this->dispatch('show-toast', message: 'Added to wishlist! ❤️', type: 'success');
         }
     }
 

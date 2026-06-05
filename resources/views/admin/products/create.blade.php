@@ -16,12 +16,11 @@
                     @error('title')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select name="category_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
-                        @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Category
+                        <span class="text-xs font-normal text-gray-400 ml-1">— or create new</span>
+                    </label>
+                    @livewire('category-select-or-create')
                     @error('category_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>

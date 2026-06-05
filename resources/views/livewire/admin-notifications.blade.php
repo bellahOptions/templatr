@@ -11,6 +11,45 @@
         <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-6 text-sm">{{ session('message') }}</div>
     @endif
 
+    {{-- View Details Panel --}}
+    @if($viewingId)
+        @php $viewed = $notifications->find($viewingId) ?? \App\Models\Notification::find($viewingId) @endphp
+        @if($viewed)
+        <div class="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
+            <div class="flex items-start justify-between mb-4">
+                <h3 class="text-lg font-semibold">Notification Details</h3>
+                <button wire:click="closeView" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        @switch($viewed->type)
+                            @case('success') bg-green-100 text-green-700 @break
+                            @case('warning') bg-yellow-100 text-yellow-700 @break
+                            @case('alert') bg-red-100 text-red-700 @break
+                            @default bg-blue-100 text-blue-700
+                        @endswitch">{{ ucfirst($viewed->type) }}</span>
+                    <span class="text-xs text-gray-400">{{ $viewed->created_at->diffForHumans() }}</span>
+                </div>
+                <h4 class="text-base font-semibold text-gray-900">{{ $viewed->title }}</h4>
+                <p class="text-sm text-gray-600 leading-relaxed">{{ $viewed->message }}</p>
+                @if($viewed->action_url)
+                    <p class="text-sm"><span class="font-medium text-gray-700">Action URL:</span>
+                        <a href="{{ $viewed->action_url }}" target="_blank" rel="noopener" class="text-[#FFC300] hover:underline break-all ml-1">{{ $viewed->action_url }}</a>
+                    </p>
+                @endif
+                <p class="text-sm text-gray-500">Recipients: {{ $viewed->is_global ? 'All Users' : ($viewed->user?->name ?? 'N/A') }}</p>
+            </div>
+            <div class="mt-4 flex space-x-3">
+                <button wire:click="edit({{ $viewed->id }})" class="bg-[#FFC300] hover:bg-black hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">Edit</button>
+                <button wire:click="closeView" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200">Close</button>
+            </div>
+        </div>
+        @endif
+    @endif
+
     @if($showForm)
         <div class="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
             <h3 class="text-lg font-semibold mb-4">{{ $editingId ? 'Edit' : 'Create' }} Notification</h3>
@@ -35,8 +74,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Action URL</label>
-                    <input type="text" wire:model="action_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Action URL <span class="text-gray-400 font-normal">(optional, must start with https://)</span></label>
+                    <input type="url" wire:model="action_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Action Text</label>
@@ -71,7 +110,7 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($notifications as $notif)
-                    <tr class="hover:bg-gray-50">
+                    <tr wire:click="view({{ $notif->id }})" class="hover:bg-gray-50 cursor-pointer">
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                 @switch($notif->type)
@@ -91,9 +130,9 @@
                                 {{ $notif->is_read ? 'Read' : 'Unread' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right" wire:click.stop>
                             <button wire:click="edit({{ $notif->id }})" class="text-[#FFC300] hover:text-black text-sm font-medium mr-3">Edit</button>
-                            <button wire:click="delete({{ $notif->id }})" class="text-red-400 hover:text-red-600 text-sm font-medium">Delete</button>
+                            <button wire:click="delete({{ $notif->id }})" class="text-red-400 hover:text-red-600 text-sm font-medium" onclick="return confirm('Delete this notification?')">Delete</button>
                         </td>
                     </tr>
                 @endforeach

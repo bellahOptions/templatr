@@ -24,8 +24,9 @@
     <meta name="msapplication-TileColor" content="#ffc400">
     <meta name="msapplication-TileImage" content="{{  asset('/ms-icon-144x144.png') }}">
     <meta name="theme-color" content="#000000">
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>
@@ -39,283 +40,11 @@
         [x-cloak] {
             display: none !important;
         }
-
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes fadeInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        @keyframes pulseGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 195, 0, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 15px rgba(255, 195, 0, 0);
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
-        }
-
-        .animate-fade-in-up {
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        .animate-fade-in-down {
-            animation: fadeInDown 0.6s ease-out forwards;
-        }
-
-        .animate-fade-in-left {
-            animation: fadeInLeft 0.6s ease-out forwards;
-        }
-
-        .animate-fade-in-right {
-            animation: fadeInRight 0.6s ease-out forwards;
-        }
-
-        .animate-scale-in {
-            animation: scaleIn 0.5s ease-out forwards;
-        }
-
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .animate-pulse-glow {
-            animation: pulseGlow 2s infinite;
-        }
-
-        .animate-shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
-        }
-
-        .stagger-1 {
-            animation-delay: 0.1s;
-        }
-
-        .stagger-2 {
-            animation-delay: 0.2s;
-        }
-
-        .stagger-3 {
-            animation-delay: 0.3s;
-        }
-
-        .stagger-4 {
-            animation-delay: 0.4s;
-        }
-
-        .stagger-5 {
-            animation-delay: 0.5s;
-        }
-
-        .stagger-6 {
-            animation-delay: 0.6s;
-        }
-
-        /* Preloader */
-        .preloader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .preloader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .preloader-logo {
-            width: 200px;
-            animation: pulseGlow 2s infinite;
-        }
-
-        .preloader-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #FFC300, #FFD633, #FFC300);
-            animation: loadingBar 1.5s ease-in-out infinite;
-        }
-
-        @keyframes loadingBar {
-            0% {
-                width: 0%;
-                left: 0;
-            }
-
-            50% {
-                width: 100%;
-                left: 0;
-            }
-
-            100% {
-                width: 0%;
-                left: 100%;
-            }
-        }
-
-        /* Scroll Animations */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease-out;
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .reveal-left {
-            opacity: 0;
-            transform: translateX(-30px);
-            transition: all 0.6s ease-out;
-        }
-
-        .reveal-left.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .reveal-right {
-            opacity: 0;
-            transform: translateX(30px);
-            transition: all 0.6s ease-out;
-        }
-
-        .reveal-right.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* Smooth scroll bar for product cards */
-        .products-scroll {
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Card hover effects */
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Gradient text */
-        .gradient-text {
-            background: linear-gradient(135deg, #FFC300, #FFD633, #FFC300);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
     </style>
     @stack('styles')
 </head>
 
-<body class="font-sans antialiased bg-white text-gray-900 overflow-x-hidden">
+<body class="font-sans antialiased bg-white text-gray-900 overflow-x-hidden" style="font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;">
     {{-- Preloader --}}
     <div id="preloader" class="preloader">
         <div class="text-center">
@@ -781,6 +510,50 @@
         </div>
     </footer>
 
+    {{-- Cart Drawer (always mounted, opens dynamically) --}}
+    @livewire('cart-drawer')
+
+    {{-- Global Toast Notification --}}
+    <div
+        x-data="{ show: false, message: '', type: 'success' }"
+        x-on:show-toast.window="message = $event.detail.message; type = $event.detail.type || 'success'; show = true; setTimeout(() => show = false, 3500)"
+        x-show="show"
+        x-cloak
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-3"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-3"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center space-x-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold text-white pointer-events-auto"
+        :class="type === 'error' ? 'bg-red-600' : 'bg-gray-900'"
+        style="min-width:280px;max-width:380px;"
+    >
+        <svg x-show="type !== 'error'" class="w-5 h-5 text-[#FFC300] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <svg x-show="type === 'error'" class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span x-text="message" class="flex-1"></span>
+        <button @click="show = false" class="text-white/60 hover:text-white transition-colors ml-2 flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+
+    {{-- Admin / Author: Floating Add Product button --}}
+    @auth
+        @if(auth()->user()->isAdmin() || auth()->user()->isAuthor())
+        <a href="{{ route('admin.products.create') }}"
+           title="Add New Product"
+           class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#FFC300] text-black rounded-full shadow-lg hover:bg-[#FFD633] hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span class="absolute right-16 bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
+                Add New Product
+            </span>
+        </a>
+        @endif
+    @endauth
+
+    @stack('fab')
     @stack('scripts')
     @livewireScripts
     <script>

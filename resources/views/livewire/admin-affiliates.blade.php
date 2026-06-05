@@ -46,7 +46,7 @@
     @if($showPayoutForm)
         <div class="bg-white rounded-2xl p-6 border border-gray-200 mb-6">
             <h3 class="text-lg font-semibold mb-4">Process Payout</h3>
-            <p class="text-sm text-gray-500 mb-4">User: <strong>{{ User::find($payoutUserId)?->name }}</strong> - Available Coins: <strong>{{ User::find($payoutUserId)?->coins }}</strong></p>
+            <p class="text-sm text-gray-500 mb-4">User: <strong>{{ $payoutUser?->name }}</strong> — Available Coins: <strong>{{ $payoutUser?->coins }}</strong></p>
             <div class="flex items-center space-x-3">
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Coins to Convert</label>

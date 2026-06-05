@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Services\Webhook\WebhookService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class VerificationController extends Controller
 {
@@ -28,31 +30,40 @@ class VerificationController extends Controller
     }
 
     /**
-     * Mark the authenticated user's email as verified.
-     * Uses Laravel's signed URL for security.
+     * Verify the user's email using a signed URL.
      */
     public function verify(Request $request)
     {
         $user = User::findOrFail($request->route('id'));
 
-        if (!hash_equals((string) $request->route('id'), (string) $user->getKey())) {
+        if (! hash_equals((string) $request->route('id'), (string) $user->getKey())) {
             abort(403);
         }
 
-        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+        if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
             abort(403);
+        }
+
+        // If a *different* user is already authenticated, do not hijack their session.
+        $currentUser = Auth::user();
+        if ($currentUser && $currentUser->id !== $user->id) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
 
         if ($user->hasVerifiedEmail()) {
+            Auth::login($user, true);
+
             return redirect()->route('dashboard')
                 ->with('info', 'Your email is already verified.');
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-        }
+        $user->email_verified_at = now();
+        $user->save();
 
-        // Fire webhook for user.verified event
+        event(new Verified($user));
+
         try {
             $this->webhookService->fire('user.verified', [
                 'user_id' => $user->id,
@@ -61,11 +72,11 @@ class VerificationController extends Controller
                 'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to fire user.verified webhook: ' . $e->getMessage());
+            Log::warning('Failed to fire user.verified webhook: '.$e->getMessage());
         }
 
-        // Log the user in and redirect to dashboard
-        \Illuminate\Support\Facades\Auth::login($user);
+        $user->refresh();
+        Auth::login($user, true);
 
         return redirect()->route('dashboard')
             ->with('success', 'Email verified successfully! Welcome to your dashboard.');

@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Advertisement;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,21 +12,43 @@ class AdminAdvertisements extends Component
     use WithPagination;
 
     public string $title = '';
+
     public string $description = '';
+
     public string $image_url = '';
+
     public string $link_url = '';
+
     public string $position = 'banner';
+
     public string $type = 'banner';
+
     public int $sort_order = 0;
+
     public bool $is_active = true;
+
     public ?int $editingId = null;
+
     public bool $showForm = false;
+
+    public ?int $viewingId = null;
 
     protected $rules = [
         'title' => 'required|min:3',
         'position' => 'required',
         'type' => 'required',
     ];
+
+    public function view($id): void
+    {
+        $this->viewingId = $id;
+        $this->showForm = false;
+    }
+
+    public function closeView(): void
+    {
+        $this->viewingId = null;
+    }
 
     public function create()
     {
@@ -81,10 +104,10 @@ class AdminAdvertisements extends Component
         session()->flash('message', 'Advertisement deleted.');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.admin-advertisements', [
             'ads' => Advertisement::latest()->paginate(10),
-        ]);
+        ])->extends('admin.layouts.admin')->section('content');
     }
 }

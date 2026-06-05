@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class Profile2faController extends Controller
@@ -16,6 +15,7 @@ class Profile2faController extends Controller
     public function index()
     {
         $user = Auth::user();
+
         return view('profile.2fa', compact('user'));
     }
 
@@ -37,22 +37,22 @@ class Profile2faController extends Controller
         try {
             Mail::send('emails.notification', [
                 'user' => $user,
-                'title' => 'Two-Factor Authentication Enabled',
+                'title' => 'Your 2FA Verification Code',
                 'icon' => '🔐',
-                'message' => 'You have enabled two-factor authentication on your Templatr account. Your verification code is:',
+                'message' => 'You requested to enable two-factor authentication on your Templatr account. Your verification code is:',
                 'actionText' => null,
-            ], function ($message) use ($user) {
+            ], function ($message) use ($user, $code) {
                 $message->to($user->email)
-                    ->subject('2FA Enabled - Templatr');
+                    ->subject('Your 2FA Verification Code - Templatr')
+                    ->text("Your verification code is: {$code}\n\nThis code will expire in 10 minutes.");
             });
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to send 2FA enable email: ' . $e->getMessage());
+            Log::warning('Failed to send 2FA enable email: '.$e->getMessage());
+
+            return back()->with('error', 'Failed to send verification code. Please try again.');
         }
 
-        // Store the code in session for verification
-        session(['2fa_enable_code' => $code]);
-
-        return back()->with('success', 'Two-factor authentication is being enabled. Please check your email for the verification code.')
+        return back()->with('success', 'A verification code has been sent to your email. Enter it below to confirm.')
             ->with('show_2fa_verify', true);
     }
 
@@ -71,7 +71,7 @@ class Profile2faController extends Controller
             return redirect()->route('profile.2fa')->with('info', 'Two-factor authentication is already enabled.');
         }
 
-        if (!$user->validateTwoFactorCode($request->code)) {
+        if (! $user->validateTwoFactorCode($request->code)) {
             return back()->with('error', 'Invalid or expired verification code. Please try again.');
         }
 
