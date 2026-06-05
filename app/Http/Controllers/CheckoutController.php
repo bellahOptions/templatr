@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\CurrencyHelper;
 use App\Mail\OrderReceipt;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -16,12 +15,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
     protected PaymentManager $paymentManager;
+
     protected DownloadSecurityManager $downloadSecurity;
+
     protected WebhookService $webhookService;
 
     public function __construct(
@@ -72,7 +74,7 @@ class CheckoutController extends Controller
 
         // Validate guest fields if user is not authenticated
         $guestData = [];
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             $validated = $request->validate([
                 'guest_name' => 'required|string|max:255',
                 'guest_email' => 'required|email|max:255',
@@ -91,7 +93,7 @@ class CheckoutController extends Controller
 
         // If a payment gateway was selected, redirect to gateway
         if (in_array($paymentMethod, ['paystack', 'flutterwave', 'interswitch'])) {
-            $reference = 'TXN-' . strtoupper(Str::random(16));
+            $reference = 'TXN-'.strtoupper(Str::random(16));
 
             session()->put('pending_payment', array_merge([
                 'reference' => $reference,
@@ -130,7 +132,7 @@ class CheckoutController extends Controller
         // Direct payment (no gateway configured)
         $order = $this->completeOrder($products, $totalAmount, 'direct', $guestData);
 
-        if (!$order) {
+        if (! $order) {
             return redirect()->route('checkout.index')->with('error', 'Order processing failed.');
         }
 
@@ -141,7 +143,7 @@ class CheckoutController extends Controller
     {
         $pending = session()->get('pending_payment');
 
-        if (!$pending || $pending['gateway'] !== $gateway) {
+        if (! $pending || $pending['gateway'] !== $gateway) {
             return redirect()->route('cart.index')->with('error', 'Invalid payment session.');
         }
 
@@ -156,7 +158,7 @@ class CheckoutController extends Controller
                 $totalAmount = $pending['amount'];
 
                 $guestData = [];
-                if (!empty($pending['guest_name'])) {
+                if (! empty($pending['guest_name'])) {
                     $guestData = [
                         'guest_name' => $pending['guest_name'],
                         'guest_email' => $pending['guest_email'],
@@ -168,16 +170,19 @@ class CheckoutController extends Controller
 
                 if ($order) {
                     session()->forget('pending_payment');
+
                     return redirect()->route('orders.confirmation', $order)
                         ->with('success', 'Payment successful! Your items are ready for download.');
                 }
             }
 
             session()->forget('pending_payment');
+
             return redirect()->route('checkout.index')
                 ->with('error', 'Payment verification failed. Please contact support.');
         } catch (\Exception $e) {
             session()->forget('pending_payment');
+
             return redirect()->route('checkout.index')
                 ->with('error', 'Payment verification error. Please contact support.');
         }
@@ -188,7 +193,7 @@ class CheckoutController extends Controller
         try {
             $orderData = [
                 'user_id' => Auth::id(),
-                'order_number' => 'ORD-' . strtoupper(Str::random(10)),
+                'order_number' => 'ORD-'.strtoupper(Str::random(10)),
                 'total_amount' => $totalAmount,
                 'status' => 'completed',
                 'payment_method' => $paymentMethod,
@@ -196,7 +201,7 @@ class CheckoutController extends Controller
             ];
 
             // Add guest data if provided
-            if (!empty($guestData)) {
+            if (! empty($guestData)) {
                 $orderData['user_id'] = null;
                 $orderData['guest_name'] = $guestData['guest_name'];
                 $orderData['guest_email'] = $guestData['guest_email'];
@@ -217,7 +222,7 @@ class CheckoutController extends Controller
                 ]);
 
                 // Generate download token for guest orders (72-hour expiry)
-                if (!Auth::check()) {
+                if (! Auth::check()) {
                     $this->downloadSecurity->generateDownloadToken($orderItem, 72);
                 }
 
@@ -229,7 +234,7 @@ class CheckoutController extends Controller
             session()->forget('guest_data');
 
             // Store last order number for guest access to confirmation
-            if (!Auth::check()) {
+            if (! Auth::check()) {
                 session()->put('last_order_number', $order->order_number);
             }
 
@@ -238,7 +243,7 @@ class CheckoutController extends Controller
                 Mail::to($order->customer_email)
                     ->queue(new OrderReceipt($order));
             } catch (\Exception $e) {
-                Log::warning('Failed to queue order receipt email: ' . $e->getMessage());
+                Log::warning('Failed to queue order receipt email: '.$e->getMessage());
             }
 
             // Send new purchase notification to admin and the specified email
@@ -248,17 +253,13 @@ class CheckoutController extends Controller
                     $admin->notify(new NewPurchaseAdminNotification($order));
                 }
                 // Also notify the specified email
-                Mail::mailer('log')->raw('', function ($message) use ($order) {
-                    // We'll send via a direct notification approach
-                });
-                // Use Notification facade to send to the specified email
                 $specificEmail = 'muyiwadavis65@gmail.com';
                 if (filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
-                    \Illuminate\Support\Facades\Notification::route('mail', $specificEmail)
+                    Notification::route('mail', $specificEmail)
                         ->notify(new NewPurchaseAdminNotification($order));
                 }
             } catch (\Exception $e) {
-                Log::warning('Failed to send new purchase notification: ' . $e->getMessage());
+                Log::warning('Failed to send new purchase notification: '.$e->getMessage());
             }
 
             // Fire webhooks for order.paid event
@@ -281,12 +282,13 @@ class CheckoutController extends Controller
                     'timestamp' => now()->toIso8601String(),
                 ]);
             } catch (\Exception $e) {
-                Log::warning('Failed to fire webhook: ' . $e->getMessage());
+                Log::warning('Failed to fire webhook: '.$e->getMessage());
             }
 
             return $order;
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Order completion failed: ' . $e->getMessage());
+            Log::error('Order completion failed: '.$e->getMessage());
+
             return null;
         }
     }
@@ -301,7 +303,7 @@ class CheckoutController extends Controller
         } else {
             // For guests, ensure they can only see their own order via session
             $lastOrderNumber = session('last_order_number');
-            if (!$lastOrderNumber || $lastOrderNumber !== $order->order_number) {
+            if (! $lastOrderNumber || $lastOrderNumber !== $order->order_number) {
                 abort(403);
             }
         }
@@ -311,5 +313,3 @@ class CheckoutController extends Controller
         return view('checkout.confirmation', compact('order'));
     }
 }
-
-
