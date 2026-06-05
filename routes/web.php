@@ -19,6 +19,7 @@ use App\Http\Controllers\User2faLoginController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Middleware\RedirectAdminToPanel;
 use App\Livewire\AdminAdvertisements;
 use App\Livewire\AdminAffiliates;
 use App\Livewire\AdminNotifications;
@@ -27,7 +28,7 @@ use App\Livewire\SearchProducts;
 use Illuminate\Support\Facades\Route;
 
 // Guest routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home')->middleware(RedirectAdminToPanel::class);
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -63,24 +64,30 @@ Route::middleware('guest')->group(function () {
 });
 
 // Product routes
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/search', SearchProducts::class)->name('products.search');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::middleware(RedirectAdminToPanel::class)->group(function () {
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/search', SearchProducts::class)->name('products.search');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+});
 
 // Cart routes
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
-Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::middleware(RedirectAdminToPanel::class)->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+});
 
 // Checkout routes (guest users can also purchase)
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
-Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
+Route::middleware(RedirectAdminToPanel::class)->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
+    Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
+});
 
 // Authenticated user routes (require verified email)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', RedirectAdminToPanel::class])->group(function () {
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
