@@ -9,6 +9,7 @@ use App\Services\Payment\PaymentManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -28,7 +29,7 @@ class DownloadSecurityManager
      */
     public function authorizeDownload(Product $product): DownloadAuthorization
     {
-        $authorization = new DownloadAuthorization();
+        $authorization = new DownloadAuthorization;
         $authorization->product = $product;
 
         // ── Layer 1: Rate limiting by IP ──
@@ -43,12 +44,12 @@ class DownloadSecurityManager
         Cache::put($rateLimitKey, $attempts + 1, now()->addMinutes(15));
 
         // ── Layer 2: Check if the product exists and is published ──
-        if (!$product->is_published) {
+        if (! $product->is_published) {
             throw new HttpException(404, 'Product not found.');
         }
 
         // ── Layer 3: Check file exists ──
-        if (!$product->file_path || !\Illuminate\Support\Facades\Storage::exists($product->file_path)) {
+        if (! $product->file_path || ! Storage::disk('public')->exists($product->file_path)) {
             Log::error("Download failed: File not found for product #{$product->id} - {$product->file_path}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
@@ -64,7 +65,7 @@ class DownloadSecurityManager
             $orderItem = OrderItem::where('product_id', $product->id)
                 ->whereHas('order', function ($q) use ($user) {
                     $q->where('user_id', $user->id)
-                      ->where('payment_status', 'paid');
+                        ->where('payment_status', 'paid');
                 })
                 ->first();
         } else {
@@ -75,25 +76,26 @@ class DownloadSecurityManager
                     ->where('download_token', $token)
                     ->whereHas('order', function ($q) {
                         $q->whereNull('user_id')
-                          ->where('payment_status', 'paid');
+                            ->where('payment_status', 'paid');
                     })
                     ->first();
             }
         }
 
-        if (!$orderItem) {
+        if (! $orderItem) {
             // Log the failed attempt
-            Log::warning("Unauthorized download attempt for product #{$product->id} by " . ($user ? "user #{$user->id}" : "guest IP {$ip}"));
+            Log::warning("Unauthorized download attempt for product #{$product->id} by ".($user ? "user #{$user->id}" : "guest IP {$ip}"));
 
             if ($user && $user->isAdmin()) {
                 // Admins bypass purchase check
                 $authorization->isAuthorized = true;
                 $authorization->orderItem = null;
                 $authorization->isAdminBypass = true;
+
                 return $authorization;
             }
 
-            if (!$user) {
+            if (! $user) {
                 throw new HttpException(401, 'You must provide a valid download token. Please check your email for the download link.');
             }
 
@@ -103,7 +105,7 @@ class DownloadSecurityManager
         // ── Layer 6: Verify payment with the gateway (double-check) ──
         if ($orderItem->order->payment_method !== 'direct') {
             $paymentVerified = $this->verifyPaymentWithGateway($orderItem->order);
-            if (!$paymentVerified) {
+            if (! $paymentVerified) {
                 Log::warning("Payment verification failed for order #{$orderItem->order->id} - marking as unpaid.");
                 $orderItem->order->update(['payment_status' => 'unpaid']);
                 throw new HttpException(403, 'Payment could not be verified. Please contact support.');
@@ -111,7 +113,7 @@ class DownloadSecurityManager
         }
 
         // ── Layer 7: Check download limits ──
-        if (!$orderItem->isDownloadable()) {
+        if (! $orderItem->isDownloadable()) {
             $remaining = $orderItem->remaining_downloads;
             $maxMsg = $orderItem->order->user_id ? '2' : '1';
             throw new HttpException(403, "Download limit reached. You have used all {$maxMsg} allowed download(s) for this item.");
@@ -148,7 +150,7 @@ class DownloadSecurityManager
      */
     public function recordDownload(DownloadAuthorization $authorization): void
     {
-        if (!$authorization->orderItem) {
+        if (! $authorization->orderItem) {
             return; // Admin bypass, no tracking needed
         }
 
@@ -165,8 +167,8 @@ class DownloadSecurityManager
         $orderItem->product->increment('download_count');
 
         // Log the download
-        Log::info("Download recorded: product #{$orderItem->product_id}, order item #{$orderItem->id}, " .
-            "user: " . ($orderItem->order->user_id ? "user #{$orderItem->order->user_id}" : "guest"),
+        Log::info("Download recorded: product #{$orderItem->product_id}, order item #{$orderItem->id}, ".
+            'user: '.($orderItem->order->user_id ? "user #{$orderItem->order->user_id}" : 'guest'),
             [
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),
@@ -187,7 +189,8 @@ class DownloadSecurityManager
             return $verification['success'] ?? false;
         } catch (\Exception $e) {
             // If gateway verification fails, fall back to our own status
-            Log::warning("Gateway payment verification failed for order #{$order->id}: " . $e->getMessage());
+            Log::warning("Gateway payment verification failed for order #{$order->id}: ".$e->getMessage());
+
             return $order->payment_status === 'paid';
         }
     }

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
-use App\Models\Review;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\Review;
 use App\Services\Download\DownloadSecurityManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ProductController extends Controller
@@ -43,8 +43,8 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('tags', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('tags', 'like', "%{$search}%");
             });
         }
 
@@ -83,7 +83,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        if (!$product->is_published) {
+        if (! $product->is_published) {
             abort(404);
         }
 
@@ -109,7 +109,7 @@ class ProductController extends Controller
             $orderItem = OrderItem::where('product_id', $product->id)
                 ->whereHas('order', function ($q) {
                     $q->where('user_id', Auth::id())
-                      ->where('payment_status', 'paid');
+                        ->where('payment_status', 'paid');
                 })
                 ->first();
 
@@ -151,30 +151,31 @@ class ProductController extends Controller
 
             // Determine file path and serve
             $filePath = $product->file_path;
-            $fileName = $product->slug . '.' . pathinfo($filePath, PATHINFO_EXTENSION);
+            $fileName = $product->slug.'.'.pathinfo($filePath, PATHINFO_EXTENSION);
             $fileTitle = $product->title;
 
             // Record the download with audit trail
             $this->downloadSecurity->recordDownload($authorization);
 
             // Log successful download
-            Log::info("Download authorized: product #{$product->id} by " .
-                (Auth::check() ? "user #" . Auth::id() : "guest (token-based)"));
+            Log::info("Download authorized: product #{$product->id} by ".
+                (Auth::check() ? 'user #'.Auth::id() : 'guest (token-based)'));
 
             // If admin bypass, just let them know
             if ($authorization->isAdminBypass) {
-                return back()->with('success', 'Admin download bypass: File is ready. [Storage path: ' . $filePath . ']');
+                return back()->with('success', 'Admin download bypass: File is ready. [Storage path: '.$filePath.']');
             }
 
             // Serve the actual file securely
-            if (!Storage::exists($filePath)) {
+            if (! Storage::disk('public')->exists($filePath)) {
                 Log::error("Download failed: File missing at {$filePath} for product #{$product->id}");
+
                 return back()->with('error', 'The file could not be found on the server. Please contact support.');
             }
 
-            return Storage::download($filePath, $fileName, [
+            return Storage::disk('public')->download($filePath, $fileName, [
                 'Content-Type' => 'application/octet-stream',
-                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
                 'X-Content-Type-Options' => 'nosniff',
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
                 'Pragma' => 'no-cache',
@@ -182,7 +183,7 @@ class ProductController extends Controller
 
         } catch (HttpException $e) {
             // Handle security exceptions with user-friendly messages
-            $message = match($e->getStatusCode()) {
+            $message = match ($e->getStatusCode()) {
                 429 => 'Too many download attempts. Please wait 15 minutes before trying again.',
                 401 => 'Authentication required. Please sign in to download this item.',
                 403 => $e->getMessage() ?: 'You are not authorized to download this item.',
@@ -193,7 +194,7 @@ class ProductController extends Controller
 
             return back()->with('error', $message);
         } catch (\Exception $e) {
-            Log::error('Download exception: ' . $e->getMessage(), [
+            Log::error('Download exception: '.$e->getMessage(), [
                 'product_id' => $product->id,
                 'user_id' => Auth::id(),
                 'ip' => request()->ip(),
@@ -214,7 +215,7 @@ class ProductController extends Controller
             $q->where('product_id', $product->id);
         })->where('payment_status', 'paid')->exists();
 
-        if (!$hasPurchased) {
+        if (! $hasPurchased) {
             return back()->with('error', 'You can only review items you have purchased.');
         }
 
