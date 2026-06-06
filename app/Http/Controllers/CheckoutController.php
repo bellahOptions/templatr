@@ -79,6 +79,10 @@ class CheckoutController extends Controller
                 'guest_name' => 'required|string|max:255',
                 'guest_email' => 'required|email|max:255',
                 'guest_phone' => 'required|string|max:20',
+                'terms_accepted' => ['required', 'accepted'],
+            ], [
+                'terms_accepted.required' => 'You must accept the Terms of Service to complete your purchase.',
+                'terms_accepted.accepted' => 'You must accept the Terms of Service to complete your purchase.',
             ]);
             $guestData = [
                 'guest_name' => $validated['guest_name'],

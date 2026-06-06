@@ -7,8 +7,8 @@
     <div class="max-w-md w-full">
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-[#FFC300] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <svg class="w-8 h-8" viewBox="0 0 88 93" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M88 7.16H0V93.16H36V51.16H44H52V93.16H88V7.16Z"/>
                 </svg>
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Welcome back</h2>

@@ -88,8 +88,8 @@
                     <p class="text-black/60 text-sm mt-1">Payout to: {{ $user->paypal_email }}</p>
                     @endif
                 </div>
-                <svg class="w-12 h-12 md:w-16 md:h-16 text-black/30" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <svg class="w-12 h-12 md:w-16 md:h-16 text-black/30" viewBox="0 0 88 93" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M88 7.16H0V93.16H36V51.16H44H52V93.16H88V7.16Z"/>
                 </svg>
             </div>
         </div>

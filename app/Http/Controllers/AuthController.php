@@ -64,6 +64,10 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'referral_code' => 'nullable|string|exists:users,referral_code',
+            'terms_accepted' => ['required', 'accepted'],
+        ], [
+            'terms_accepted.required' => 'You must accept the Terms of Service to create an account.',
+            'terms_accepted.accepted' => 'You must accept the Terms of Service to create an account.',
         ]);
 
         $user = User::create([
@@ -71,6 +75,7 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'user',
+            'terms_accepted_at' => now(),
         ]);
 
         // Handle referral

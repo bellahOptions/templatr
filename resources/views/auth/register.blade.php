@@ -7,8 +7,8 @@
     <div class="max-w-md w-full">
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-[#FFC300] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <svg class="w-8 h-8" viewBox="0 0 88 93" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M88 7.16H0V93.16H36V51.16H44H52V93.16H88V7.16Z"/>
                 </svg>
             </div>
             <h2 class="text-3xl font-bold text-gray-900">Create your account</h2>
@@ -67,6 +67,25 @@
                     <input id="password_confirmation" type="password" name="password_confirmation" required
                         class="block w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300] focus:border-transparent"
                         placeholder="Confirm your password">
+                </div>
+
+                <div class="pt-1">
+                    <label class="flex items-start space-x-3 cursor-pointer">
+                        <input type="checkbox" name="terms_accepted" id="terms_accepted" value="1"
+                            class="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FFC300] focus:ring-[#FFC300] focus:ring-2 cursor-pointer flex-shrink-0"
+                            {{ old('terms_accepted') ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-600 leading-snug">
+                            I have read and agree to the
+                            <a href="{{ route('terms.show') }}" target="_blank" rel="noopener noreferrer"
+                               class="font-semibold text-gray-900 underline underline-offset-2 hover:text-[#FFC300] transition-colors">
+                                Terms of Service
+                            </a>.
+                            By creating an account, I consent to my data being processed as described therein.
+                        </span>
+                    </label>
+                    @error('terms_accepted')
+                        <p class="text-red-500 text-xs mt-1.5 ml-7">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <button type="submit" class="w-full bg-black text-white py-3 px-4 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">

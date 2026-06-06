@@ -2,20 +2,22 @@
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'balance', 'referral_code', 'coins', 'pending_commission', 'two_factor_enabled', 'two_factor_code', 'two_factor_expires_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'balance', 'referral_code', 'coins', 'pending_commission', 'two_factor_enabled', 'two_factor_code', 'two_factor_expires_at', 'terms_accepted_at'])]
 #[Hidden(['password', 'remember_token', 'two_factor_code'])]
-class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -30,9 +32,10 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
             'pending_commission' => 'decimal:2',
             'two_factor_enabled' => 'boolean',
             'two_factor_expires_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
         ];
     }
-    
+
     protected static function booted()
     {
         static::creating(function ($user) {
@@ -126,7 +129,7 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification);
     }
 
     public function emailVerifications(): HasMany
@@ -165,12 +168,13 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
             'two_factor_code' => Hash::make($code),
             'two_factor_expires_at' => now()->addMinutes(10),
         ]);
+
         return $code;
     }
 
     public function validateTwoFactorCode(string $code): bool
     {
-        if (!$this->two_factor_code || !$this->two_factor_expires_at) {
+        if (! $this->two_factor_code || ! $this->two_factor_expires_at) {
             return false;
         }
 
@@ -209,9 +213,8 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
     /**
      * Get coin value in Naira
      */
-    public function getCoinValueInNaira(int $coins = null): float
+    public function getCoinValueInNaira(?int $coins = null): float
     {
         return ($coins ?? $this->coins) * AffiliatePayout::COIN_VALUE;
     }
 }
-

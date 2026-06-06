@@ -164,6 +164,28 @@
                 </div>
             </div>
 
+            <!-- Terms acceptance -->
+            @guest
+            <div class="mb-5">
+                <label class="flex items-start space-x-3 cursor-pointer group">
+                    <input type="checkbox" name="terms_accepted" form="paymentForm" id="terms_accepted" value="1"
+                        class="mt-0.5 w-4 h-4 rounded border-gray-300 text-black focus:ring-[#FFC300] focus:ring-2 cursor-pointer flex-shrink-0"
+                        {{ old('terms_accepted') ? 'checked' : '' }}>
+                    <span class="text-sm text-gray-600 leading-snug">
+                        I have read and agree to the
+                        <a href="{{ route('terms.show') }}" target="_blank" rel="noopener noreferrer"
+                           class="font-semibold text-gray-900 underline underline-offset-2 hover:text-[#FFC300] transition-colors">
+                            Terms of Service
+                        </a>.
+                        I understand this is a digital product purchase with no physical delivery.
+                    </span>
+                </label>
+                @error('terms_accepted')
+                    <p class="text-red-500 text-xs mt-1.5 ml-7">{{ $message }}</p>
+                @enderror
+            </div>
+            @endguest
+
             <!-- Payment Button -->
             <form id="paymentForm" method="POST" action="{{ route('checkout.process') }}">
                 @csrf
@@ -186,7 +208,9 @@
             </div>
 
             <p class="text-xs text-gray-500 text-center mt-4">
-                By completing this purchase you agree to our Terms of Service. All transactions are securely processed in Nigerian Naira ({{ CurrencyHelper::SYMBOL }}).
+                By completing this purchase you agree to our
+                <a href="{{ route('terms.show') }}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-gray-800">Terms of Service</a>.
+                All transactions are securely processed in Nigerian Naira ({{ CurrencyHelper::SYMBOL }}).
             </p>
         </div>
     </div>
