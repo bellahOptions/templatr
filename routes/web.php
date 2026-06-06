@@ -15,6 +15,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile2faController;
 use App\Http\Controllers\ProfileController;
@@ -84,6 +85,11 @@ Route::middleware(RedirectAdminToPanel::class)->group(function () {
     Route::post('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
+
+// Payment gateway webhook endpoints (no CSRF, no auth — verified by signature)
+Route::post('/payment/webhook/{gateway}', [PaymentWebhookController::class, 'handle'])
+    ->name('payment.webhook')
+    ->whereIn('gateway', ['paystack', 'flutterwave']);
 
 // Checkout routes (guest users can also purchase)
 Route::middleware(RedirectAdminToPanel::class)->group(function () {
