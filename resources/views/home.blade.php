@@ -52,7 +52,7 @@
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         @if($product->thumbnail)
-                            <img src="{{ Storage::url($product->thumbnail) }}"
+                            <img src="{{ $product->thumbnail_url }}"
                                  alt="{{ $product->title }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy">
@@ -129,7 +129,7 @@
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         @if($product->thumbnail)
-                            <img src="{{ Storage::url($product->thumbnail) }}"
+                            <img src="{{ $product->thumbnail_url }}"
                                  alt="{{ $product->title }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy">

@@ -192,6 +192,30 @@
     </div>
 </section>
 
+{{-- Payment progress overlay --}}
+<div id="payment-overlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+    <div class="absolute top-0 left-0 right-0 h-1">
+        <div id="pay-top-bar" class="h-full bg-[#FFC300] transition-all duration-500" style="width:0%;box-shadow:0 0 10px #FFC300"></div>
+    </div>
+    <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+        <div class="flex justify-center mb-5">
+            <div class="w-16 h-16 bg-[#FFC300]/10 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-[#FFC300] animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        <h3 class="text-xl font-bold text-center mb-1">Processing Payment</h3>
+        <p class="text-sm text-gray-500 text-center mb-5">Connecting securely — do not close this window</p>
+        <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-1">
+            <div id="pay-modal-bar" class="h-full bg-[#FFC300] rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p id="pay-pct" class="text-xs font-semibold text-[#FFC300] text-right mb-5">0%</p>
+        <div id="pay-steps" class="space-y-3"></div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     // Update hidden input with selected payment method
@@ -200,12 +224,90 @@
             document.getElementById('paymentMethodInput').value = this.value;
         });
     });
-    
+
     // Set default payment method
     const checkedInput = document.querySelector('input[name="payment_method"]:checked');
     if (checkedInput) {
         document.getElementById('paymentMethodInput').value = checkedInput.value;
     }
+
+    // Payment progress overlay
+    (function () {
+        const STEPS = [
+            { label: 'Verifying your order',        target: 25, ms: 700  },
+            { label: 'Connecting to payment gateway', target: 65, ms: 900 },
+            { label: 'Redirecting securely…',        target: 90, ms: 600  },
+        ];
+
+        const overlay   = document.getElementById('payment-overlay');
+        const topBar    = document.getElementById('pay-top-bar');
+        const modalBar  = document.getElementById('pay-modal-bar');
+        const pctLabel  = document.getElementById('pay-pct');
+        const stepsList = document.getElementById('pay-steps');
+
+        STEPS.forEach((s, i) => {
+            const d = document.createElement('div');
+            d.id = 'pay-step-' + i;
+            d.className = 'flex items-center gap-3 opacity-30 transition-all duration-300';
+            d.innerHTML = `<div class="w-6 h-6 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center step-icon">
+                <span class="text-xs font-bold text-gray-400">${i + 1}</span></div>
+                <span class="text-sm text-gray-600">${s.label}</span>`;
+            stepsList.appendChild(d);
+        });
+
+        let pct = 0;
+
+        function setPct(p) {
+            pct = Math.min(Math.max(p, 0), 99);
+            topBar.style.width   = pct + '%';
+            modalBar.style.width = pct + '%';
+            pctLabel.textContent = Math.round(pct) + '%';
+        }
+
+        function setStep(i, state) {
+            const el   = document.getElementById('pay-step-' + i);
+            if (!el) return;
+            el.classList.remove('opacity-30');
+            const icon = el.querySelector('.step-icon');
+            if (state === 'done') {
+                icon.className = 'w-6 h-6 rounded-full bg-green-500 flex-shrink-0 flex items-center justify-center step-icon';
+                icon.innerHTML = `<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+            } else {
+                icon.className = 'w-6 h-6 rounded-full bg-[#FFC300] flex-shrink-0 flex items-center justify-center step-icon';
+                icon.innerHTML = `<span class="text-xs font-bold text-black">${i + 1}</span>`;
+            }
+        }
+
+        function animateTo(from, to, dur, cb) {
+            const t0 = performance.now();
+            (function tick(now) {
+                const t = Math.min((now - t0) / dur, 1);
+                setPct(from + (to - from) * (1 - Math.pow(1 - t, 3)));
+                t < 1 ? requestAnimationFrame(tick) : cb && cb();
+            })(performance.now());
+        }
+
+        function runSteps() {
+            let idx = 0;
+            function next() {
+                if (idx >= STEPS.length) return;
+                setStep(idx, 'active');
+                animateTo(pct, STEPS[idx].target, STEPS[idx].ms, function () {
+                    setStep(idx, 'done');
+                    idx++;
+                    setTimeout(next, 150);
+                });
+            }
+            next();
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', function () {
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setPct(5);
+            setTimeout(runSteps, 200);
+        });
+    })();
 </script>
 @endpush
 @endsection

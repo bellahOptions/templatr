@@ -4,7 +4,117 @@
 
 @section('title', 'Order Confirmed - Templatr')
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const STEPS = [
+        { label: 'Verifying payment',      target: 35, ms: 700 },
+        { label: 'Creating your order',    target: 70, ms: 600 },
+        { label: 'Sending receipt email',  target: 90, ms: 500 },
+    ];
+
+    const overlay   = document.getElementById('confirm-overlay');
+    const topBar    = document.getElementById('confirm-top-bar');
+    const modalBar  = document.getElementById('confirm-modal-bar');
+    const pctLabel  = document.getElementById('confirm-pct');
+    const stepsList = document.getElementById('confirm-steps');
+    const page      = document.getElementById('confirm-page');
+
+    STEPS.forEach((s, i) => {
+        const d = document.createElement('div');
+        d.id = 'cs-' + i;
+        d.className = 'flex items-center gap-3 opacity-30 transition-all duration-300';
+        d.innerHTML = `<div class="w-6 h-6 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center step-icon">
+            <span class="text-xs font-bold text-gray-400">${i + 1}</span></div>
+            <span class="text-sm text-gray-600">${s.label}</span>`;
+        stepsList.appendChild(d);
+    });
+
+    let pct = 0;
+
+    function setPct(p) {
+        pct = p;
+        topBar.style.width   = p + '%';
+        modalBar.style.width = p + '%';
+        pctLabel.textContent = Math.round(p) + '%';
+    }
+
+    function setStep(i, state) {
+        const el   = document.getElementById('cs-' + i);
+        if (!el) return;
+        el.classList.remove('opacity-30');
+        const icon = el.querySelector('.step-icon');
+        if (state === 'done') {
+            icon.className = 'w-6 h-6 rounded-full bg-green-500 flex-shrink-0 flex items-center justify-center step-icon';
+            icon.innerHTML = `<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`;
+        } else {
+            icon.className = 'w-6 h-6 rounded-full bg-green-500 flex-shrink-0 flex items-center justify-center step-icon animate-pulse';
+            icon.innerHTML = `<span class="text-xs font-bold text-white">${i + 1}</span>`;
+        }
+    }
+
+    function animateTo(from, to, dur, cb) {
+        const t0 = performance.now();
+        (function tick(now) {
+            const t = Math.min((now - t0) / dur, 1);
+            setPct(from + (to - from) * (1 - Math.pow(1 - t, 3)));
+            t < 1 ? requestAnimationFrame(tick) : cb && cb();
+        })(performance.now());
+    }
+
+    let idx = 0;
+    setPct(5);
+
+    function next() {
+        if (idx >= STEPS.length) {
+            // Fill to 100% then dismiss
+            animateTo(pct, 100, 400, function () {
+                overlay.style.transition = 'opacity 0.5s ease';
+                overlay.style.opacity    = '0';
+                page.style.transition    = 'opacity 0.5s ease 0.3s';
+                page.style.opacity       = '1';
+                setTimeout(() => overlay.remove(), 800);
+            });
+            return;
+        }
+        setStep(idx, 'active');
+        animateTo(pct, STEPS[idx].target, STEPS[idx].ms, function () {
+            setStep(idx, 'done');
+            idx++;
+            setTimeout(next, 200);
+        });
+    }
+
+    setTimeout(next, 400);
+});
+</script>
+@endpush
+
 @section('content')
+{{-- Payment confirmation processing overlay (auto-dismisses) --}}
+<div id="confirm-overlay" class="fixed inset-0 bg-white z-[999] flex items-center justify-center p-4">
+    <div class="absolute top-0 left-0 right-0 h-1.5">
+        <div id="confirm-top-bar" class="h-full bg-green-500 transition-all duration-500" style="width:0%;box-shadow:0 0 10px #22c55e"></div>
+    </div>
+    <div class="w-full max-w-sm text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-green-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Confirming Your Order</h2>
+        <p class="text-gray-500 text-sm mb-8">Securely processing your payment</p>
+        <div class="h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
+            <div id="confirm-modal-bar" class="h-full bg-green-500 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p id="confirm-pct" class="text-xs font-semibold text-green-600 text-right mb-8">0%</p>
+        <div id="confirm-steps" class="space-y-3 text-left"></div>
+    </div>
+</div>
+
+{{-- Page content starts hidden, fades in after overlay dismisses --}}
+<div id="confirm-page" style="opacity:0">
 <section class="py-16 md:py-20">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -110,4 +220,5 @@
         </div>
     </div>
 </section>
+</div>{{-- /confirm-page --}}
 @endsection

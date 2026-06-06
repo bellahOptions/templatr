@@ -74,24 +74,39 @@ class ProductController extends Controller
             ? array_values(array_filter(array_map('trim', explode("\n", $request->features))))
             : null;
 
-        // Handle secure thumbnail upload with optimization
-        if ($request->hasFile('thumbnail')) {
+        // Handle pre-uploaded Cloudinary thumbnail URL
+        if ($request->filled('cloudinary_thumbnail_url')) {
+            $validated['thumbnail'] = $request->cloudinary_thumbnail_url;
+        } elseif ($request->hasFile('thumbnail')) {
             $validated['thumbnail'] = $this->uploadOptimizedImage($request->file('thumbnail'), 'products/thumbnails', 600, 450);
         }
 
-        // Handle secure preview image upload with optimization
-        if ($request->hasFile('preview_image')) {
+        // Handle pre-uploaded Cloudinary preview URL
+        if ($request->filled('cloudinary_preview_url')) {
+            $validated['preview_image'] = $request->cloudinary_preview_url;
+        } elseif ($request->hasFile('preview_image')) {
             $validated['preview_image'] = $this->uploadOptimizedImage($request->file('preview_image'), 'products/previews', 1200, 900);
         }
 
-        // Handle secure file upload
-        if ($request->hasFile('file_path')) {
+        // Handle pre-uploaded product file (temp storage)
+        if ($request->filled('file_temp_id')) {
+            $tempData = session('upload_temp_'.$request->file_temp_id);
+            if ($tempData) {
+                $ext = pathinfo($tempData['original_name'], PATHINFO_EXTENSION);
+                $sanitizedName = Str::slug(pathinfo($tempData['original_name'], PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
+                $finalPath = 'products/files/'.$sanitizedName;
+                Storage::disk('public')->move($tempData['path'], $finalPath);
+                $validated['file_path'] = $finalPath;
+                if (empty($validated['file_size'])) {
+                    $validated['file_size'] = $tempData['size'];
+                }
+                session()->forget('upload_temp_'.$request->file_temp_id);
+            }
+        } elseif ($request->hasFile('file_path')) {
             $file = $request->file('file_path');
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
-
-            // Auto-calculate file size if not provided
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = $file->getSize();
             }
@@ -162,25 +177,50 @@ class ProductController extends Controller
             $validated['file_path'] = null;
         }
 
-        // Handle new thumbnail upload
-        if ($request->hasFile('thumbnail')) {
-            // Delete old thumbnail
-            if ($product->thumbnail) {
+        // Handle new thumbnail (Cloudinary pre-upload or direct)
+        if ($request->filled('cloudinary_thumbnail_url')) {
+            if ($product->thumbnail && ! str_starts_with($product->thumbnail, 'http')) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $validated['thumbnail'] = $request->cloudinary_thumbnail_url;
+        } elseif ($request->hasFile('thumbnail')) {
+            if ($product->thumbnail && ! str_starts_with($product->thumbnail, 'http')) {
                 Storage::disk('public')->delete($product->thumbnail);
             }
             $validated['thumbnail'] = $this->uploadOptimizedImage($request->file('thumbnail'), 'products/thumbnails', 600, 450);
         }
 
-        // Handle new preview image upload
-        if ($request->hasFile('preview_image')) {
-            if ($product->preview_image) {
+        // Handle new preview image (Cloudinary pre-upload or direct)
+        if ($request->filled('cloudinary_preview_url')) {
+            if ($product->preview_image && ! str_starts_with($product->preview_image, 'http')) {
+                Storage::disk('public')->delete($product->preview_image);
+            }
+            $validated['preview_image'] = $request->cloudinary_preview_url;
+        } elseif ($request->hasFile('preview_image')) {
+            if ($product->preview_image && ! str_starts_with($product->preview_image, 'http')) {
                 Storage::disk('public')->delete($product->preview_image);
             }
             $validated['preview_image'] = $this->uploadOptimizedImage($request->file('preview_image'), 'products/previews', 1200, 900);
         }
 
-        // Handle new file upload
-        if ($request->hasFile('file_path')) {
+        // Handle new product file (pre-uploaded temp or direct)
+        if ($request->filled('file_temp_id')) {
+            $tempData = session('upload_temp_'.$request->file_temp_id);
+            if ($tempData) {
+                if ($product->file_path) {
+                    Storage::disk('public')->delete($product->file_path);
+                }
+                $ext = pathinfo($tempData['original_name'], PATHINFO_EXTENSION);
+                $sanitizedName = Str::slug(pathinfo($tempData['original_name'], PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
+                $finalPath = 'products/files/'.$sanitizedName;
+                Storage::disk('public')->move($tempData['path'], $finalPath);
+                $validated['file_path'] = $finalPath;
+                if (empty($validated['file_size'])) {
+                    $validated['file_size'] = $tempData['size'];
+                }
+                session()->forget('upload_temp_'.$request->file_temp_id);
+            }
+        } elseif ($request->hasFile('file_path')) {
             if ($product->file_path) {
                 Storage::disk('public')->delete($product->file_path);
             }
@@ -188,7 +228,6 @@ class ProductController extends Controller
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
-
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = $file->getSize();
             }

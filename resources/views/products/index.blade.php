@@ -117,9 +117,9 @@
                         <a href="{{ route('products.show', $product) }}">
                             <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                                 @if($product->thumbnail)
-                                <img src="{{ Storage::url($product->thumbnail) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
+                                <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
                                 @elseif($product->preview_image)
-                                <img src="{{ Storage::url($product->preview_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
+                                <img src="{{ $product->preview_image_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
                                 @else
                                 <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
                                     <img src="/templatr-logo.svg" class="w-20 h-auto" alt="Templatr" loading="lazy">

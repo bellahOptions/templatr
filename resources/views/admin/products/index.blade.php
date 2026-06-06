@@ -44,7 +44,7 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-3">
                             @if($product->thumbnail)
-                            <img src="{{ Storage::url($product->thumbnail) }}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0" alt="{{ $product->title }}">
+                            <img src="{{ $product->thumbnail_url }}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0" alt="{{ $product->title }}">
                             @else
                             <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                 <span class="text-xs font-bold">{{ substr($product->title, 0, 2) }}</span>
@@ -77,7 +77,7 @@
                     </td>
                     <td class="px-6 py-4 text-right whitespace-nowrap">
                         <a href="{{ route('admin.products.edit', $product) }}" class="text-sm text-[#FFC300] hover:text-black font-semibold mr-3">Edit</a>
-                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" class="inline" onsubmit="return confirm('Delete this product?')">
+                        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" class="inline" data-delete-form>
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-sm text-red-500 hover:text-red-700 font-semibold">Delete</button>
@@ -98,6 +98,70 @@
     </div>
 </div>
 @endsection
+
+{{-- Delete progress overlay --}}
+<div id="delete-overlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+    <div class="absolute top-0 left-0 right-0 h-1">
+        <div id="delete-top-bar" class="h-full bg-red-500 transition-all duration-500" style="width:0%;box-shadow:0 0 10px #ef4444"></div>
+    </div>
+    <div class="bg-white rounded-2xl p-8 w-full max-w-xs shadow-2xl text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-bold mb-1">Deleting Product</h3>
+        <p class="text-sm text-gray-500 mb-5">Removing files and records…</p>
+        <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-1">
+            <div id="delete-modal-bar" class="h-full bg-red-500 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p id="delete-pct" class="text-xs font-semibold text-red-500 text-right mt-1">0%</p>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+(function () {
+    const overlay  = document.getElementById('delete-overlay');
+    const topBar   = document.getElementById('delete-top-bar');
+    const modalBar = document.getElementById('delete-modal-bar');
+    const pctLabel = document.getElementById('delete-pct');
+
+    function setPct(p) {
+        topBar.style.width   = p + '%';
+        modalBar.style.width = p + '%';
+        pctLabel.textContent = Math.round(p) + '%';
+    }
+
+    function animateTo(from, to, dur, cb) {
+        const t0 = performance.now();
+        (function tick(now) {
+            const t = Math.min((now - t0) / dur, 1);
+            setPct(from + (to - from) * (1 - Math.pow(1 - t, 3)));
+            t < 1 ? requestAnimationFrame(tick) : cb && cb();
+        })(performance.now());
+    }
+
+    document.querySelectorAll('form[data-delete-form]').forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (!confirm('Delete this product? This cannot be undone.')) return;
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setPct(5);
+            animateTo(5, 40, 500, function () {
+                animateTo(40, 75, 600, function () {
+                    animateTo(75, 92, 400, function () {
+                        form.submit();
+                    });
+                });
+            });
+        });
+    });
+})();
+</script>
+@endpush
 
 @push('fab')
 <a href="{{ route('admin.products.create') }}"

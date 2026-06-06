@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SlideshowController;
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WebhookController;
 use App\Http\Controllers\Admin2faController;
@@ -126,6 +127,10 @@ Route::middleware(['auth', 'verified', RedirectAdminToPanel::class])->group(func
 // Admin Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Async uploads
+    Route::post('/uploads/image', [UploadController::class, 'image'])->name('uploads.image');
+    Route::post('/uploads/file', [UploadController::class, 'file'])->name('uploads.file');
 
     // Products
     Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');

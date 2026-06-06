@@ -27,9 +27,9 @@
                 <!-- Preview Image -->
                 <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden relative mb-8">
                     @if($product->preview_image)
-                    <img src="{{ Storage::url($product->preview_image) }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
+                    <img src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
                     @elseif($product->thumbnail)
-                    <img src="{{ Storage::url($product->thumbnail) }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
+                    <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" alt="{{ $product->title }}" loading="lazy">
                     @else
                     <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
                         <img src="/templatr-logo.svg" class="w-32 h-auto" alt="Templatr" loading="lazy">
@@ -325,9 +325,9 @@
                 <a href="{{ route('products.show', $related) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         @if($related->thumbnail)
-                        <img src="{{ Storage::url($related->thumbnail) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
+                        <img src="{{ $related->thumbnail_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
                         @elseif($related->preview_image)
-                        <img src="{{ Storage::url($related->preview_image) }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
+                        <img src="{{ $related->preview_image_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
                         @else
                         <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
                             <img src="/templatr-logo.svg" class="w-14 h-auto" alt="Templatr" loading="lazy">

@@ -15,7 +15,7 @@
                             <a href="{{ route('products.show', $product['slug']) }}" wire:navigate>
                                 <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                                     @if(!empty($product['thumbnail']))
-                                        <img src="{{ Storage::url($product['thumbnail']) }}"
+                                        <img src="{{ str_starts_with($product['thumbnail'] ?? '', 'http') ? $product['thumbnail'] : Storage::url($product['thumbnail']) }}"
                                              alt="{{ $product['title'] }}"
                                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                              loading="lazy">

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -59,6 +60,36 @@ class Product extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function thumbnailUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->thumbnail) {
+                    return null;
+                }
+
+                return str_starts_with($this->thumbnail, 'http')
+                    ? $this->thumbnail
+                    : Storage::disk('public')->url($this->thumbnail);
+            }
+        );
+    }
+
+    public function previewImageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->preview_image) {
+                    return null;
+                }
+
+                return str_starts_with($this->preview_image, 'http')
+                    ? $this->preview_image
+                    : Storage::disk('public')->url($this->preview_image);
+            }
+        );
     }
 
     public function currentPrice(): Attribute
