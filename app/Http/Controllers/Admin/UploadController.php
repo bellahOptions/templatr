@@ -31,6 +31,26 @@ class UploadController extends Controller
         }
     }
 
+    public function video(Request $request, CloudinaryService $cloudinary): JsonResponse
+    {
+        $request->validate([
+            'video' => 'required|file|mimes:mp4,webm,mov|max:51200',
+            'type' => 'required|in:thumbnail,preview',
+        ]);
+
+        $file = $request->file('video');
+        $type = $request->input('type');
+        $folder = $type === 'thumbnail' ? 'templatr/thumbnails' : 'templatr/previews';
+
+        try {
+            $url = $cloudinary->uploadVideo($file->getRealPath(), $folder);
+
+            return response()->json(['url' => $url]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Cloudinary upload failed.'], 500);
+        }
+    }
+
     public function file(Request $request): JsonResponse
     {
         $request->validate([

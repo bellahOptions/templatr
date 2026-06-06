@@ -81,13 +81,14 @@
                     <div id="thumbnail-drop" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FFC300] transition-colors cursor-pointer" onclick="document.getElementById('thumbnail-input').click()">
                         <div id="thumbnail-preview" class="hidden mb-3">
                             <img id="thumbnail-preview-img" class="w-full h-40 object-cover rounded-lg" alt="Thumbnail preview">
+                            <video id="thumbnail-preview-vid" class="w-full h-40 object-cover rounded-lg hidden" autoplay muted loop playsinline></video>
                         </div>
                         <div id="thumbnail-placeholder">
                             <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             <p class="text-sm text-gray-500">Click to upload thumbnail</p>
-                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, or WebP. Max 2MB.<br>Recommended: 600×450px</p>
+                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP, or MP4/WebM video.<br>Image max 2MB · Video max 50MB</p>
                         </div>
                         {{-- Upload progress --}}
                         <div id="thumbnail-uploading" class="hidden">
@@ -104,7 +105,7 @@
                             <p id="thumbnail-upload-pct" class="text-xs text-[#FFC300] font-semibold text-right mt-1">0%</p>
                         </div>
                     </div>
-                    <input type="file" name="thumbnail" id="thumbnail-input" accept="image/jpeg,image/png,image/webp" class="hidden">
+                    <input type="file" name="thumbnail" id="thumbnail-input" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" class="hidden">
                     @error('thumbnail')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
@@ -114,13 +115,14 @@
                     <div id="preview-drop" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FFC300] transition-colors cursor-pointer" onclick="document.getElementById('preview-input').click()">
                         <div id="preview-preview" class="hidden mb-3">
                             <img id="preview-preview-img" class="w-full h-40 object-cover rounded-lg" alt="Preview image">
+                            <video id="preview-preview-vid" class="w-full h-40 object-cover rounded-lg hidden" autoplay muted loop playsinline></video>
                         </div>
                         <div id="preview-placeholder">
                             <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             <p class="text-sm text-gray-500">Click to upload preview</p>
-                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, or WebP. Max 5MB.<br>Recommended: 1200×900px</p>
+                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, WebP, or MP4/WebM video.<br>Image max 5MB · Video max 50MB</p>
                         </div>
                         <div id="preview-uploading" class="hidden">
                             <div class="flex items-center justify-center space-x-2 mb-3">
@@ -136,7 +138,7 @@
                             <p id="preview-upload-pct" class="text-xs text-[#FFC300] font-semibold text-right mt-1">0%</p>
                         </div>
                     </div>
-                    <input type="file" name="preview_image" id="preview-input" accept="image/jpeg,image/png,image/webp" class="hidden">
+                    <input type="file" name="preview_image" id="preview-input" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" class="hidden">
                     @error('preview_image')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -293,20 +295,29 @@ function disableSubmit(msg) {
     txt.textContent = msg || 'Upload a file to continue';
 }
 
-// ─── Image upload to Cloudinary (via server) ─────────────────────────────────
-function uploadImage(inputEl, type) {
+// ─── Image / video upload to Cloudinary (via server) ─────────────────────────
+function uploadMedia(inputEl, type) {
     const file = inputEl.files[0];
     if (!file) return;
 
     const isThumb = type === 'thumbnail';
     const prefix  = isThumb ? 'thumbnail' : 'preview';
+    const isVideo = file.type.startsWith('video/');
 
     // Show local preview immediately
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById(prefix + '-preview-img').src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    const imgEl = document.getElementById(prefix + '-preview-img');
+    const vidEl = document.getElementById(prefix + '-preview-vid');
+    if (isVideo) {
+        vidEl.src = URL.createObjectURL(file);
+        vidEl.classList.remove('hidden');
+        imgEl.classList.add('hidden');
+    } else {
+        const reader = new FileReader();
+        reader.onload = e => { imgEl.src = e.target.result; };
+        reader.readAsDataURL(file);
+        imgEl.classList.remove('hidden');
+        vidEl.classList.add('hidden');
+    }
 
     // Show uploading state
     document.getElementById(prefix + '-placeholder').classList.add('hidden');
@@ -319,13 +330,12 @@ function uploadImage(inputEl, type) {
 
     const xhr  = new XMLHttpRequest();
     const data = new FormData();
-    data.append('image', file);
+    data.append(isVideo ? 'video' : 'image', file);
     data.append('type', type);
     data.append('_token', csrfToken());
 
     xhr.upload.addEventListener('progress', e => {
         if (!e.lengthComputable) return;
-        // Browser → server is 0-80%; leave 80-100% for Cloudinary processing
         const p = Math.round((e.loaded / e.total) * 80);
         bar.style.width = p + '%';
         pct.textContent = p + '%';
@@ -334,46 +344,42 @@ function uploadImage(inputEl, type) {
     xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
             const res = JSON.parse(xhr.responseText);
-            // Finish progress bar
             bar.style.width = '100%';
             pct.textContent = '100%';
             label.textContent = 'Uploaded ✓';
 
-            // Store URL in hidden field
             const hiddenKey = isThumb ? 'cloudinary_thumbnail_url' : 'cloudinary_preview_url';
             document.getElementById(hiddenKey).value = res.url;
-
-            // Clear the file input so it won't be re-sent on form submit
             inputEl.value = '';
 
-            // Show the preview image
             setTimeout(() => {
                 document.getElementById(prefix + '-uploading').classList.add('hidden');
                 document.getElementById(prefix + '-preview').classList.remove('hidden');
             }, 600);
         } else {
-            uploadImageError(prefix, inputEl);
+            uploadMediaError(prefix, inputEl);
         }
     });
 
-    xhr.addEventListener('error', () => uploadImageError(prefix, inputEl));
+    xhr.addEventListener('error', () => uploadMediaError(prefix, inputEl));
 
-    xhr.open('POST', '{{ route('admin.uploads.image') }}');
+    const endpoint = isVideo ? '{{ route('admin.uploads.video') }}' : '{{ route('admin.uploads.image') }}';
+    xhr.open('POST', endpoint);
     xhr.send(data);
 }
 
-function uploadImageError(prefix, inputEl) {
+function uploadMediaError(prefix, inputEl) {
     inputEl.value = '';
     document.getElementById(prefix + '-uploading').classList.add('hidden');
     document.getElementById(prefix + '-placeholder').classList.remove('hidden');
-    alert('Image upload failed. Please try again.');
+    alert('Upload failed. Please try again.');
 }
 
 document.getElementById('thumbnail-input').addEventListener('change', function () {
-    uploadImage(this, 'thumbnail');
+    uploadMedia(this, 'thumbnail');
 });
 document.getElementById('preview-input').addEventListener('change', function () {
-    uploadImage(this, 'preview');
+    uploadMedia(this, 'preview');
 });
 
 // ─── Product file upload ──────────────────────────────────────────────────────

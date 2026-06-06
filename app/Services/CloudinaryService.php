@@ -36,6 +36,16 @@ class CloudinaryService
         return (string) $result['secure_url'];
     }
 
+    public function uploadVideo(string $filePath, string $folder): string
+    {
+        $result = $this->cloudinary->uploadApi()->upload($filePath, [
+            'folder' => $folder,
+            'resource_type' => 'video',
+        ]);
+
+        return (string) $result['secure_url'];
+    }
+
     public function deleteImage(string $publicId): void
     {
         $this->cloudinary->uploadApi()->destroy($publicId);
