@@ -116,8 +116,7 @@ class DownloadSecurityManager
 
         // ── Layer 7: Check download limits ──
         if (! $orderItem->isDownloadable()) {
-            $maxMsg = $orderItem->order->user_id ? '2' : '1';
-            throw new HttpException(403, "Download limit reached. You have used all {$maxMsg} allowed download(s) for this item.");
+            throw new HttpException(403, 'Download limit reached. You have used all 4 allowed downloads for this item.');
         }
 
         // ── Layer 8: Check download token expiration ──

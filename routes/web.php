@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SlideshowController;
+use App\Http\Controllers\Admin\TermsController as AdminTermsController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WebhookController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile2faController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TermsController;
 use App\Http\Controllers\User2faLoginController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\VerificationController;
@@ -64,6 +66,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/2fa/verify', [Admin2faController::class, 'verify'])->name('admin.2fa.verify')->middleware('throttle:5,1');
     Route::post('/admin/2fa/cancel', [Admin2faController::class, 'cancel'])->name('admin.2fa.cancel');
 });
+
+// Public static pages
+Route::get('/terms', [TermsController::class, 'show'])->name('terms.show');
 
 // Product routes
 Route::middleware(RedirectAdminToPanel::class)->group(function () {
@@ -178,6 +183,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/advertisements', AdminAdvertisements::class)->name('advertisements');
     Route::get('/popups', AdminPopups::class)->name('popups');
     Route::get('/affiliates', AdminAffiliates::class)->name('affiliates');
+
+    // Terms of Service
+    Route::get('/terms', [AdminTermsController::class, 'edit'])->name('terms.edit');
+    Route::put('/terms', [AdminTermsController::class, 'update'])->name('terms.update');
 
     // Webhooks
     Route::get('/webhooks', [WebhookController::class, 'index'])->name('webhooks.index');

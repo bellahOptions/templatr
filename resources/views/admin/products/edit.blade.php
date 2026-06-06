@@ -69,7 +69,8 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea name="description" rows="5" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">{{ old('description', $product->description) }}</textarea>
+                <div id="description-editor" class="rounded-xl border border-gray-300" style="min-height:180px"></div>
+                <textarea name="description" id="description-textarea" class="hidden" required>{{ old('description', $product->description) }}</textarea>
                 @error('description')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -564,6 +565,7 @@ function fileUploadError(inputEl) {
             document.getElementById('file-required-hint').classList.remove('hidden');
             return;
         }
+        document.getElementById('description-textarea').value = window._descQuill ? window._descQuill.root.innerHTML : '';
         overlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         setPct(5);
@@ -572,3 +574,36 @@ function fileUploadError(inputEl) {
 })();
 </script>
 @endsection
+
+@push('styles')
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+    #description-editor .ql-editor { min-height: 160px; font-size: 14px; font-family: inherit; }
+    #description-editor .ql-toolbar.ql-snow { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: #f9fafb; }
+    #description-editor .ql-container.ql-snow { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
+    #description-editor { border-radius: 0.75rem; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+(function () {
+    var q = new Quill('#description-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['link', 'clean']
+            ]
+        },
+        placeholder: 'Describe your product…'
+    });
+    var existing = document.getElementById('description-textarea').value;
+    if (existing) { q.root.innerHTML = existing; }
+    window._descQuill = q;
+})();
+</script>
+@endpush
