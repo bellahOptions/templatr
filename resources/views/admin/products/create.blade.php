@@ -43,12 +43,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                    <input type="number" step="0.01" name="price" value="{{ old('price') }}" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                    <input type="number" step="1" name="price" value="{{ old('price') }}" required class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                     @error('price')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Sale Price ($) (optional)</label>
-                    <input type="number" step="0.01" name="sale_price" value="{{ old('sale_price') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                    <input type="number" step="1" name="sale_price" value="{{ old('sale_price') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                     @error('sale_price')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
@@ -136,6 +136,62 @@
                 @error('file_path')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
+            {{-- Puter Cloud Upload --}}
+            <div x-data="puterUpload()" class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-xs text-gray-400 font-medium whitespace-nowrap">or upload directly to Puter Cloud</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+                <div class="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
+                     :class="uploaded ? 'border-green-400 bg-green-50' : uploading ? 'border-[#FFC300] bg-yellow-50' : 'border-gray-300 hover:border-[#FFC300]'">
+                    <template x-if="!uploaded && !uploading">
+                        <div>
+                            <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                            </svg>
+                            <p class="text-sm text-gray-600 mb-1">Upload to Puter Cloud</p>
+                            <p class="text-xs text-gray-400 mb-3">Files are stored securely. Downloads are proxied through the server.</p>
+                            <button type="button" @click="upload()"
+                                class="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
+                                Select &amp; Upload to Puter
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="uploading">
+                        <div class="flex flex-col items-center gap-3">
+                            <svg class="w-8 h-8 text-[#FFC300] animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/>
+                            </svg>
+                            <p class="text-sm text-gray-600">Uploading to Puter cloud…</p>
+                        </div>
+                    </template>
+                    <template x-if="uploaded">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-8 h-8 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div class="text-left">
+                                    <p class="text-sm font-semibold text-gray-800" x-text="fileName"></p>
+                                    <p class="text-xs text-gray-500" x-text="formatSize(fileSize)"></p>
+                                    <p class="text-xs text-green-600 font-medium">Uploaded to Puter cloud</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="clear()" class="text-red-500 hover:text-red-700 p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+                <input type="hidden" name="puter_file_url" x-model="fileUrl">
+                <input type="hidden" name="puter_file_size" x-model="fileSize">
+                @error('puter_file_url')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
                 <input type="text" name="tags" value="{{ old('tags') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]" placeholder="wordpress, theme, business">
@@ -176,7 +232,89 @@
     </div>
 </div>
 
+<script src="https://js.puter.com/v2/"></script>
 <script>
+function puterUpload() {
+    return {
+        uploading: false,
+        uploaded: false,
+        fileName: '',
+        fileSize: 0,
+        fileUrl: '',
+
+        async upload() {
+            // Create a hidden local file input to pick the file
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.zip,.rar,.tar,.gz,.psd,.ai,.svg,.mp3,.wav,.mp4,.ttf,.otf';
+
+            const file = await new Promise((resolve) => {
+                input.onchange = () => resolve(input.files[0] ?? null);
+                input.click();
+            });
+
+            if (!file) return;
+
+            this.uploading = true;
+            this.fileName = file.name;
+            this.fileSize = file.size;
+
+            try {
+                // Sign in to Puter (shows OAuth popup if needed)
+                await puter.auth.signIn();
+
+                // Ensure destination directory exists
+                try { await puter.fs.mkdir('/templatr-products'); } catch (_) { /* already exists */ }
+
+                // Write file to Puter cloud using fs.write() — the correct API for local File objects
+                const safeName = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+                const destPath = '/templatr-products/' + safeName;
+                const uploaded = await puter.fs.write(destPath, file, { overwrite: false });
+
+                // Obtain a public share URL so the server can proxy-stream it at download time
+                let shareUrl = '';
+                try {
+                    const shared = await puter.fs.share([destPath]);
+                    const item = Array.isArray(shared) ? shared[0] : shared;
+                    shareUrl = item?.url ?? item?.share_url ?? '';
+                } catch (_) { /* share API unavailable in this Puter version */ }
+
+                // Fallback: construct from uid (works as a direct file link)
+                if (!shareUrl && uploaded?.uid) {
+                    shareUrl = 'https://puter.com/df/' + uploaded.uid;
+                }
+
+                if (!shareUrl) {
+                    throw new Error('File uploaded but could not obtain a shareable URL. Try again or contact support.');
+                }
+
+                this.fileUrl = shareUrl;
+                this.uploaded = true;
+            } catch (err) {
+                console.error('Puter upload error:', err);
+                const msg = err?.message || (typeof err === 'string' ? err : '') || 'Upload failed. Check console for details.';
+                alert('Puter upload failed: ' + msg);
+            } finally {
+                this.uploading = false;
+            }
+        },
+
+        clear() {
+            this.uploaded = false;
+            this.fileUrl = '';
+            this.fileName = '';
+            this.fileSize = 0;
+        },
+
+        formatSize(bytes) {
+            if (!bytes) return '';
+            const units = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
+        },
+    };
+}
+
 function previewImage(input, previewId, placeholderId, imgId) {
     const preview = document.getElementById(previewId);
     const placeholder = document.getElementById(placeholderId);

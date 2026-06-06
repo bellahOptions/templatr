@@ -5,11 +5,14 @@ namespace App\Helpers;
 class CurrencyHelper
 {
     const SYMBOL = '₦';
+
     const CODE = 'NGN';
-    
+
     // Default prices based on product type
     const WORDPRESS_THEME_PRICE = 3000;
+
     const PLUGIN_PRICE = 3000;
+
     const DESIGN_PACK_PRICE = 5000;
 
     /**
@@ -18,9 +21,10 @@ class CurrencyHelper
     public static function format($amount)
     {
         if ($amount === 0 || $amount === null) {
-            return self::SYMBOL . '0';
+            return self::SYMBOL.'0';
         }
-        return self::SYMBOL . number_format($amount, 2, '.', ',');
+
+        return self::SYMBOL.number_format((int) $amount, 0, '.', ',');
     }
 
     /**
@@ -29,9 +33,10 @@ class CurrencyHelper
     public static function formatInt($amount)
     {
         if ($amount === 0 || $amount === null) {
-            return self::SYMBOL . '0';
+            return self::SYMBOL.'0';
         }
-        return self::SYMBOL . number_format($amount, 0, '.', ',');
+
+        return self::SYMBOL.number_format($amount, 0, '.', ',');
     }
 
     /**
@@ -48,7 +53,7 @@ class CurrencyHelper
         }
 
         // WordPress themes
-        if (strpos($type, 'template') !== false && 
+        if (strpos($type, 'template') !== false &&
             (strpos($category, 'wordpress') !== false || strpos($category, 'theme') !== false)) {
             return self::WORDPRESS_THEME_PRICE;
         }

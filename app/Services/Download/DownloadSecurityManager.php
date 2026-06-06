@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Services\Payment\PaymentManager;
+use App\Services\PuterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +50,19 @@ class DownloadSecurityManager
         }
 
         // ── Layer 3: Check file exists ──
-        if (! $product->file_path || ! Storage::disk('public')->exists($product->file_path)) {
+        if (! $product->file_path) {
+            Log::error("Download failed: No file set for product #{$product->id}");
+            throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
+        }
+
+        $puter = app(PuterService::class);
+
+        if ($puter->isPuterFile($product->file_path)) {
+            if (! $puter->fileAccessible($product->file_path)) {
+                Log::error("Download failed: Puter file unreachable for product #{$product->id} - {$product->file_path}");
+                throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
+            }
+        } elseif (! Storage::disk('public')->exists($product->file_path)) {
             Log::error("Download failed: File not found for product #{$product->id} - {$product->file_path}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
@@ -86,7 +99,7 @@ class DownloadSecurityManager
             // Log the failed attempt
             Log::warning("Unauthorized download attempt for product #{$product->id} by ".($user ? "user #{$user->id}" : "guest IP {$ip}"));
 
-            if ($user && $user->isAdmin()) {
+            if ($user?->isAdmin()) {
                 // Admins bypass purchase check
                 $authorization->isAuthorized = true;
                 $authorization->orderItem = null;
@@ -114,7 +127,6 @@ class DownloadSecurityManager
 
         // ── Layer 7: Check download limits ──
         if (! $orderItem->isDownloadable()) {
-            $remaining = $orderItem->remaining_downloads;
             $maxMsg = $orderItem->order->user_id ? '2' : '1';
             throw new HttpException(403, "Download limit reached. You have used all {$maxMsg} allowed download(s) for this item.");
         }

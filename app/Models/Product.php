@@ -27,8 +27,8 @@ class Product extends Model
         'layouts' => 'array',
         'is_featured' => 'boolean',
         'is_published' => 'boolean',
-        'price' => 'decimal:2',
-        'sale_price' => 'decimal:2',
+        'price' => 'integer',
+        'sale_price' => 'integer',
     ];
 
     public function category(): BelongsTo

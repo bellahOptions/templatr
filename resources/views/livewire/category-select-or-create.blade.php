@@ -5,7 +5,7 @@
     @if(!$showForm)
         <div class="flex items-center space-x-2">
             <select
-                wire:model="categoryId"
+                wire:model.live="categoryId"
                 class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]"
             >
                 <option value="">— Select a category —</option>
