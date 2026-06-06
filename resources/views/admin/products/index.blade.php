@@ -56,8 +56,8 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->category->name }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->author->name }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->category?->name ?? '—' }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->author?->name ?? '—' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($product->sale_price)
                             <span class="text-sm line-through text-gray-400">{{ CurrencyHelper::format($product->price) }}</span>
