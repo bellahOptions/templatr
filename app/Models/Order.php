@@ -14,6 +14,11 @@ class Order extends Model
         'guest_name', 'guest_email', 'guest_phone',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'order_number';
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

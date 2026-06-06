@@ -234,10 +234,8 @@ class CheckoutController extends Controller
             session()->forget('cart');
             session()->forget('guest_data');
 
-            // Store last order number for guest access to confirmation
-            if (! Auth::check()) {
-                session()->put('last_order_number', $order->order_number);
-            }
+            // Store order number in session for confirmation access (auth + guest)
+            session()->put('last_order_number', $order->order_number);
 
             // Send order receipt email via queue
             try {
@@ -296,21 +294,21 @@ class CheckoutController extends Controller
 
     public function confirmation(Order $order)
     {
-        // Allow both the authenticated user and guest (via session order_number check) to view
-        if (Auth::check()) {
-            if ($order->user_id !== Auth::id()) {
-                abort(403);
-            }
-        } else {
-            // For guests, ensure they can only see their own order via session
-            $lastOrderNumber = session('last_order_number');
-            if (! $lastOrderNumber || $lastOrderNumber !== $order->order_number) {
-                abort(403);
-            }
+        // Primary check: session token set at order creation (works for auth + guest)
+        $sessionToken = session('last_order_number');
+        if ($sessionToken === $order->order_number) {
+            $order->load('items.product', 'items.product.author');
+
+            return view('checkout.confirmation', compact('order'));
         }
 
-        $order->load('items.product', 'items.product.author');
+        // Fallback for authenticated users viewing their own past orders
+        if (Auth::check() && (int) $order->user_id === Auth::id()) {
+            $order->load('items.product', 'items.product.author');
 
-        return view('checkout.confirmation', compact('order'));
+            return view('checkout.confirmation', compact('order'));
+        }
+
+        abort(403);
     }
 }
