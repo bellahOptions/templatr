@@ -199,6 +199,12 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Features</label>
+                <textarea name="features" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]" placeholder="Enter one feature per line:&#10;Fully responsive design&#10;RTL language support&#10;One-click installation&#10;Lifetime updates">{{ old('features', $product->features ? implode("\n", $product->features) : '') }}</textarea>
+                <p class="text-xs text-gray-400 mt-1">One feature per line. Displayed as a bullet list on the product page.</p>
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Demo URL</label>
                 <input type="url" name="demo_url" value="{{ old('demo_url', $product->demo_url) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
             </div>

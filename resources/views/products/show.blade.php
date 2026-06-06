@@ -11,7 +11,7 @@
         <div class="flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide">
             <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#FFC300] whitespace-nowrap">Home</a>
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" class="text-gray-500 hover:text-[#FFC300] whitespace-nowrap">{{ $product->category->name }}</a>
+            <a href="{{ route('products.index', $product->category ? ['category' => $product->category->slug] : []) }}" class="text-gray-500 hover:text-[#FFC300] whitespace-nowrap">{{ $product->category?->name ?? 'Uncategorized' }}</a>
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-gray-900 font-medium truncate">{{ $product->title }}</span>
         </div>
@@ -75,6 +75,21 @@
                         <p>{{ $product->description }}</p>
                     </div>
                 </div>
+
+                <!-- Features -->
+                @if($product->features && count($product->features) > 0)
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Features</h2>
+                    <ul class="space-y-2.5">
+                        @foreach($product->features as $feature)
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-[#FFC300] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-gray-700 text-sm leading-relaxed">{{ $feature }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
 
                 <!-- Details -->
                 <div class="grid grid-cols-2 gap-4 md:gap-6 mb-8 p-6 bg-gray-50 rounded-2xl">

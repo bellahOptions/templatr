@@ -43,8 +43,7 @@ class CloudinaryService
         UploadedFile $file,
         string $folder = 'products',
         ?int $width = null,
-        ?int $height = null,
-        string $format = 'auto'
+        ?int $height = null
     ): ?string {
         if (! $this->isAvailable()) {
             Log::warning('CloudinaryService: Cannot upload image - not configured.');
@@ -56,8 +55,7 @@ class CloudinaryService
             $options = [
                 'folder' => "templatr/{$folder}",
                 'resource_type' => 'image',
-                'format' => $format,
-                'quality' => 'auto:best',
+                'quality' => 'auto',
             ];
 
             if ($width && $height) {

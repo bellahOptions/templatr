@@ -553,6 +553,91 @@
         @endif
     @endauth
 
+    {{-- Session Timeout Modal --}}
+    <div
+        x-data="{
+            show: false,
+            warning: false,
+            countdown: 30,
+            countdownInterval: null,
+            loginUrl: '{{ route("login") }}',
+            open() {
+                if (this.show) return;
+                this.show = true;
+                this.warning = false;
+                this.countdown = 30;
+                this.countdownInterval = setInterval(() => {
+                    this.countdown--;
+                    if (this.countdown <= 0) {
+                        clearInterval(this.countdownInterval);
+                        window.location.href = this.loginUrl;
+                    }
+                }, 1000);
+            },
+            openWarning() {
+                if (this.show || this.warning) return;
+                this.warning = true;
+            },
+            dismiss() {
+                this.warning = false;
+                this.show = false;
+                clearInterval(this.countdownInterval);
+            },
+            relogin() {
+                window.location.href = this.loginUrl;
+            }
+        }"
+        x-on:session-expired.window="open()"
+        x-on:session-warning.window="openWarning()"
+        x-cloak
+    >
+        {{-- Warning toast (session expiring soon) --}}
+        <div
+            x-show="warning && !show"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-3"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl bg-yellow-500 text-black text-sm font-semibold"
+            style="min-width:300px;"
+        >
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="flex-1">Your session will expire soon.</span>
+            <button @click="dismiss()" class="text-black/60 hover:text-black transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        {{-- Session expired modal --}}
+        <div
+            x-show="show"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            class="fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+        >
+            <div
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center"
+            >
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Session Expired</h3>
+                <p class="text-gray-500 text-sm mb-6">Your session has expired due to inactivity. You'll be redirected to the login page in <span class="font-bold text-gray-900" x-text="countdown"></span> seconds.</p>
+                <div class="flex gap-3">
+                    <button @click="window.location.reload()" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors">
+                        Reload Page
+                    </button>
+                    <button @click="relogin()" class="flex-1 px-4 py-3 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">
+                        Log In Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @stack('fab')
     @stack('scripts')
     @livewireScripts
@@ -580,6 +665,64 @@
 
             document.addEventListener('DOMContentLoaded', revealElements);
             document.addEventListener('livewire:navigated', revealElements);
+        })();
+
+        // Session timeout detection
+        (() => {
+            const lifetimeMs = {{ config('session.lifetime') }} * 60 * 1000;
+            const warningMs = Math.max(lifetimeMs - 2 * 60 * 1000, 0);
+            let warningTimer, expiredTimer, lastActivity = Date.now();
+
+            function resetTimers() {
+                clearTimeout(warningTimer);
+                clearTimeout(expiredTimer);
+                lastActivity = Date.now();
+
+                if (warningMs > 0) {
+                    warningTimer = setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('session-warning'));
+                    }, warningMs);
+                }
+
+                expiredTimer = setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('session-expired'));
+                }, lifetimeMs);
+            }
+
+            // Reset on user activity (throttled to once per minute)
+            let throttle = false;
+            ['click', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+                document.addEventListener(evt, () => {
+                    if (!throttle) {
+                        throttle = true;
+                        resetTimers();
+                        setTimeout(() => { throttle = false; }, 60000);
+                    }
+                }, { passive: true });
+            });
+
+            // Intercept fetch to catch 419 (CSRF/session mismatch) responses
+            const originalFetch = window.fetch;
+            window.fetch = async function(...args) {
+                const response = await originalFetch.apply(this, args);
+                if (response.status === 419) {
+                    window.dispatchEvent(new CustomEvent('session-expired'));
+                }
+                return response;
+            };
+
+            // Intercept XMLHttpRequest for older libraries
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(...args) {
+                this.addEventListener('load', function() {
+                    if (this.status === 419) {
+                        window.dispatchEvent(new CustomEvent('session-expired'));
+                    }
+                });
+                return originalOpen.apply(this, args);
+            };
+
+            resetTimers();
         })();
     </script>
 </body>

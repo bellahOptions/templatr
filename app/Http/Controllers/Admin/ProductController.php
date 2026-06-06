@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
+use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class ProductController extends Controller
 {
@@ -60,13 +60,17 @@ class ProductController extends Controller
             'demo_url' => 'nullable|url',
             'version' => 'nullable|string|max:50',
             'requirements' => 'nullable|string',
+            'features' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'preview_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
         ]);
 
-        $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(5);
+        $validated['slug'] = Str::slug($validated['title']).'-'.Str::random(5);
         $validated['tags'] = $request->tags ? json_encode(explode(',', $request->tags)) : null;
+        $validated['features'] = $request->features
+            ? array_values(array_filter(array_map('trim', explode("\n", $request->features))))
+            : null;
 
         // Handle secure thumbnail upload with optimization
         if ($request->hasFile('thumbnail')) {
@@ -82,9 +86,9 @@ class ProductController extends Controller
         if ($request->hasFile('file_path')) {
             $file = $request->file('file_path');
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $sanitizedName = Str::slug($originalName) . '-' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
-            
+
             // Auto-calculate file size if not provided
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = $file->getSize();
@@ -122,6 +126,7 @@ class ProductController extends Controller
             'demo_url' => 'nullable|url',
             'version' => 'nullable|string|max:50',
             'requirements' => 'nullable|string',
+            'features' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'preview_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
@@ -131,6 +136,9 @@ class ProductController extends Controller
         ]);
 
         $validated['tags'] = $request->tags ? json_encode(explode(',', $request->tags)) : null;
+        $validated['features'] = $request->features
+            ? array_values(array_filter(array_map('trim', explode("\n", $request->features))))
+            : null;
 
         // Handle thumbnail removal
         if ($request->boolean('remove_thumbnail') && $product->thumbnail) {
@@ -174,9 +182,9 @@ class ProductController extends Controller
             }
             $file = $request->file('file_path');
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $sanitizedName = Str::slug($originalName) . '-' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
-            
+
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = $file->getSize();
             }
@@ -201,6 +209,7 @@ class ProductController extends Controller
         }
 
         $product->delete();
+
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
 
@@ -210,26 +219,26 @@ class ProductController extends Controller
     private function uploadOptimizedImage($file, string $path, int $width, int $height): string
     {
         // Generate a secure, unique filename
-        $filename = Str::random(20) . '.webp';
+        $filename = Str::random(20).'.webp';
         $storagePath = "{$path}/{$filename}";
 
         try {
             // Use Intervention Image for optimization (if installed)
             if (class_exists('Intervention\Image\ImageManager')) {
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
                 $image = $manager->read($file->getRealPath());
-                
+
                 // Resize maintaining aspect ratio, crop to fit
                 $image->cover($width, $height);
-                
+
                 // Encode as WebP for optimal compression
                 $encoded = $image->toWebp(80);
-                
+
                 Storage::disk('public')->put($storagePath, $encoded);
             } else {
                 // Fallback: store original with sanitized name
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $sanitizedName = Str::slug($originalName) . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $sanitizedName = Str::slug($originalName).'-'.Str::random(8).'.'.$file->getClientOriginalExtension();
                 $storagePath = "{$path}/{$sanitizedName}";
                 $file->storeAs($path, basename($storagePath), 'public');
             }
@@ -238,10 +247,10 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             // Fallback to simple store
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $sanitizedName = Str::slug($originalName) . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $sanitizedName = Str::slug($originalName).'-'.Str::random(8).'.'.$file->getClientOriginalExtension();
             $storagePath = "{$path}/{$sanitizedName}";
             $file->storeAs($path, basename($storagePath), 'public');
-            
+
             return $storagePath;
         }
     }

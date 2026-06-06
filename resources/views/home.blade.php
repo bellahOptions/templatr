@@ -4,37 +4,7 @@
 
 @section('content')
 
-<!-- Hero Section -->
-<section class="relative bg-black text-white overflow-hidden min-h-[80vh] flex items-center">
-    <div class="absolute inset-0 bg-gradient-to-br from-[#FFC300]/10 via-black to-black animate-gradient"></div>
-    <div class="absolute inset-0 opacity-[0.03]" style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFC300' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)"></div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 lg:py-36">
-        <div>
-            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] animate-fade-in-up">
-                Get Premium Creative &
-                <span class="text-[#FFC300]">Web Resources</span>
-                <br>for as Affordable as
-                <span class="text-[#FFC300]">{{ CurrencyHelper::formatInt(3000) }}</span>
-            </h1>
-            <p class="mt-6 text-base sm:text-lg md:text-xl text-gray-400 leading-relaxed max-w-xl animate-fade-in-up stagger-2">
-                Unlock thousands of premium WordPress themes, plugins, design templates, and digital assets crafted by world-class creators. Start building your dream projects today without breaking the bank.
-            </p>
-            <div class="mt-8 flex flex-wrap items-center gap-4 animate-fade-in-up stagger-3">
-                <a href="{{ route('products.index') }}" class="bg-[#FFC300] text-black px-8 py-4 rounded-xl text-base font-bold hover:bg-[#FFD633] transition-all transform hover:scale-105 shadow-lg shadow-[#FFC300]/25 w-full sm:w-auto text-center animate-pulse-glow">
-                    Explore Marketplace
-                </a>
-                <a href="#featured" class="border border-gray-700 text-white px-8 py-4 rounded-xl text-base font-semibold hover:border-[#FFC300] hover:text-[#FFC300] transition-all w-full sm:w-auto text-center">
-                    View Featured Items
-                </a>
-            </div>
-            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 animate-fade-in-up stagger-4">
-                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Instant Download</span>
-                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Lifetime Updates</span>
-                <span class="flex items-center"><svg class="w-4 h-4 text-green-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Secure Payment</span>
-            </div>
-        </div>
-    </div>
-</section>
+<livewire:hero-slideshow />
 
 <!-- Trusted By / Stats Bar -->
 <section class="bg-black border-t border-gray-800/50">
@@ -82,7 +52,7 @@
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         @if($product->thumbnail)
-                            <img src="{{ \App\Helpers\CloudinaryHelper::imageUrl($product->thumbnail, 400) }}"
+                            <img src="{{ Storage::url($product->thumbnail) }}"
                                  alt="{{ $product->title }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy">
@@ -101,7 +71,7 @@
                 </a>
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category->name }}</span>
+                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category?->name ?? 'Uncategorized' }}</span>
                         <div class="flex items-center" x-data>
                             <span class="text-xs text-yellow-400">
                                 @for($i = 1; $i <= 5; $i++)
@@ -121,9 +91,9 @@
                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                         <div class="flex items-center space-x-2">
                             <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                <span class="text-[10px] font-bold">{{ substr($product->author->name, 0, 1) }}</span>
+                                <span class="text-[10px] font-bold">{{ substr($product->author?->name ?? '?', 0, 1) }}</span>
                             </div>
-                            <span class="text-[11px] text-gray-500">{{ $product->author->name }}</span>
+                            <span class="text-[11px] text-gray-500">{{ $product->author?->name ?? 'Unknown' }}</span>
                         </div>
                         <div class="text-right">
                             @if($product->sale_price)
@@ -159,7 +129,7 @@
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                         @if($product->thumbnail)
-                            <img src="{{ \App\Helpers\CloudinaryHelper::imageUrl($product->thumbnail, 400) }}"
+                            <img src="{{ Storage::url($product->thumbnail) }}"
                                  alt="{{ $product->title }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy">
@@ -176,7 +146,7 @@
                 </a>
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category->name }}</span>
+                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category?->name ?? 'Uncategorized' }}</span>
                         <div class="flex items-center">
                             <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                             <span class="text-xs text-gray-500 ml-1">{{ number_format($product->average_rating, 1) }}</span>
@@ -186,7 +156,7 @@
                         <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
                     </a>
                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                        <span class="text-[11px] text-gray-500">by {{ $product->author->name }}</span>
+                        <span class="text-[11px] text-gray-500">by {{ $product->author?->name ?? 'Unknown' }}</span>
                         <div class="text-right">
                             @if($product->sale_price)
                                 <span class="text-[11px] text-gray-400 line-through">{{ CurrencyHelper::format($product->price) }}</span>

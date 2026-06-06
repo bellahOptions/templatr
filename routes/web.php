@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\SlideshowController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WebhookController;
 use App\Http\Controllers\Admin2faController;
@@ -158,6 +159,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
     Route::post('/reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // Slideshows
+    Route::get('/slideshows', [SlideshowController::class, 'index'])->name('slideshows.index');
+    Route::get('/slideshows/create', [SlideshowController::class, 'create'])->name('slideshows.create');
+    Route::post('/slideshows', [SlideshowController::class, 'store'])->name('slideshows.store');
+    Route::get('/slideshows/{slideshow}/edit', [SlideshowController::class, 'edit'])->name('slideshows.edit');
+    Route::put('/slideshows/{slideshow}', [SlideshowController::class, 'update'])->name('slideshows.update');
+    Route::delete('/slideshows/{slideshow}', [SlideshowController::class, 'destroy'])->name('slideshows.destroy');
 
     // Admin Livewire pages
     Route::get('/notifications', AdminNotifications::class)->name('notifications');

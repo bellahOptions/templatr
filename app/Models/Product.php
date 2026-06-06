@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Helpers\CurrencyHelper;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Product extends Model
 {
@@ -15,11 +15,12 @@ class Product extends Model
         'price', 'sale_price', 'thumbnail', 'preview_image', 'file_path',
         'file_type', 'file_size', 'download_count', 'view_count',
         'is_featured', 'is_published', 'tags', 'demo_url', 'version',
-        'requirements', 'compatible_browsers', 'includes', 'columns', 'layouts'
+        'requirements', 'features', 'compatible_browsers', 'includes', 'columns', 'layouts',
     ];
 
     protected $casts = [
         'tags' => 'array',
+        'features' => 'array',
         'compatible_browsers' => 'array',
         'includes' => 'array',
         'columns' => 'array',
@@ -63,35 +64,35 @@ class Product extends Model
     public function currentPrice(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->sale_price ?? $this->price
+            get: fn () => $this->sale_price ?? $this->price
         );
     }
 
     public function formattedPrice(): Attribute
     {
         return Attribute::make(
-            get: fn() => CurrencyHelper::format($this->sale_price ?? $this->price)
+            get: fn () => CurrencyHelper::format($this->sale_price ?? $this->price)
         );
     }
 
     public function formattedOriginalPrice(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->sale_price ? CurrencyHelper::format($this->price) : null
+            get: fn () => $this->sale_price ? CurrencyHelper::format($this->price) : null
         );
     }
 
     public function averageRating(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->reviews()->avg('rating') ?? 0
+            get: fn () => $this->reviews()->avg('rating') ?? 0
         );
     }
 
     public function reviewCount(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->reviews()->count()
+            get: fn () => $this->reviews()->count()
         );
     }
 
