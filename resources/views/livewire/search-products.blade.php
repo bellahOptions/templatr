@@ -23,7 +23,7 @@
                             <span class="text-xs text-gray-500 ml-1">{{ number_format($product->average_rating, 1) }}</span>
                         </div>
                     </div>
-                    <a href="{{ route('products.show', $product)" wire:navigate>
+                    <a href="{{ route('products.show', $product) }}" wire:navigate>
                         <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
                     </a>
                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">

@@ -11,8 +11,8 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     @foreach($products as $product)
-                        <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300 animate-fade-in" wire:key="suggest-{{ $product['id'] }}">
-                            <a href="{{ route('products.show', $product['id']) }}" wire:navigate>
+                        <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300 animate-fade-in" wire:key="suggest-{{ $product['slug'] }}">
+                            <a href="{{ route('products.show', $product['slug']) }}" wire:navigate>
                                 <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                                     @if(!empty($product['thumbnail']))
                                         <img src="{{ Storage::url($product['thumbnail']) }}"
@@ -33,7 +33,7 @@
                             </a>
                             <div class="p-4">
                                 <span class="text-[11px] text-gray-500 font-medium">{{ $product['category']['name'] ?? '' }}</span>
-                                <a href="{{ route('products.show', $product['id']) }}" wire:navigate>
+                                <a href="{{ route('products.show', $product['slug']) }}" wire:navigate>
                                     <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm mt-1">{{ $product['title'] }}</h3>
                                 </a>
                                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">

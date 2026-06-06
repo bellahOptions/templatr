@@ -185,20 +185,20 @@
                             <div
                                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100 overflow-hidden">
                                 <div class="py-2">
+                                    <a href="{{ route('dashboard') }}"
+                                        class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">Dashboard</a>
                                     <a href="{{ route('profile.index') }}"
                                         class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">Profile</a>
                                     <a href="{{ route('orders.index') }}"
-                                        class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">My
-                                        Orders</a>
+                                        class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">My Orders</a>
                                     <a href="{{ route('wishlist.index') }}"
                                         class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">Wishlist</a>
                                     <hr class="my-1 border-gray-100">
-                                    <a href="{{ route('profile.index') }}#referrals"
-                                        class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">
-                                        Referral Program
+                                    <a href="{{ route('affiliate.index') }}"
+                                        class="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">
+                                        <span>Referral Program</span>
                                         @if(auth()->user()->coins > 0)
-                                            <span class="ml-1 text-[#FFC300] font-semibold">{{ auth()->user()->coins }}
-                                                coins</span>
+                                            <span class="text-xs text-[#FFC300] font-semibold">{{ auth()->user()->coins }} coins</span>
                                         @endif
                                     </a>
                                     <hr class="my-1 border-gray-100">
@@ -293,13 +293,15 @@
                 @endforeach
                 @auth
                     <hr class="border-gray-800 my-3">
+                    <a href="{{ route('dashboard') }}"
+                        class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">Dashboard</a>
                     <a href="{{ route('profile.index') }}"
                         class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">Profile</a>
-                    <a href="{{ route('orders.index') }}" class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">My
-                        Orders</a>
+                    <a href="{{ route('orders.index') }}"
+                        class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">My Orders</a>
                     <a href="{{ route('wishlist.index') }}"
                         class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">Wishlist</a>
-                    <a href="{{ route('profile.index') }}#referrals"
+                    <a href="{{ route('affiliate.index') }}"
                         class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">Referral Program</a>
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}"

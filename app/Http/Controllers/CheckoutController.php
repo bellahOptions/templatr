@@ -166,7 +166,7 @@ class CheckoutController extends Controller
                     ];
                 }
 
-                $order = $this->completeOrder($products, $totalAmount, $gateway, $guestData);
+                $order = $this->completeOrder($products, $totalAmount, $gateway, $guestData, $reference);
 
                 if ($order) {
                     session()->forget('pending_payment');
@@ -188,7 +188,7 @@ class CheckoutController extends Controller
         }
     }
 
-    protected function completeOrder($products, float $totalAmount, string $paymentMethod, array $guestData = []): ?Order
+    protected function completeOrder($products, float $totalAmount, string $paymentMethod, array $guestData = [], ?string $paymentReference = null): ?Order
     {
         try {
             $orderData = [
@@ -197,6 +197,7 @@ class CheckoutController extends Controller
                 'total_amount' => $totalAmount,
                 'status' => 'completed',
                 'payment_method' => $paymentMethod,
+                'payment_reference' => $paymentReference,
                 'payment_status' => 'paid',
             ];
 

@@ -64,8 +64,6 @@ class ProductController extends Controller
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'preview_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
-            'puter_file_url' => 'nullable|url',
-            'puter_file_size' => 'nullable|integer|min:0',
         ], [
             'sale_price.lt' => 'The sale price must be less than the regular price.',
         ]);
@@ -75,16 +73,6 @@ class ProductController extends Controller
         $validated['features'] = $request->features
             ? array_values(array_filter(array_map('trim', explode("\n", $request->features))))
             : null;
-
-        // Puter cloud upload takes precedence when no local file is selected
-        if ($request->filled('puter_file_url') && ! $request->hasFile('file_path')) {
-            $validated['file_path'] = $validated['puter_file_url'];
-            if ($request->filled('puter_file_size')) {
-                $validated['file_size'] = (int) $validated['puter_file_size'];
-            }
-        }
-
-        unset($validated['puter_file_url'], $validated['puter_file_size']);
 
         // Handle secure thumbnail upload with optimization
         if ($request->hasFile('thumbnail')) {
@@ -147,8 +135,6 @@ class ProductController extends Controller
             'remove_thumbnail' => 'nullable|boolean',
             'remove_preview' => 'nullable|boolean',
             'remove_file' => 'nullable|boolean',
-            'puter_file_url' => 'nullable|url',
-            'puter_file_size' => 'nullable|integer|min:0',
         ], [
             'sale_price.lt' => 'The sale price must be less than the regular price.',
         ]);
@@ -157,15 +143,6 @@ class ProductController extends Controller
         $validated['features'] = $request->features
             ? array_values(array_filter(array_map('trim', explode("\n", $request->features))))
             : null;
-
-        if ($request->filled('puter_file_url') && ! $request->hasFile('file_path')) {
-            $validated['file_path'] = $validated['puter_file_url'];
-            if ($request->filled('puter_file_size')) {
-                $validated['file_size'] = (int) $validated['puter_file_size'];
-            }
-        }
-
-        unset($validated['puter_file_url'], $validated['puter_file_size']);
 
         // Handle thumbnail removal
         if ($request->boolean('remove_thumbnail') && $product->thumbnail) {

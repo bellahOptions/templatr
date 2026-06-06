@@ -7,7 +7,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
 use App\Services\Download\DownloadSecurityManager;
-use App\Services\PuterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -151,12 +150,7 @@ class ProductController extends Controller
             $authorization = $this->downloadSecurity->authorizeDownload($product);
 
             $filePath = $product->file_path;
-            $puter = app(PuterService::class);
-            $isPuterFile = $puter->isPuterFile($filePath);
-
-            // Derive the download filename from the slug + extension
-            $urlPath = $isPuterFile ? (parse_url($filePath, PHP_URL_PATH) ?? $filePath) : $filePath;
-            $ext = pathinfo($urlPath, PATHINFO_EXTENSION) ?: 'zip';
+            $ext = pathinfo($filePath, PATHINFO_EXTENSION) ?: 'zip';
             $fileName = $product->slug.'.'.$ext;
 
             // Record the download with audit trail
@@ -165,16 +159,6 @@ class ProductController extends Controller
             Log::info("Download authorized: product #{$product->id} by ".
                 (Auth::check() ? 'user #'.Auth::id() : 'guest (token-based)'));
 
-            if ($authorization->isAdminBypass) {
-                return back()->with('success', 'Admin download bypass: File is ready. [Path: '.$filePath.']');
-            }
-
-            if ($isPuterFile) {
-                // Proxy-stream from Puter cloud — the raw URL stays server-side
-                return $puter->streamDownload($filePath, $fileName);
-            }
-
-            // Local storage download
             if (! Storage::disk('public')->exists($filePath)) {
                 Log::error("Download failed: File missing at {$filePath} for product #{$product->id}");
 

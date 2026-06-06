@@ -6,7 +6,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Services\Payment\PaymentManager;
-use App\Services\PuterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -49,26 +48,28 @@ class DownloadSecurityManager
             throw new HttpException(404, 'Product not found.');
         }
 
+        // ── Layer 4: Authentication check ──
+        $user = Auth::user();
+
+        // ── Admin bypass: skip all remaining checks ──
+        if ($user?->isAdmin()) {
+            $authorization->isAuthorized = true;
+            $authorization->orderItem = null;
+            $authorization->isAdminBypass = true;
+
+            return $authorization;
+        }
+
         // ── Layer 3: Check file exists ──
         if (! $product->file_path) {
             Log::error("Download failed: No file set for product #{$product->id}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
 
-        $puter = app(PuterService::class);
-
-        if ($puter->isPuterFile($product->file_path)) {
-            if (! $puter->fileAccessible($product->file_path)) {
-                Log::error("Download failed: Puter file unreachable for product #{$product->id} - {$product->file_path}");
-                throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
-            }
-        } elseif (! Storage::disk('public')->exists($product->file_path)) {
+        if (! Storage::disk('public')->exists($product->file_path)) {
             Log::error("Download failed: File not found for product #{$product->id} - {$product->file_path}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
-
-        // ── Layer 4: Authentication check ──
-        $user = Auth::user();
 
         // ── Layer 5: Find the order item ──
         $orderItem = null;
@@ -96,17 +97,7 @@ class DownloadSecurityManager
         }
 
         if (! $orderItem) {
-            // Log the failed attempt
             Log::warning("Unauthorized download attempt for product #{$product->id} by ".($user ? "user #{$user->id}" : "guest IP {$ip}"));
-
-            if ($user?->isAdmin()) {
-                // Admins bypass purchase check
-                $authorization->isAuthorized = true;
-                $authorization->orderItem = null;
-                $authorization->isAdminBypass = true;
-
-                return $authorization;
-            }
 
             if (! $user) {
                 throw new HttpException(401, 'You must provide a valid download token. Please check your email for the download link.');
@@ -116,12 +107,10 @@ class DownloadSecurityManager
         }
 
         // ── Layer 6: Verify payment with the gateway (double-check) ──
-        if ($orderItem->order->payment_method !== 'direct') {
+        if ($orderItem->order->payment_method !== 'direct' && $orderItem->order->payment_reference) {
             $paymentVerified = $this->verifyPaymentWithGateway($orderItem->order);
             if (! $paymentVerified) {
-                Log::warning("Payment verification failed for order #{$orderItem->order->id} - marking as unpaid.");
-                $orderItem->order->update(['payment_status' => 'unpaid']);
-                throw new HttpException(403, 'Payment could not be verified. Please contact support.');
+                Log::warning("Payment re-verification failed for order #{$orderItem->order->id} (reference: {$orderItem->order->payment_reference}). Allowing download — investigate if fraudulent.");
             }
         }
 
@@ -196,7 +185,7 @@ class DownloadSecurityManager
     {
         try {
             $gateway = $this->paymentManager->gateway($order->payment_method);
-            $verification = $gateway->verifyPayment($order->order_number);
+            $verification = $gateway->verifyPayment($order->payment_reference);
 
             return $verification['success'] ?? false;
         } catch (\Exception $e) {

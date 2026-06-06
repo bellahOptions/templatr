@@ -42,7 +42,7 @@ class AuthController extends Controller
                     ->with('info', 'A verification code has been sent to your email.');
             }
 
-            return redirect()->intended('/');
+            return redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([
