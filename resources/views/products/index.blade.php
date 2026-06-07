@@ -167,9 +167,9 @@
                             <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                        <span class="text-[10px] font-bold">{{ substr($product->author->name, 0, 1) }}</span>
+                                        <span class="text-[10px] font-bold">{{ substr($product->author?->name ?? '?', 0, 1) }}</span>
                                     </div>
-                                    <span class="text-[11px] text-gray-500">{{ $product->author->name }}</span>
+                                    <span class="text-[11px] text-gray-500">{{ $product->author?->name ?? 'Unknown' }}</span>
                                 </div>
                                 <div class="text-right">
                                     @if($product->sale_price)
