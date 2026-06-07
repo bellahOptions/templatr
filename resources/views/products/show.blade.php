@@ -21,22 +21,22 @@
 @push('structured_data')
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "Product",
+    "@@context": "https://schema.org",
+    "@@type": "Product",
     "name": "{{ addslashes($product->title) }}",
     "description": "{{ addslashes($productDescription) }}",
     "image": "{{ $productImage }}",
     "url": "{{ route('products.show', $product) }}",
     "sku": "{{ $product->slug }}",
     "offers": {
-        "@type": "Offer",
+        "@@type": "Offer",
         "price": "{{ $productPrice }}",
         "priceCurrency": "{{ CurrencyHelper::CODE }}",
         "availability": "https://schema.org/InStock",
         "url": "{{ route('products.show', $product) }}"
     }@if($product->reviews_count ?? false),
     "aggregateRating": {
-        "@type": "AggregateRating",
+        "@@type": "AggregateRating",
         "ratingValue": "{{ number_format($product->average_rating ?? 0, 1) }}",
         "reviewCount": "{{ $product->reviews_count }}"
     }@endif

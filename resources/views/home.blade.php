@@ -11,8 +11,8 @@
 @push('structured_data')
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+    "@@context": "https://schema.org",
+    "@@type": "Organization",
     "name": "Templatr",
     "url": "{{ url('/') }}",
     "logo": "{{ asset('templatr.svg') }}",
@@ -21,14 +21,14 @@
 </script>
 <script type="application/ld+json">
 {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@@context": "https://schema.org",
+    "@@type": "WebSite",
     "name": "Templatr",
     "url": "{{ url('/') }}",
     "potentialAction": {
-        "@type": "SearchAction",
+        "@@type": "SearchAction",
         "target": {
-            "@type": "EntryPoint",
+            "@@type": "EntryPoint",
             "urlTemplate": "{{ url('/products') }}?search={search_term_string}"
         },
         "query-input": "required name=search_term_string"
