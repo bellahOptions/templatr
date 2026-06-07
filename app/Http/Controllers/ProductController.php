@@ -165,13 +165,17 @@ class ProductController extends Controller
                 return back()->with('error', 'The file could not be found on the server. Please contact support.');
             }
 
-            return Storage::disk('public')->download($filePath, $fileName, [
-                'Content-Type' => 'application/octet-stream',
-                'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
-                'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma' => 'no-cache',
-            ]);
+            return response()->download(
+                Storage::disk('public')->path($filePath),
+                $fileName,
+                [
+                    'Content-Type' => 'application/octet-stream',
+                    'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                    'Pragma' => 'no-cache',
+                ]
+            );
 
         } catch (HttpException $e) {
             // Handle security exceptions with user-friendly messages

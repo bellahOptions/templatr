@@ -2,6 +2,41 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
+@section('title', 'Templatr - Premium Creative & Web Resources')
+@section('meta_description', 'Download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial license included. Nigeria\'s #1 creative marketplace.')
+@section('og_title', 'Templatr - Premium Creative & Web Resources')
+@section('og_description', 'Download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial license included. Nigeria\'s #1 creative marketplace.')
+@section('canonical', url('/'))
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Templatr",
+    "url": "{{ url('/') }}",
+    "logo": "{{ asset('templatr.svg') }}",
+    "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Templatr",
+    "url": "{{ url('/') }}",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "{{ url('/products') }}?search={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+    }
+}
+</script>
+@endpush
+
 @section('content')
 
 <livewire:hero-slideshow />
@@ -51,18 +86,35 @@
             <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        @if($product->thumbnail)
-                            <img src="{{ $product->thumbnail_url }}"
-                                 alt="{{ $product->title }}"
-                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                 loading="lazy">
-                        @else
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                </svg>
-                            </div>
-                        @endif
+                        @php
+                            $cardMedia = match(true) {
+                                (bool)$product->thumbnail && $product->thumbnail_is_video  => 'thumb-video',
+                                (bool)$product->thumbnail                                  => 'thumb-image',
+                                (bool)$product->preview_image && $product->preview_is_video => 'preview-video',
+                                (bool)$product->preview_image                              => 'preview-image',
+                                default                                                    => 'placeholder',
+                            };
+                        @endphp
+                        @switch($cardMedia)
+                            @case('thumb-video')
+                                <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                @break
+                            @case('thumb-image')
+                                <img src="{{ $product->thumbnail_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                @break
+                            @case('preview-video')
+                                <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                @break
+                            @case('preview-image')
+                                <img src="{{ $product->preview_image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                @break
+                            @default
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                </div>
+                        @endswitch
                         @if($product->sale_price)
                         <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
                         @endif
@@ -128,18 +180,35 @@
             <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
                 <a href="{{ route('products.show', $product) }}">
                     <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        @if($product->thumbnail)
-                            <img src="{{ $product->thumbnail_url }}"
-                                 alt="{{ $product->title }}"
-                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                 loading="lazy">
-                        @else
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                </svg>
-                            </div>
-                        @endif
+                        @php
+                            $cardMedia = match(true) {
+                                (bool)$product->thumbnail && $product->thumbnail_is_video  => 'thumb-video',
+                                (bool)$product->thumbnail                                  => 'thumb-image',
+                                (bool)$product->preview_image && $product->preview_is_video => 'preview-video',
+                                (bool)$product->preview_image                              => 'preview-image',
+                                default                                                    => 'placeholder',
+                            };
+                        @endphp
+                        @switch($cardMedia)
+                            @case('thumb-video')
+                                <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                @break
+                            @case('thumb-image')
+                                <img src="{{ $product->thumbnail_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                @break
+                            @case('preview-video')
+                                <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                @break
+                            @case('preview-image')
+                                <img src="{{ $product->preview_image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                @break
+                            @default
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                </div>
+                        @endswitch
                         <span class="absolute top-3 left-3 bg-[#FFC300] text-black text-xs font-bold px-2.5 py-1 rounded-lg">NEW</span>
                         <span class="absolute bottom-3 left-3 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm font-medium">{{ ucfirst($product->file_type) }}</span>
                     </div>

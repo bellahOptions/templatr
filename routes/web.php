@@ -143,6 +143,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/uploads/image', [UploadController::class, 'image'])->name('uploads.image');
     Route::post('/uploads/video', [UploadController::class, 'video'])->name('uploads.video');
     Route::post('/uploads/file', [UploadController::class, 'file'])->name('uploads.file');
+    Route::post('/uploads/chunk', [UploadController::class, 'chunk'])->name('uploads.chunk');
 
     // Products
     Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');

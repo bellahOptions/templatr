@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UploadController extends Controller
@@ -74,6 +75,81 @@ class UploadController extends Controller
             'temp_id' => $tempId,
             'name' => $file->getClientOriginalName(),
             'size' => $file->getSize(),
+        ]);
+    }
+
+    public function chunk(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file',
+            'upload_id' => ['required', 'string', 'regex:/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i'],
+            'chunk_index' => 'required|integer|min:0|max:999',
+            'total_chunks' => 'required|integer|min:1|max:500',
+            'filename' => 'required|string|max:255',
+        ]);
+
+        $uploadId = $request->input('upload_id');
+        $chunkIndex = (int) $request->input('chunk_index');
+        $totalChunks = (int) $request->input('total_chunks');
+        $filename = basename($request->input('filename'));
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        $allowedExts = ['zip', 'rar', 'tar', 'gz', 'psd', 'ai', 'svg', 'mp3', 'wav', 'mp4', 'ttf', 'otf'];
+        if (! in_array($ext, $allowedExts)) {
+            return response()->json(['error' => 'File type not allowed.'], 422);
+        }
+
+        $chunkDir = 'products/chunks/'.$uploadId;
+        Storage::disk('local')->makeDirectory($chunkDir);
+        $request->file('file')->storeAs($chunkDir, 'chunk_'.$chunkIndex, 'local');
+
+        if ($chunkIndex < $totalChunks - 1) {
+            return response()->json([
+                'done' => false,
+                'progress' => (int) round(($chunkIndex + 1) / $totalChunks * 100),
+            ]);
+        }
+
+        // All chunks received — assemble into final temp file
+        $tempId = Str::uuid()->toString();
+        $finalPath = 'products/temp/'.$tempId.'.'.$ext;
+
+        Storage::disk('public')->makeDirectory('products/temp');
+        $absPath = Storage::disk('public')->path($finalPath);
+
+        $output = fopen($absPath, 'wb');
+        for ($i = 0; $i < $totalChunks; $i++) {
+            $chunkPath = Storage::disk('local')->path($chunkDir.'/chunk_'.$i);
+            if (! file_exists($chunkPath)) {
+                fclose($output);
+                Storage::disk('local')->deleteDirectory($chunkDir);
+                @unlink($absPath);
+
+                return response()->json(['error' => 'Upload incomplete, please retry.'], 422);
+            }
+            $chunk = fopen($chunkPath, 'rb');
+            stream_copy_to_stream($chunk, $output);
+            fclose($chunk);
+        }
+        fclose($output);
+
+        Storage::disk('local')->deleteDirectory($chunkDir);
+
+        $fileSize = filesize($absPath);
+
+        session([
+            'upload_temp_'.$tempId => [
+                'path' => $finalPath,
+                'original_name' => $filename,
+                'size' => $fileSize,
+            ],
+        ]);
+
+        return response()->json([
+            'done' => true,
+            'temp_id' => $tempId,
+            'name' => $filename,
+            'size' => $fileSize,
         ]);
     }
 }

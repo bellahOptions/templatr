@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Templatr - Premium Creative & Web Resources')</title>
+    <meta name="description" content="@yield('meta_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta name="robots" content="@yield('robots', 'index, follow')">
+    <meta property="og:site_name" content="Templatr">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="@yield('og_title', 'Templatr - Premium Creative & Web Resources')">
+    <meta property="og:description" content="@yield('og_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('og-image.jpg'))">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('og_title', 'Templatr - Premium Creative & Web Resources')">
+    <meta name="twitter:description" content="@yield('og_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('og-image.jpg'))">
+    @stack('structured_data')
     <link rel="icon" href="{{ asset('favicon.ico')}}" />
     <link rel="apple-touch-icon" sizes="57x57" href="{{ asset('/apple-icon-57x57.png')}}">
     <link rel="apple-touch-icon" sizes="60x60" href="{{  asset('/apple-icon-60x60.png') }}">

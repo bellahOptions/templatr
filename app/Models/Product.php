@@ -92,6 +92,36 @@ class Product extends Model
         );
     }
 
+    public function thumbnailIsVideo(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->thumbnail_url) {
+                    return false;
+                }
+
+                $ext = strtolower(pathinfo(parse_url($this->thumbnail_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+                return in_array($ext, ['mp4', 'webm', 'mov', 'ogv']);
+            }
+        );
+    }
+
+    public function previewIsVideo(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->preview_image_url) {
+                    return false;
+                }
+
+                $ext = strtolower(pathinfo(parse_url($this->preview_image_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+                return in_array($ext, ['mp4', 'webm', 'mov', 'ogv']);
+            }
+        );
+    }
+
     public function currentPrice(): Attribute
     {
         return Attribute::make(

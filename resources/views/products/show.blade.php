@@ -1,8 +1,48 @@
 @extends('layouts.app')
 
-@php use App\Helpers\CurrencyHelper; @endphp
+@php
+    use App\Helpers\CurrencyHelper;
+    $productImage = $product->thumbnail
+        ? (str_starts_with($product->thumbnail, 'http') ? $product->thumbnail : asset('storage/' . $product->thumbnail))
+        : asset('og-image.jpg');
+    $productDescription = substr(strip_tags($product->description ?? ''), 0, 155);
+    $productPrice = $product->sale_price ?? $product->price;
+@endphp
 
 @section('title', $product->title . ' - Templatr')
+@section('meta_description', $productDescription)
+@section('og_type', 'product')
+@section('og_title', $product->title . ' - Templatr')
+@section('og_description', $productDescription)
+@section('og_image', $productImage)
+@section('og_url', route('products.show', $product))
+@section('canonical', route('products.show', $product))
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ addslashes($product->title) }}",
+    "description": "{{ addslashes($productDescription) }}",
+    "image": "{{ $productImage }}",
+    "url": "{{ route('products.show', $product) }}",
+    "sku": "{{ $product->slug }}",
+    "offers": {
+        "@type": "Offer",
+        "price": "{{ $productPrice }}",
+        "priceCurrency": "{{ CurrencyHelper::CODE }}",
+        "availability": "https://schema.org/InStock",
+        "url": "{{ route('products.show', $product) }}"
+    }@if($product->reviews_count ?? false),
+    "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{ number_format($product->average_rating ?? 0, 1) }}",
+        "reviewCount": "{{ $product->reviews_count }}"
+    }@endif
+}
+</script>
+@endpush
 
 @section('content')
 <!-- Breadcrumb -->
