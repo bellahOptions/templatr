@@ -30,6 +30,7 @@ class Product extends Model
         'is_published' => 'boolean',
         'price' => 'integer',
         'sale_price' => 'integer',
+        'file_size' => 'float',
     ];
 
     public function category(): BelongsTo

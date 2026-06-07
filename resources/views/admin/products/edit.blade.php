@@ -62,8 +62,8 @@
                     <input type="text" name="version" value="{{ old('version', $product->version) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">File Size (bytes)</label>
-                    <input type="number" name="file_size" value="{{ old('file_size', $product->file_size) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File Size (MB)</label>
+                    <input type="number" name="file_size" value="{{ old('file_size', $product->file_size) }}" step="0.01" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                 </div>
             </div>
 
@@ -194,7 +194,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-700">{{ basename($product->file_path) }}</p>
                             @if($product->file_size)
-                            <p class="text-xs text-gray-500">{{ number_format($product->file_size / 1024, 1) }} KB</p>
+                            <p class="text-xs text-gray-500">{{ number_format($product->file_size, 2) }} MB</p>
                             @endif
                         </div>
                     </div>

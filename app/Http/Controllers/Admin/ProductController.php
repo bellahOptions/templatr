@@ -53,7 +53,7 @@ class ProductController extends Controller
             'price' => 'required|integer|min:1',
             'sale_price' => 'nullable|integer|min:1|lt:price',
             'file_type' => 'required|string',
-            'file_size' => 'nullable|integer',
+            'file_size' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
             'tags' => 'nullable|string',
@@ -98,7 +98,7 @@ class ProductController extends Controller
                 Storage::disk('public')->move($tempData['path'], $finalPath);
                 $validated['file_path'] = $finalPath;
                 if (empty($validated['file_size'])) {
-                    $validated['file_size'] = $tempData['size'];
+                    $validated['file_size'] = round($tempData['size'] / 1048576, 2);
                 }
                 session()->forget('upload_temp_'.$request->file_temp_id);
             }
@@ -108,7 +108,7 @@ class ProductController extends Controller
             $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
             if (empty($validated['file_size'])) {
-                $validated['file_size'] = $file->getSize();
+                $validated['file_size'] = round($file->getSize() / 1048576, 2);
             }
         }
 
@@ -136,7 +136,7 @@ class ProductController extends Controller
             'price' => 'required|integer|min:1',
             'sale_price' => 'nullable|integer|min:1|lt:price',
             'file_type' => 'required|string',
-            'file_size' => 'nullable|integer',
+            'file_size' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
             'tags' => 'nullable|string',
@@ -216,7 +216,7 @@ class ProductController extends Controller
                 Storage::disk('public')->move($tempData['path'], $finalPath);
                 $validated['file_path'] = $finalPath;
                 if (empty($validated['file_size'])) {
-                    $validated['file_size'] = $tempData['size'];
+                    $validated['file_size'] = round($tempData['size'] / 1048576, 2);
                 }
                 session()->forget('upload_temp_'.$request->file_temp_id);
             }
@@ -229,7 +229,7 @@ class ProductController extends Controller
             $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
             if (empty($validated['file_size'])) {
-                $validated['file_size'] = $file->getSize();
+                $validated['file_size'] = round($file->getSize() / 1048576, 2);
             }
         }
 

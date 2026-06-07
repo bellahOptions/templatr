@@ -112,7 +112,7 @@
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold mb-4">Description</h2>
                     <div class="prose prose-gray max-w-none">
-                        <p>{{ $product->description }}</p>
+                        {!! $product->description !!}
                     </div>
                 </div>
 
@@ -142,7 +142,7 @@
                     @if($product->file_size)
                     <div>
                         <span class="text-xs text-gray-500 uppercase tracking-wider font-medium">File Size</span>
-                        <p class="font-semibold mt-1">{{ number_format($product->file_size / 1048576, 2) }} MB</p>
+                        <p class="font-semibold mt-1">{{ number_format($product->file_size, 2) }} MB</p>
                     </div>
                     @endif
                     <div>
