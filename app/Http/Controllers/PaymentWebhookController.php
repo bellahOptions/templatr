@@ -89,6 +89,19 @@ class PaymentWebhookController extends Controller
             return;
         }
 
+        $expectedAmount = (float) $order->total_amount;
+        if (abs($amount - $expectedAmount) > 0.01) {
+            Log::warning('Payment webhook amount mismatch — possible fraud attempt', [
+                'reference' => $reference,
+                'gateway' => $gateway,
+                'webhook_amount' => $amount,
+                'order_amount' => $expectedAmount,
+                'order_number' => $order->order_number,
+            ]);
+
+            return;
+        }
+
         $order->update([
             'payment_status' => 'paid',
             'status' => 'completed',

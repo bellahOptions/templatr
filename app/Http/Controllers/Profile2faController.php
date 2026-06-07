@@ -92,11 +92,8 @@ class Profile2faController extends Controller
 
         $user = Auth::user();
 
-        $user->update([
-            'two_factor_enabled' => false,
-            'two_factor_code' => null,
-            'two_factor_expires_at' => null,
-        ]);
+        $user->update(['two_factor_enabled' => false]);
+        $user->resetTwoFactorCode();
 
         return back()->with('success', 'Two-factor authentication has been disabled.');
     }

@@ -7,24 +7,26 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\MonthlySalesReportNotification;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
 
 class SendMonthlySalesReport extends Command
 {
     protected $signature = 'app:send-monthly-sales-report {--month= : The month to report on (format: Y-m)}';
+
     protected $description = 'Send monthly sales report to admin and specified email';
 
     public function handle(): int
     {
         $month = $this->option('month')
-            ? \Carbon\Carbon::createFromFormat('Y-m', $this->option('month'))
+            ? Carbon::createFromFormat('Y-m', $this->option('month'))
             : now()->subMonth();
 
         $startOfMonth = $month->copy()->startOfMonth();
         $endOfMonth = $month->copy()->endOfMonth();
 
-        $this->info('Generating sales report for ' . $month->format('F Y') . '...');
+        $this->info('Generating sales report for '.$month->format('F Y').'...');
 
         // Gather report data
         $orders = Order::where('payment_status', 'paid')
@@ -53,20 +55,21 @@ class SendMonthlySalesReport extends Command
             $q->where('payment_status', 'paid')
                 ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
         })
-        ->selectRaw('product_id, COUNT(*) as sales, SUM(price) as revenue')
-        ->groupBy('product_id')
-        ->orderByDesc('sales')
-        ->take(5)
-        ->get()
-        ->map(function ($item) {
-            $product = Product::find($item->product_id);
-            return [
-                'title' => $product?->title ?? 'Deleted Product #' . $item->product_id,
-                'sales' => $item->sales,
-                'revenue' => (float) $item->revenue,
-            ];
-        })
-        ->toArray();
+            ->selectRaw('product_id, COUNT(*) as sales, SUM(price) as revenue')
+            ->groupBy('product_id')
+            ->orderByDesc('sales')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                $product = Product::find($item->product_id);
+
+                return [
+                    'title' => $product?->title ?? 'Deleted Product #'.$item->product_id,
+                    'sales' => $item->sales,
+                    'revenue' => (float) $item->revenue,
+                ];
+            })
+            ->toArray();
 
         $report = [
             'month' => $month->format('F Y'),
@@ -93,16 +96,15 @@ class SendMonthlySalesReport extends Command
 
         // Send to all admin users
         $adminUsers = User::where('role', 'admin')->get();
-        $this->info('Sending report to ' . $adminUsers->count() . ' admin(s)...');
+        $this->info('Sending report to '.$adminUsers->count().' admin(s)...');
 
         foreach ($adminUsers as $admin) {
             $admin->notify(new MonthlySalesReportNotification($report));
         }
 
-        // Send to the specified email
-        $specificEmail = 'muyiwadavis65@gmail.com';
-        if (filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
-            $this->info('Sending report to ' . $specificEmail . '...');
+        $specificEmail = config('services.admin.notification_email');
+        if ($specificEmail && filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->info('Sending report to '.$specificEmail.'...');
             Notification::route('mail', $specificEmail)
                 ->notify(new MonthlySalesReportNotification($report));
         }
