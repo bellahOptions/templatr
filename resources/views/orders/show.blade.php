@@ -45,7 +45,7 @@
                         </div>
                         <div class="min-w-0">
                             <a href="{{ route('products.show', $item->product) }}" class="font-semibold hover:text-[#FFC300] transition-colors text-sm md:text-base">{{ $item->product->title }}</a>
-                            <p class="text-sm text-gray-500">by {{ $item->product->author->name }}</p>
+                            <p class="text-sm text-gray-500">by Animashaun</p>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">

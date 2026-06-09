@@ -51,7 +51,7 @@
                                     <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm mt-1">{{ $product['title'] }}</h3>
                                 </a>
                                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                    <span class="text-[11px] text-gray-500">{{ $product['author']['name'] ?? '' }}</span>
+                                    <span class="text-[11px] text-gray-500">Animashaun</span>
                                     <span class="font-bold text-sm">{{ \App\Helpers\CurrencyHelper::format($product['sale_price'] ?? $product['price']) }}</span>
                                 </div>
                             </div>

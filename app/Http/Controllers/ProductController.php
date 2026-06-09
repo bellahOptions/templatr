@@ -96,7 +96,7 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        $reviews = $product->reviews()->with('user')->latest()->get();
+        $reviews = $product->reviews()->approved()->with('user')->latest()->get();
         $userReview = Auth::check() ? $product->reviews()->where('user_id', Auth::id())->first() : null;
         $isInWishlist = Auth::check() ? Auth::user()->wishlists()->where('product_id', $product->id)->exists() : false;
         $hasPurchased = Auth::check() ? Auth::user()->orders()->whereHas('items', function ($q) use ($product) {
@@ -217,7 +217,7 @@ class ProductController extends Controller
 
         Review::updateOrCreate(
             ['product_id' => $product->id, 'user_id' => Auth::id()],
-            ['rating' => $validated['rating'], 'review' => $validated['review']]
+            ['rating' => $validated['rating'], 'review' => $validated['review'], 'is_approved' => true]
         );
 
         return back()->with('success', 'Review submitted successfully!');

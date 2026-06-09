@@ -147,14 +147,14 @@ class Product extends Model
     public function averageRating(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->reviews()->avg('rating') ?? 0
+            get: fn () => $this->reviews()->approved()->avg('rating') ?? 0
         );
     }
 
     public function reviewCount(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->reviews()->count()
+            get: fn () => $this->reviews()->approved()->count()
         );
     }
 

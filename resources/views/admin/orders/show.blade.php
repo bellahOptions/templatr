@@ -21,7 +21,7 @@
                     </div>
                     <div class="min-w-0">
                         <p class="font-semibold text-sm truncate">{{ $item->product->title }}</p>
-                        <p class="text-xs text-gray-500">by {{ $item->product->author->name }}</p>
+                        <p class="text-xs text-gray-500">by Animashaun</p>
                     </div>
                 </div>
                 <div class="text-right flex-shrink-0 ml-3">

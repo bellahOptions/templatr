@@ -22,4 +22,9 @@ class Review extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
 }

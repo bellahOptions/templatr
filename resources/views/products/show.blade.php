@@ -249,10 +249,9 @@
                     <!-- Author Info -->
                     <div class="text-center mb-6 pb-6 border-b border-gray-100">
                         <div class="w-16 h-16 bg-gradient-to-br from-[#FFC300] to-[#FFD633] rounded-full flex items-center justify-center mx-auto mb-3">
-                            <span class="text-xl font-bold text-black">{{ substr($product->author->name, 0, 1) }}</span>
+                            <span class="text-xl font-bold text-black">A</span>
                         </div>
-                        <h3 class="font-semibold">{{ $product->author->name }}</h3>
-                        <p class="text-xs text-gray-500">{{ $product->author->products()->count() }} items</p>
+                        <h3 class="font-semibold">Animashaun</h3>
                     </div>
 
                     <!-- Price -->

@@ -165,12 +165,7 @@
                                 <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
                             </a>
                             <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                        <span class="text-[10px] font-bold">{{ substr($product->author?->name ?? '?', 0, 1) }}</span>
-                                    </div>
-                                    <span class="text-[11px] text-gray-500">{{ $product->author?->name ?? 'Unknown' }}</span>
-                                </div>
+                                <span class="text-[11px] text-gray-500">Animashaun</span>
                                 <div class="text-right">
                                     @if($product->sale_price)
                                         <span class="text-[11px] text-gray-400 line-through">{{ CurrencyHelper::format($product->price) }}</span>
