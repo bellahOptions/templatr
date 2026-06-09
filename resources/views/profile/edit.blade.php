@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Profile - Templatr')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="py-12">

@@ -3,6 +3,10 @@
 @php use App\Helpers\CurrencyHelper; @endphp
 
 @section('title', 'Browse Products - Templatr')
+@section('meta_description', 'Explore our full library of premium design templates, graphics, fonts, audio, plugins and more. Filter by category, type and price. Instant download.')
+@section('og_title', 'Browse Products - Templatr')
+@section('og_description', 'Explore our full library of premium design templates, graphics, fonts, audio, plugins and more. Filter by category, type and price. Instant download.')
+@section('canonical', route('products.index'))
 
 @section('content')
 <!-- Header -->
@@ -116,15 +120,33 @@
                     <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300">
                         <a href="{{ route('products.show', $product) }}">
                             <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                                @if($product->thumbnail)
-                                <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
-                                @elseif($product->preview_image)
-                                <img src="{{ $product->preview_image_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
-                                @else
-                                <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
-                                    <img src="/templatr-logo.svg" class="w-20 h-auto" alt="Templatr" loading="lazy">
-                                </div>
-                                @endif
+                                @php
+                                    $cardMedia = match(true) {
+                                        (bool)$product->thumbnail && $product->thumbnail_is_video  => 'thumb-video',
+                                        (bool)$product->thumbnail                                  => 'thumb-image',
+                                        (bool)$product->preview_image && $product->preview_is_video => 'preview-video',
+                                        (bool)$product->preview_image                              => 'preview-image',
+                                        default                                                    => 'placeholder',
+                                    };
+                                @endphp
+                                @switch($cardMedia)
+                                    @case('thumb-video')
+                                        <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                        @break
+                                    @case('thumb-image')
+                                        <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
+                                        @break
+                                    @case('preview-video')
+                                        <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                        @break
+                                    @case('preview-image')
+                                        <img src="{{ $product->preview_image_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
+                                        @break
+                                    @default
+                                        <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
+                                            <img src="/templatr-logo.svg" class="w-20 h-auto" alt="Templatr" loading="lazy">
+                                        </div>
+                                @endswitch
                                 @if($product->sale_price)
                                 <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
                                 @endif
@@ -145,9 +167,9 @@
                             <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                                        <span class="text-[10px] font-bold">{{ substr($product->author->name, 0, 1) }}</span>
+                                        <span class="text-[10px] font-bold">{{ substr($product->author?->name ?? '?', 0, 1) }}</span>
                                     </div>
-                                    <span class="text-[11px] text-gray-500">{{ $product->author->name }}</span>
+                                    <span class="text-[11px] text-gray-500">{{ $product->author?->name ?? 'Unknown' }}</span>
                                 </div>
                                 <div class="text-right">
                                     @if($product->sale_price)

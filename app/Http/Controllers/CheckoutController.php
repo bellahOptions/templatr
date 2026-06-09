@@ -255,9 +255,8 @@ class CheckoutController extends Controller
                 foreach ($adminUsers as $admin) {
                     $admin->notify(new NewPurchaseAdminNotification($order));
                 }
-                // Also notify the specified email
-                $specificEmail = 'muyiwadavis65@gmail.com';
-                if (filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
+                $specificEmail = config('services.admin.notification_email');
+                if ($specificEmail && filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
                     Notification::route('mail', $specificEmail)
                         ->notify(new NewPurchaseAdminNotification($order));
                 }

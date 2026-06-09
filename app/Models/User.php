@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'balance', 'referral_code', 'coins', 'pending_commission', 'two_factor_enabled', 'two_factor_code', 'two_factor_expires_at', 'terms_accepted_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'avatar', 'bio', 'paypal_email', 'referral_code', 'referred_by', 'two_factor_enabled', 'terms_accepted_at'])]
 #[Hidden(['password', 'remember_token', 'two_factor_code'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -164,10 +164,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function generateTwoFactorCode(): string
     {
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $this->update([
+        $this->forceFill([
             'two_factor_code' => Hash::make($code),
             'two_factor_expires_at' => now()->addMinutes(10),
-        ]);
+        ])->save();
 
         return $code;
     }
@@ -187,10 +187,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function resetTwoFactorCode(): void
     {
-        $this->update([
+        $this->forceFill([
             'two_factor_code' => null,
             'two_factor_expires_at' => null,
-        ]);
+        ])->save();
     }
 
     // =====================

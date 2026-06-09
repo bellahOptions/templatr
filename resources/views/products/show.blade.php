@@ -1,8 +1,48 @@
 @extends('layouts.app')
 
-@php use App\Helpers\CurrencyHelper; @endphp
+@php
+    use App\Helpers\CurrencyHelper;
+    $productImage = $product->thumbnail
+        ? (str_starts_with($product->thumbnail, 'http') ? $product->thumbnail : asset('storage/' . $product->thumbnail))
+        : asset('og-image.jpg');
+    $productDescription = substr(strip_tags($product->description ?? ''), 0, 155);
+    $productPrice = $product->sale_price ?? $product->price;
+@endphp
 
 @section('title', $product->title . ' - Templatr')
+@section('meta_description', $productDescription)
+@section('og_type', 'product')
+@section('og_title', $product->title . ' - Templatr')
+@section('og_description', $productDescription)
+@section('og_image', $productImage)
+@section('og_url', route('products.show', $product))
+@section('canonical', route('products.show', $product))
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "Product",
+    "name": "{{ addslashes($product->title) }}",
+    "description": "{{ addslashes($productDescription) }}",
+    "image": "{{ $productImage }}",
+    "url": "{{ route('products.show', $product) }}",
+    "sku": "{{ $product->slug }}",
+    "offers": {
+        "@@type": "Offer",
+        "price": "{{ $productPrice }}",
+        "priceCurrency": "{{ CurrencyHelper::CODE }}",
+        "availability": "https://schema.org/InStock",
+        "url": "{{ route('products.show', $product) }}"
+    }@if($product->reviews_count ?? false),
+    "aggregateRating": {
+        "@@type": "AggregateRating",
+        "ratingValue": "{{ number_format($product->average_rating ?? 0, 1) }}",
+        "reviewCount": "{{ $product->reviews_count }}"
+    }@endif
+}
+</script>
+@endpush
 
 @section('content')
 <!-- Breadcrumb -->
@@ -72,7 +112,7 @@
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold mb-4">Description</h2>
                     <div class="prose prose-gray max-w-none">
-                        <p>{{ $product->description }}</p>
+                        {!! $product->description !!}
                     </div>
                 </div>
 
@@ -102,7 +142,7 @@
                     @if($product->file_size)
                     <div>
                         <span class="text-xs text-gray-500 uppercase tracking-wider font-medium">File Size</span>
-                        <p class="font-semibold mt-1">{{ number_format($product->file_size / 1048576, 2) }} MB</p>
+                        <p class="font-semibold mt-1">{{ number_format($product->file_size, 2) }} MB</p>
                     </div>
                     @endif
                     <div>
@@ -288,6 +328,13 @@
                             Sign In to Purchase
                         </a>
                     @endauth
+
+                    @if($product->demo_url)
+                    <a href="{{ $product->demo_url }}" target="_blank" rel="noopener noreferrer" class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2 mt-3">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        <span>Live Preview</span>
+                    </a>
+                    @endif
 
                     <!-- Info Points -->
                     <div class="space-y-3 mt-6 pt-6 border-t border-gray-100">

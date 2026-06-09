@@ -30,6 +30,7 @@ class Product extends Model
         'is_published' => 'boolean',
         'price' => 'integer',
         'sale_price' => 'integer',
+        'file_size' => 'float',
     ];
 
     public function category(): BelongsTo
@@ -88,6 +89,36 @@ class Product extends Model
                 return str_starts_with($this->preview_image, 'http')
                     ? $this->preview_image
                     : Storage::disk('public')->url($this->preview_image);
+            }
+        );
+    }
+
+    public function thumbnailIsVideo(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->thumbnail_url) {
+                    return false;
+                }
+
+                $ext = strtolower(pathinfo(parse_url($this->thumbnail_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+                return in_array($ext, ['mp4', 'webm', 'mov', 'ogv']);
+            }
+        );
+    }
+
+    public function previewIsVideo(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->preview_image_url) {
+                    return false;
+                }
+
+                $ext = strtolower(pathinfo(parse_url($this->preview_image_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+
+                return in_array($ext, ['mp4', 'webm', 'mov', 'ogv']);
             }
         );
     }

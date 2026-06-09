@@ -3,6 +3,7 @@
 @php use App\Helpers\CurrencyHelper; @endphp
 
 @section('title', 'My Dashboard - Templatr')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="py-8 md:py-12 bg-gray-50 min-h-screen">

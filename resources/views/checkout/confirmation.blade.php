@@ -3,6 +3,7 @@
 @php use App\Helpers\CurrencyHelper; @endphp
 
 @section('title', 'Order Confirmed - Templatr')
+@section('robots', 'noindex, nofollow')
 
 @push('scripts')
 <script>

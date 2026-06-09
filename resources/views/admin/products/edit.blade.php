@@ -62,8 +62,8 @@
                     <input type="text" name="version" value="{{ old('version', $product->version) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">File Size (bytes)</label>
-                    <input type="number" name="file_size" value="{{ old('file_size', $product->file_size) }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File Size (MB)</label>
+                    <input type="number" name="file_size" value="{{ old('file_size', $product->file_size) }}" step="0.01" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
                 </div>
             </div>
 
@@ -194,7 +194,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-700">{{ basename($product->file_path) }}</p>
                             @if($product->file_size)
-                            <p class="text-xs text-gray-500">{{ number_format($product->file_size / 1024, 1) }} KB</p>
+                            <p class="text-xs text-gray-500">{{ number_format($product->file_size, 2) }} MB</p>
                             @endif
                         </div>
                     </div>
@@ -447,7 +447,8 @@ function clearFileUpload() {
 }
 
 document.getElementById('file-input').addEventListener('change', function () {
-    const file = this.files[0];
+    const file    = this.files[0];
+    const inputEl = this;
     if (!file) return;
 
     document.getElementById('file_temp_id').value = '';
@@ -463,26 +464,39 @@ document.getElementById('file-input').addEventListener('change', function () {
     label.textContent = 'Uploading ' + file.name + '…';
     uploadStarted();
 
-    const xhr  = new XMLHttpRequest();
-    const data = new FormData();
-    data.append('file', file);
-    data.append('_token', csrfToken());
-
-    xhr.upload.addEventListener('progress', e => {
-        if (!e.lengthComputable) return;
-        const p = Math.round((e.loaded / e.total) * 95);
-        bar.style.width = p + '%';
-        pct.textContent = p + '%';
+    const CHUNK = 2 * 1024 * 1024; // 2 MB per chunk
+    const uid   = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
     });
+    const total = Math.ceil(file.size / CHUNK);
+    let   idx   = 0;
 
-    xhr.addEventListener('load', () => {
-        if (xhr.status === 200) {
+    (function sendChunk() {
+        const start = idx * CHUNK;
+        const fd    = new FormData();
+        fd.append('file',         file.slice(start, Math.min(start + CHUNK, file.size)), file.name);
+        fd.append('upload_id',    uid);
+        fd.append('chunk_index',  idx);
+        fd.append('total_chunks', total);
+        fd.append('filename',     file.name);
+        fd.append('_token',       csrfToken());
+
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', e => {
+            if (!e.lengthComputable) return;
+            const p = ((idx + e.loaded / e.total) / total) * 100;
+            bar.style.width = Math.round(p) + '%';
+            pct.textContent = Math.round(p) + '%';
+        });
+        xhr.addEventListener('load', () => {
+            if (xhr.status !== 200) { fileUploadError(inputEl); return; }
             const res = JSON.parse(xhr.responseText);
+            if (!res.done) { idx++; sendChunk(); return; }
             bar.style.width = '100%';
             pct.textContent = '100%';
             document.getElementById('file_temp_id').value = res.temp_id;
-            this.value = '';
-
+            inputEl.value = '';
             setTimeout(() => {
                 document.getElementById('file-uploading').classList.add('hidden');
                 document.getElementById('file-required-hint').classList.add('hidden');
@@ -491,15 +505,11 @@ document.getElementById('file-input').addEventListener('change', function () {
                 document.getElementById('file-info').classList.remove('hidden');
                 uploadFinished();
             }, 400);
-        } else {
-            fileUploadError(this);
-        }
-    });
-
-    xhr.addEventListener('error', () => fileUploadError(this));
-
-    xhr.open('POST', '{{ route('admin.uploads.file') }}');
-    xhr.send(data);
+        });
+        xhr.addEventListener('error', () => fileUploadError(inputEl));
+        xhr.open('POST', '{{ route('admin.uploads.chunk') }}');
+        xhr.send(fd);
+    })();
 });
 
 function fileUploadError(inputEl) {

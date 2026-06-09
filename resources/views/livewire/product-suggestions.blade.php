@@ -14,18 +14,32 @@
                         <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300 animate-fade-in" wire:key="suggest-{{ $product['slug'] }}">
                             <a href="{{ route('products.show', $product['slug']) }}" wire:navigate>
                                 <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                                    @if(!empty($product['thumbnail']))
-                                        <img src="{{ str_starts_with($product['thumbnail'] ?? '', 'http') ? $product['thumbnail'] : Storage::url($product['thumbnail']) }}"
-                                             alt="{{ $product['title'] }}"
-                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                             loading="lazy">
-                                    @else
-                                        <div class="absolute inset-0 flex items-center justify-center">
-                                            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                            </svg>
-                                        </div>
-                                    @endif
+                                    @php
+                                        $videoExts  = ['mp4', 'webm', 'mov', 'ogv'];
+                                        $thumbUrl   = !empty($product['thumbnail'])
+                                            ? (str_starts_with($product['thumbnail'], 'http') ? $product['thumbnail'] : \Illuminate\Support\Facades\Storage::url($product['thumbnail']))
+                                            : null;
+                                        $thumbIsVid = $thumbUrl && in_array(strtolower(pathinfo(parse_url($thumbUrl, PHP_URL_PATH), PATHINFO_EXTENSION)), $videoExts);
+                                        $cardMedia  = match(true) {
+                                            $thumbIsVid   => 'thumb-video',
+                                            (bool)$thumbUrl => 'thumb-image',
+                                            default       => 'placeholder',
+                                        };
+                                    @endphp
+                                    @switch($cardMedia)
+                                        @case('thumb-video')
+                                            <video src="{{ $thumbUrl }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+                                            @break
+                                        @case('thumb-image')
+                                            <img src="{{ $thumbUrl }}" alt="{{ $product['title'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                                            @break
+                                        @default
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                                </svg>
+                                            </div>
+                                    @endswitch
                                     @if(isset($product['sale_price']) && $product['sale_price'])
                                         <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
                                     @endif

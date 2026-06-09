@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Affiliate Dashboard - Templatr')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-10">
