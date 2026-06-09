@@ -35,7 +35,7 @@ class AdminAdvertisements extends Component
 
     protected $rules = [
         'title' => 'required|min:3',
-        'position' => 'required',
+        'position' => 'required|in:banner,sidebar,inline,popup,marquee',
         'type' => 'required',
     ];
 

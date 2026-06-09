@@ -48,7 +48,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'user_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:255|unique:products,title',
             'description' => 'required|string',
             'price' => 'required|integer|min:1',
             'sale_price' => 'nullable|integer|min:1|lt:price',
@@ -66,6 +66,7 @@ class ProductController extends Controller
             'file_path' => 'nullable|file|mimes:zip,rar,tar,gz,psd,ai,svg,mp3,wav,mp4,ttf,otf|max:102400',
         ], [
             'sale_price.lt' => 'The sale price must be less than the regular price.',
+            'title.unique' => 'A product with this title already exists.',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']).'-'.Str::random(5);
@@ -92,11 +93,17 @@ class ProductController extends Controller
         if ($request->filled('file_temp_id')) {
             $tempData = session('upload_temp_'.$request->file_temp_id);
             if ($tempData) {
+                // Prevent duplicate file upload
+                if (Product::where('original_file_name', $tempData['original_name'])->exists()) {
+                    return back()->withErrors(['file_path' => 'A product with this file already exists.'])->withInput();
+                }
+
                 $ext = pathinfo($tempData['original_name'], PATHINFO_EXTENSION);
                 $sanitizedName = Str::slug(pathinfo($tempData['original_name'], PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
                 $finalPath = 'products/files/'.$sanitizedName;
                 Storage::disk('public')->move($tempData['path'], $finalPath);
                 $validated['file_path'] = $finalPath;
+                $validated['original_file_name'] = $tempData['original_name'];
                 if (empty($validated['file_size'])) {
                     $validated['file_size'] = $tempData['size'];
                 }
@@ -104,9 +111,17 @@ class ProductController extends Controller
             }
         } elseif ($request->hasFile('file_path')) {
             $file = $request->file('file_path');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $clientName = $file->getClientOriginalName();
+
+            // Prevent duplicate file upload
+            if (Product::where('original_file_name', $clientName)->exists()) {
+                return back()->withErrors(['file_path' => 'A product with this file already exists.'])->withInput();
+            }
+
+            $originalName = pathinfo($clientName, PATHINFO_FILENAME);
             $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
+            $validated['original_file_name'] = $clientName;
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = $file->getSize();
             }
@@ -131,7 +146,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'user_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:255|unique:products,title,'.$product->id,
             'description' => 'required|string',
             'price' => 'required|integer|min:1',
             'sale_price' => 'nullable|integer|min:1|lt:price',
@@ -152,6 +167,7 @@ class ProductController extends Controller
             'remove_file' => 'nullable|boolean',
         ], [
             'sale_price.lt' => 'The sale price must be less than the regular price.',
+            'title.unique' => 'A product with this title already exists.',
         ]);
 
         $validated['tags'] = $request->tags ? json_encode(explode(',', $request->tags)) : null;

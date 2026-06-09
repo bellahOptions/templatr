@@ -96,6 +96,9 @@
     <!-- Livewire Popup Modal -->
     @livewire('popup-modal')
 
+    <!-- Advertisement Popup Modal (admin-controlled via position=popup) -->
+    @livewire('advertisement-popup-modal')
+
     <!-- Navigation -->
     <nav class="bg-black text-white sticky top-0 z-50" x-data="{ mobileOpen: false, searchOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -344,6 +347,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Marquee Ad Ticker (admin-controlled via position=marquee) -->
+    @livewire('marquee-ad')
 
     <!-- Flash Messages -->
     @if(session('success') || session('error') || session('info') || session('warning'))

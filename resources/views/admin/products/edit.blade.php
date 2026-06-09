@@ -70,7 +70,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <div id="description-editor" class="rounded-xl border border-gray-300" style="min-height:180px"></div>
-                <textarea name="description" id="description-textarea" class="hidden" required>{{ old('description', $product->description) }}</textarea>
+                <textarea name="description" id="description-textarea" class="hidden">{{ old('description', $product->description) }}</textarea>
                 @error('description')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -588,6 +588,10 @@ function fileUploadError(inputEl) {
             return;
         }
         document.getElementById('description-textarea').value = window._descQuill ? window._descQuill.root.innerHTML : '';
+        // Prevent double submission
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        document.getElementById('submit-btn-text').textContent = 'Updating...';
         overlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         setPct(5);

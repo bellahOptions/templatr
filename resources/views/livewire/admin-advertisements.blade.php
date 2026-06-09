@@ -85,12 +85,15 @@
                     <input type="url" wire:model="link_url" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Display Type / Position</label>
                     <select wire:model="position" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                        <option value="banner">Banner (Top)</option>
+                        <option value="marquee">🎞 Marquee (Scrolling Ticker)</option>
+                        <option value="popup">🪟 Popup (Overlay on page load)</option>
+                        <option value="banner">Banner (Top of page)</option>
                         <option value="sidebar">Sidebar</option>
                         <option value="inline">Inline (Between content)</option>
                     </select>
+                    <p class="text-xs text-gray-400 mt-1">Marquee and Popup positions are shown site-wide automatically.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
@@ -133,7 +136,15 @@
                 @foreach($ads as $ad)
                     <tr wire:click="view({{ $ad->id }})" class="hover:bg-gray-50 cursor-pointer">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $ad->title }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 capitalize">{{ $ad->position }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            @if($ad->position === 'marquee')
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">🎞 Marquee</span>
+                            @elseif($ad->position === 'popup')
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">🪟 Popup</span>
+                            @else
+                                <span class="text-gray-500 capitalize">{{ $ad->position }}</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-sm text-gray-500 capitalize">{{ $ad->type }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $ad->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
