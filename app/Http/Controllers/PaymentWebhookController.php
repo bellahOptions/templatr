@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\Order\OrderFulfillmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 class PaymentWebhookController extends Controller
 {
+    public function __construct(protected OrderFulfillmentService $fulfillmentService) {}
+
     public function handle(Request $request, string $gateway): Response
     {
         $rawPayload = $request->getContent();
@@ -102,14 +105,21 @@ class PaymentWebhookController extends Controller
             return;
         }
 
-        $order->update([
-            'payment_status' => 'paid',
-            'status' => 'completed',
-        ]);
+        // Atomic update — guards against the callback arriving at the same time.
+        $marked = Order::where('id', $order->id)
+            ->where('payment_status', '!=', 'paid')
+            ->update(['payment_status' => 'paid', 'status' => 'completed']);
+
+        if (! $marked) {
+            return;
+        }
 
         Log::info("Order {$order->order_number} confirmed paid via {$gateway} webhook", [
             'reference' => $reference,
             'amount' => $amount,
         ]);
+
+        $order->refresh();
+        $this->fulfillmentService->fulfill($order);
     }
 }

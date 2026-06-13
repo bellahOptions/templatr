@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Helpers\CurrencyHelper;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -28,10 +29,12 @@ class NewPurchaseAdminNotification extends Notification
         $customerName = $this->order->user?->name ?? $this->order->guest_name ?? 'Guest';
         $customerEmail = $this->order->customer_email;
 
+        $recipientName = $notifiable instanceof User ? $notifiable->name : 'Admin';
+
         return (new MailMessage)
             ->subject('New Purchase - '.CurrencyHelper::format($this->order->total_amount).' - Templatr')
             ->markdown('emails.new-purchase', [
-                'user' => $notifiable,
+                'recipientName' => $recipientName,
                 'customerName' => $customerName,
                 'customerEmail' => $customerEmail,
                 'orderNumber' => $this->order->order_number,

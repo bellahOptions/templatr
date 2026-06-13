@@ -42,7 +42,7 @@
                 @foreach($orders as $order)
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 text-sm font-semibold">#{{ $order->order_number }}</td>
-                    <td class="px-6 py-4 text-sm">{{ $order->user->name }}</td>
+                    <td class="px-6 py-4 text-sm">{{ $order->user?->name ?? $order->guest_name ?? 'Guest' }}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $order->items_count ?? $order->items->count() ?? 0 }}</td>
                     <td class="px-6 py-4 text-sm font-bold whitespace-nowrap">{{ CurrencyHelper::format($order->total_amount) }}</td>
                     <td class="px-6 py-4">

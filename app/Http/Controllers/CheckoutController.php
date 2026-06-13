@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Notifications\NewPurchaseAdminNotification;
 use App\Services\Download\DownloadSecurityManager;
+use App\Services\Order\OrderFulfillmentService;
 use App\Services\Payment\PaymentManager;
 use App\Services\Webhook\WebhookService;
 use Illuminate\Http\Request;
@@ -26,14 +27,18 @@ class CheckoutController extends Controller
 
     protected WebhookService $webhookService;
 
+    protected OrderFulfillmentService $fulfillmentService;
+
     public function __construct(
         PaymentManager $paymentManager,
         DownloadSecurityManager $downloadSecurity,
-        WebhookService $webhookService
+        WebhookService $webhookService,
+        OrderFulfillmentService $fulfillmentService
     ) {
         $this->paymentManager = $paymentManager;
         $this->downloadSecurity = $downloadSecurity;
         $this->webhookService = $webhookService;
+        $this->fulfillmentService = $fulfillmentService;
     }
 
     public function index()
@@ -99,9 +104,42 @@ class CheckoutController extends Controller
         if (in_array($paymentMethod, ['paystack', 'flutterwave', 'interswitch'])) {
             $reference = 'TXN-'.strtoupper(Str::random(16));
 
+            // Create the order in pending state BEFORE redirecting so the
+            // payment webhook can find it even if the user never returns.
+            $orderData = [
+                'user_id' => $user?->id,
+                'order_number' => 'ORD-'.strtoupper(Str::random(10)),
+                'total_amount' => $totalAmount,
+                'status' => 'pending',
+                'payment_method' => $paymentMethod,
+                'payment_reference' => $reference,
+                'payment_status' => 'unpaid',
+            ];
+            if (! empty($guestData)) {
+                $orderData['user_id'] = null;
+                $orderData['guest_name'] = $guestData['guest_name'];
+                $orderData['guest_email'] = $guestData['guest_email'];
+                $orderData['guest_phone'] = $guestData['guest_phone'];
+            }
+            $pendingOrder = Order::create($orderData);
+
+            foreach ($products as $product) {
+                $price = $product->sale_price ?? $product->price;
+                $orderItem = OrderItem::create([
+                    'order_id' => $pendingOrder->id,
+                    'product_id' => $product->id,
+                    'price' => $price,
+                    'author_earnings' => $price * 0.7,
+                ]);
+                if (! $user) {
+                    $this->downloadSecurity->generateDownloadToken($orderItem, 72);
+                }
+            }
+
             session()->put('pending_payment', array_merge([
                 'reference' => $reference,
                 'amount' => $totalAmount,
+                'order_id' => $pendingOrder->id,
                 'products' => $products->pluck('id')->toArray(),
                 'user_id' => $user?->id,
                 'gateway' => $paymentMethod,
@@ -120,16 +158,23 @@ class CheckoutController extends Controller
                     'amount' => $totalAmount,
                     'reference' => $reference,
                     'callback_url' => route('checkout.callback', ['gateway' => $paymentMethod]),
-                    'order_id' => null,
+                    'order_id' => $pendingOrder->id,
                 ]);
 
                 if ($result['success']) {
                     return redirect($result['authorization_url']);
                 }
 
+                // Gateway rejected — clean up the pending order
+                $pendingOrder->delete();
+                session()->forget('pending_payment');
+
                 return redirect()->route('checkout.index')
                     ->with('error', 'Payment initialization failed. Please try again.');
             } catch (\Exception $e) {
+                $pendingOrder->delete();
+                session()->forget('pending_payment');
+
                 return redirect()->route('checkout.index')
                     ->with('error', 'Payment gateway error. Please try again or use a different payment method.');
             }
@@ -160,22 +205,35 @@ class CheckoutController extends Controller
             $verification = $paymentGateway->verifyPayment($reference);
 
             if ($verification['success']) {
-                $products = Product::whereIn('id', $pending['products'])->get();
-                $totalAmount = $pending['amount'];
-
-                $guestData = [];
-                if (! empty($pending['guest_name'])) {
-                    $guestData = [
-                        'guest_name' => $pending['guest_name'],
-                        'guest_email' => $pending['guest_email'],
-                        'guest_phone' => $pending['guest_phone'],
-                    ];
-                }
-
-                $order = $this->completeOrder($products, $totalAmount, $gateway, $guestData, $reference);
+                $order = Order::where('payment_reference', $reference)->first();
 
                 if ($order) {
-                    session()->forget('pending_payment');
+                    // Atomic update: only fulfil if the webhook hasn't already done it.
+                    $marked = Order::where('id', $order->id)
+                        ->where('payment_status', '!=', 'paid')
+                        ->update(['payment_status' => 'paid', 'status' => 'completed']);
+
+                    if ($marked) {
+                        $order->refresh();
+                        $this->fulfillmentService->fulfill($order);
+                    }
+                } else {
+                    // Fallback for orders created before this fix was deployed.
+                    $products = Product::whereIn('id', $pending['products'])->get();
+                    $guestData = [];
+                    if (! empty($pending['guest_name'])) {
+                        $guestData = [
+                            'guest_name' => $pending['guest_name'],
+                            'guest_email' => $pending['guest_email'],
+                            'guest_phone' => $pending['guest_phone'],
+                        ];
+                    }
+                    $order = $this->completeOrder($products, $pending['amount'], $gateway, $guestData, $reference);
+                }
+
+                if ($order) {
+                    session()->forget(['pending_payment', 'cart', 'guest_data']);
+                    session()->put('last_order_number', $order->order_number);
 
                     return redirect()->route('orders.confirmation', $order)
                         ->with('success', 'Payment successful! Your items are ready for download.');

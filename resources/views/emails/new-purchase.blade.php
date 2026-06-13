@@ -6,7 +6,7 @@
     <div style="text-align:center;">
         <div style="font-size:56px; margin-bottom:16px;">💰</div>
         <h1>New Purchase Received!</h1>
-        <p>Hi <strong>{{ $user->name }}</strong>, a new purchase has been made on Templatr.</p>
+        <p>Hi <strong>{{ $recipientName }}</strong>, a new purchase has been made on Templatr.</p>
     </div>
 
     <div class="info-card">
