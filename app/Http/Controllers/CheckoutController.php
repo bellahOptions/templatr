@@ -111,10 +111,12 @@ class CheckoutController extends Controller
                 $gateway = $this->paymentManager->gateway($paymentMethod);
                 $email = $user?->email ?? $guestData['guest_email'];
                 $name = $user?->name ?? $guestData['guest_name'];
+                $phone = $guestData['guest_phone'] ?? null;
 
                 $result = $gateway->initializePayment([
                     'email' => $email,
                     'name' => $name,
+                    'phone' => $phone,
                     'amount' => $totalAmount,
                     'reference' => $reference,
                     'callback_url' => route('checkout.callback', ['gateway' => $paymentMethod]),

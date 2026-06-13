@@ -8,14 +8,19 @@ use Illuminate\Support\Facades\Log;
 class PaystackGateway implements PaymentGateway
 {
     protected string $secretKey;
+
     protected string $publicKey;
+
     protected bool $isLive;
+
+    protected string $splitCode;
 
     public function __construct()
     {
         $this->secretKey = config('services.paystack.secret', env('PAYSTACK_SECRET_KEY', ''));
         $this->publicKey = config('services.paystack.public', env('PAYSTACK_PUBLIC_KEY', ''));
         $this->isLive = env('PAYSTACK_LIVE', false);
+        $this->splitCode = env('PAYSTACK_SPLIT_CODE', '');
     }
 
     public function getPublicKey(): string
@@ -30,7 +35,17 @@ class PaystackGateway implements PaymentGateway
 
     public function initializePayment(array $data): array
     {
+        $this->upsertCustomer($data['email'], $data['name'] ?? null, $data['phone'] ?? null);
+
         try {
+            $customFields = [
+                ['display_name' => 'Order', 'variable_name' => 'order_id', 'value' => $data['order_id'] ?? ''],
+            ];
+
+            if (! empty($data['phone'])) {
+                $customFields[] = ['display_name' => 'Phone', 'variable_name' => 'phone', 'value' => $data['phone']];
+            }
+
             $response = Http::withToken($this->secretKey)
                 ->post('https://api.paystack.co/transaction/initialize', [
                     'email' => $data['email'],
@@ -39,10 +54,9 @@ class PaystackGateway implements PaymentGateway
                     'callback_url' => $data['callback_url'],
                     'metadata' => [
                         'order_id' => $data['order_id'] ?? null,
-                        'custom_fields' => [
-                            ['display_name' => 'Order', 'variable_name' => 'order_id', 'value' => $data['order_id'] ?? '']
-                        ]
-                    ]
+                        'custom_fields' => $customFields,
+                    ],
+                    ...($this->splitCode ? ['split_code' => $this->splitCode] : []),
                 ]);
 
             if ($response->successful() && $response->json('status')) {
@@ -55,10 +69,30 @@ class PaystackGateway implements PaymentGateway
             }
 
             Log::error('Paystack initialization failed', ['response' => $response->json()]);
+
             return ['success' => false, 'message' => $response->json('message', 'Payment initialization failed')];
         } catch (\Exception $e) {
-            Log::error('Paystack exception: ' . $e->getMessage());
+            Log::error('Paystack exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Payment gateway error. Please try again.'];
+        }
+    }
+
+    protected function upsertCustomer(string $email, ?string $name, ?string $phone): void
+    {
+        try {
+            $nameParts = $name ? explode(' ', trim($name), 2) : [];
+            $payload = array_filter([
+                'email' => $email,
+                'first_name' => $nameParts[0] ?? null,
+                'last_name' => $nameParts[1] ?? null,
+                'phone' => $phone,
+            ]);
+
+            Http::withToken($this->secretKey)
+                ->post('https://api.paystack.co/customer', $payload);
+        } catch (\Exception $e) {
+            Log::warning('Paystack customer upsert failed: '.$e->getMessage());
         }
     }
 
@@ -70,6 +104,7 @@ class PaystackGateway implements PaymentGateway
 
             if ($response->successful() && $response->json('status')) {
                 $data = $response->json('data');
+
                 return [
                     'success' => $data['status'] === 'success',
                     'amount' => $data['amount'] / 100,
@@ -83,7 +118,8 @@ class PaystackGateway implements PaymentGateway
 
             return ['success' => false, 'message' => 'Verification failed'];
         } catch (\Exception $e) {
-            Log::error('Paystack verification exception: ' . $e->getMessage());
+            Log::error('Paystack verification exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Verification error'];
         }
     }

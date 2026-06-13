@@ -116,13 +116,10 @@
                     <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-[#FFC300] has-[:checked]:border-[#FFC300] has-[:checked]:bg-[#FFC300]/5">
                         <input type="radio" name="payment_method" form="paymentForm" value="paystack" class="absolute opacity-0" {{ !isset($availableGateways['flutterwave']) && !isset($availableGateways['interswitch']) ? 'checked' : 'checked' }}>
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                <span class="text-green-700 font-bold text-xs">P</span>
+                            <div class="flex items-center justify-center">
+                                <img src="{{ asset('paystack-logo.png') }}" alt="Paystack" class="h-6 w-auto">
                             </div>
-                            <div>
-                                <span class="font-semibold text-sm">Paystack</span>
-                                <p class="text-xs text-gray-500">Card, Transfer, USSD</p>
-                            </div>
+                            <p class="text-xs text-gray-500">Card, Transfer, USSD</p>
                         </div>
                     </label>
                     @endif
