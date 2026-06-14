@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="96" height="96" viewBox="0 0 96 96" version="1.2" baseProfile="tiny-ps">
+<title>Templatr</title>
+<rect width="96" height="96" fill="#FFC400"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M70.3023 26H26V69.2955H44.1237V48.1512H48.1512H52.1787V69.2955H70.3023V26Z" fill="black"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M48.1512 26H26V69.2955H44.1237V48.1512H48.1512V26Z" fill="black"/>
+</svg>
