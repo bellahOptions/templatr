@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
@@ -22,63 +21,9 @@ class ProductController extends Controller
         $this->downloadSecurity = $downloadSecurity;
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $query = Product::published()->with(['category', 'author']);
-
-        // Category filter
-        if ($request->filled('category')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
-        }
-
-        // Type filter
-        if ($request->filled('type')) {
-            $query->where('file_type', $request->type);
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('tags', 'like', "%{$search}%");
-            });
-        }
-
-        // Price range
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        // Sort
-        switch ($request->sort) {
-            case 'price_asc':
-                $query->orderBy('price');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'popular':
-                $query->orderBy('download_count', 'desc');
-                break;
-            case 'rating':
-                $query->withAvg('reviews', 'rating')->orderBy('reviews_avg_rating', 'desc');
-                break;
-            default:
-                $query->latest();
-        }
-
-        $products = $query->paginate(12)->withQueryString();
-        $categories = Category::orderBy('order')->get();
-        $types = ['graphic' => 'Graphics', 'template' => 'Templates', 'audio' => 'Audio', 'video' => 'Video', 'font' => 'Fonts', 'plugin' => 'Plugins', '3d' => '3D Assets'];
-
-        return view('products.index', compact('products', 'categories', 'types'));
+        return view('products.index');
     }
 
     public function show(Product $product)

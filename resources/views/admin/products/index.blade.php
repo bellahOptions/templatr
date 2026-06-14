@@ -23,7 +23,10 @@
             </select>
             <button type="submit" class="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800">Filter</button>
         </form>
-        <a href="{{ route('admin.products.create') }}" class="bg-[#FFC300] text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#FFD633] whitespace-nowrap">+ Add Product</a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.products.import') }}" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 whitespace-nowrap">Bulk Import</a>
+            <a href="{{ route('admin.products.create') }}" class="bg-[#FFC300] text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#FFD633] whitespace-nowrap">+ Add Product</a>
+        </div>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full">

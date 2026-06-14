@@ -4,7 +4,16 @@
       "Bash(git push *)",
       "Bash(vendor/bin/pint --dirty --format agent)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\templatr\" -Recurse -Directory)",
-      "Bash(Select-Object -First 30)"
+      "Bash(Select-Object -First 30)",
+      "Bash(vendor/bin/pint app/Http/Controllers/Admin/ProductImportController.php --dirty --format agent)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Administrator\\\\templatr\\\\resources\\\\views\\\\components\\\\⚡product-catalog.blade.php\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\Administrator\\\\templatr\\\\resources\\\\views\\\\components\\\\⚡smart-search.blade.php\" -Force)",
+      "Bash(Write-Host \"Deleted\")",
+      "Bash(vendor/bin/pint app/Livewire/SmartSearch.php app/Livewire/ProductCatalog.php app/Http/Controllers/ProductController.php --format agent)",
+      "Bash(vendor/bin/pint app/Livewire/SmartSearch.php --format agent)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Administrator\\templatr\\resources\\views\\components"
     ]
   }
 }

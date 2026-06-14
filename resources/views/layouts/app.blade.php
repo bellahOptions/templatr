@@ -273,13 +273,7 @@
         <!-- Search Bar Dropdown -->
         <div x-show="searchOpen" x-cloak class="bg-black border-t border-gray-800">
             <div class="max-w-2xl mx-auto px-4 py-4">
-                <form method="GET" action="{{ route('products.index') }}" class="flex">
-                    <input type="text" name="search" placeholder="Search items, authors, or categories..."
-                        class="w-full px-4 py-3 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FFC300] text-sm"
-                        @keydown.escape="searchOpen = false">
-                    <button type="submit"
-                        class="ml-2 bg-[#FFC300] text-black px-5 rounded-xl font-semibold hover:bg-[#FFD633] transition-colors text-sm">Search</button>
-                </form>
+                @livewire('smart-search')
             </div>
         </div>
 
@@ -287,10 +281,7 @@
         <div x-show="mobileOpen" class="md:hidden bg-black border-t border-gray-800" x-cloak>
             <div class="px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
                 <div class="pb-3 mb-3 border-b border-gray-800">
-                    <form method="GET" action="{{ route('products.index') }}" class="flex">
-                        <input type="text" name="search" placeholder="Search..."
-                            class="w-full px-4 py-2.5 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC300]">
-                    </form>
+                    @livewire('smart-search')
                 </div>
                 @auth
                     <a href="{{ route('profile.index') }}"
