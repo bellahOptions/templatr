@@ -355,9 +355,6 @@
         </div>
     </div>
 
-    <!-- Marquee Ad Ticker (admin-controlled via position=marquee) -->
-    @livewire('marquee-ad')
-
     <!-- Flash Messages -->
     @if(session('success') || session('error') || session('info') || session('warning'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
@@ -437,7 +434,8 @@
     <main>
         @yield('content')
     </main>
-
+    <!-- Marquee Ad Ticker (admin-controlled via position=marquee) -->
+    @livewire('marquee-ad')
     <!-- Footer -->
     <footer class="bg-black text-white mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

@@ -1,14 +1,30 @@
 <div>
     @if($ads->isNotEmpty())
-        <div class="w-full bg-black overflow-hidden relative" style="height: 44px;">
-
+        <div
+            class="w-full bg-black overflow-hidden relative"
+            style="height: 44px;"
+            x-data="{
+                speed: 80,
+                init() {
+                    this.setDuration();
+                    window.addEventListener('resize', () => this.setDuration());
+                },
+                setDuration() {
+                    const track = this.$refs.track;
+                    if (!track) return;
+                    const halfWidth = track.scrollWidth / 2;
+                    const duration = halfWidth / this.speed;
+                    track.style.animationDuration = duration + 's';
+                }
+            }"
+        >
             {{-- Gradient fade on edges --}}
             <div class="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
                  style="background: linear-gradient(to right, #000 0%, transparent 100%);"></div>
             <div class="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
                  style="background: linear-gradient(to left, #000 0%, transparent 100%);"></div>
 
-            <div class="marquee-track flex items-center h-full" style="width: max-content;">
+            <div x-ref="track" class="marquee-track flex items-center h-full" style="width: max-content; animation-duration: 30s;">
                 {{-- Render twice for seamless infinite loop --}}
                 @foreach([1, 2] as $_)
                     <div class="flex items-center gap-0 shrink-0">
@@ -46,7 +62,7 @@
         @push('styles')
         <style>
             .marquee-track {
-                animation: marquee-scroll 30s linear infinite;
+                animation: marquee-scroll linear infinite;
             }
 
             .marquee-track:hover {
@@ -54,14 +70,8 @@
             }
 
             @keyframes marquee-scroll {
-                0%   { transform: translateX(0); }
-                100% { transform: translateX(-50%); }
-            }
-
-            @media (max-width: 640px) {
-                .marquee-track {
-                    animation-duration: 20s;
-                }
+                0%   { transform: translateX(-50%); }
+                100% { transform: translateX(0); }
             }
         </style>
         @endpush
