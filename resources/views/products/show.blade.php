@@ -2,19 +2,30 @@
 
 @php
     use App\Helpers\CurrencyHelper;
+    use Illuminate\Support\Str;
+
     $productImage = $product->thumbnail
         ? (str_starts_with($product->thumbnail, 'http') ? $product->thumbnail : asset('storage/' . $product->thumbnail))
         : asset('og-image.jpg');
-    $productDescription = substr(strip_tags($product->description ?? ''), 0, 155);
+
+    $productDescription = Str::limit(
+        trim(strip_tags($product->description ?? '')) ?: 'Download '.$product->title.' — a premium '
+            .($product->category?->name ?? 'digital').' asset from Templatr with a commercial licence, instant download and lifetime updates.',
+        158
+    );
+
     $productPrice = $product->sale_price ?? $product->price;
+    $reviewCount = (int) $product->review_count;
+    $ratingValue = (float) $product->average_rating;
 @endphp
 
-@section('title', $product->title . ' - Templatr')
+@section('title', $product->title)
 @section('meta_description', $productDescription)
 @section('og_type', 'product')
-@section('og_title', $product->title . ' - Templatr')
+@section('og_title', $product->title . ' — ' . CurrencyHelper::format($productPrice))
 @section('og_description', $productDescription)
 @section('og_image', $productImage)
+@section('og_image_alt', $product->title)
 @section('og_url', route('products.show', $product))
 @section('canonical', route('products.show', $product))
 
@@ -22,23 +33,56 @@
 <script type="application/ld+json">
 {
     "@@context": "https://schema.org",
+    "@@type": "BreadcrumbList",
+    "itemListElement": [
+        { "@@type": "ListItem", "position": 1, "name": "Home", "item": "{{ route('home') }}" },
+        { "@@type": "ListItem", "position": 2, "name": "Marketplace", "item": "{{ route('products.index') }}" }
+        @if($product->category),
+        { "@@type": "ListItem", "position": 3, "name": "{{ $product->category->name }}", "item": "{{ route('category.show', $product->category) }}" },
+        { "@@type": "ListItem", "position": 4, "name": "{{ addslashes($product->title) }}", "item": "{{ route('products.show', $product) }}" }
+        @else,
+        { "@@type": "ListItem", "position": 3, "name": "{{ addslashes($product->title) }}", "item": "{{ route('products.show', $product) }}" }
+        @endif
+    ]
+}
+</script>
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
     "@@type": "Product",
     "name": "{{ addslashes($product->title) }}",
     "description": "{{ addslashes($productDescription) }}",
-    "image": "{{ $productImage }}",
+    "image": ["{{ $productImage }}"],
     "url": "{{ route('products.show', $product) }}",
     "sku": "{{ $product->slug }}",
+    @if($product->category)
+    "category": "{{ addslashes($product->category->name) }}",
+    @endif
+    @if($product->author)
+    "creator": { "@@type": "Person", "name": "{{ addslashes($product->author->name) }}" },
+    @endif
+    "brand": { "@@type": "Brand", "name": "{{ \App\Helpers\BrandHelper::FULL }}" },
+    "itemCondition": "https://schema.org/NewCondition",
     "offers": {
         "@@type": "Offer",
         "price": "{{ $productPrice }}",
         "priceCurrency": "{{ CurrencyHelper::CODE }}",
         "availability": "https://schema.org/InStock",
-        "url": "{{ route('products.show', $product) }}"
-    }@if($product->reviews_count ?? false),
+        "itemCondition": "https://schema.org/NewCondition",
+        "priceValidUntil": "{{ now()->addYear()->toDateString() }}",
+        "url": "{{ route('products.show', $product) }}",
+        "seller": {
+            "@@type": "Organization",
+            "name": "{{ \App\Helpers\BrandHelper::FULL }}",
+            "url": "{{ route('home') }}"
+        }
+    }@if($reviewCount > 0),
     "aggregateRating": {
         "@@type": "AggregateRating",
-        "ratingValue": "{{ number_format($product->average_rating ?? 0, 1) }}",
-        "reviewCount": "{{ $product->reviews_count }}"
+        "ratingValue": "{{ number_format($ratingValue, 1) }}",
+        "reviewCount": "{{ $reviewCount }}",
+        "bestRating": "5",
+        "worstRating": "1"
     }@endif
 }
 </script>
@@ -51,7 +95,11 @@
         <div class="flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide">
             <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#FFC300] whitespace-nowrap">Home</a>
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <a href="{{ route('products.index', $product->category ? ['category' => $product->category->slug] : []) }}" class="text-gray-500 hover:text-[#FFC300] whitespace-nowrap">{{ $product->category?->name ?? 'Uncategorized' }}</a>
+            @if($product->category)
+            <a href="{{ route('category.show', $product->category) }}" class="text-gray-600 hover:text-[var(--color-primary-ink)] whitespace-nowrap transition-colors">{{ $product->category->name }}</a>
+            @else
+            <span class="text-gray-600 whitespace-nowrap">Uncategorised</span>
+            @endif
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             <span class="text-gray-900 font-medium truncate">{{ $product->title }}</span>
         </div>
@@ -159,11 +207,11 @@
                         <p class="font-semibold mt-1">{{ $product->requirements }}</p>
                     </div>
                     @endif
-                    @if($product->tags)
+                    @if(!empty($product->tags))
                     <div class="col-span-2">
-                        <span class="text-xs text-gray-500 uppercase tracking-wider font-medium">Tags</span>
+                        <span class="text-xs text-gray-600 uppercase tracking-wider font-medium">Tags</span>
                         <div class="flex flex-wrap gap-2 mt-2">
-                            @foreach(json_decode($product->tags, true) ?? [] as $tag)
+                            @foreach((array) $product->tags as $tag)
                             <a href="{{ route('products.index', ['search' => $tag]) }}" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-gray-600 hover:border-[#FFC300] hover:text-black transition-colors">{{ $tag }}</a>
                             @endforeach
                         </div>
@@ -249,20 +297,21 @@
                     <!-- Author Info -->
                     <div class="text-center mb-6 pb-6 border-b border-gray-100">
                         <div class="w-16 h-16 bg-gradient-to-br from-[#FFC300] to-[#FFD633] rounded-full flex items-center justify-center mx-auto mb-3">
-                            <span class="text-xl font-bold text-black">A</span>
+                            <span class="text-xl font-bold text-black">{{ strtoupper(substr($product->author?->name ?? 'T', 0, 1)) }}</span>
                         </div>
-                        <h3 class="font-semibold">Animashaun</h3>
+                        <h3 class="font-semibold">{{ $product->author?->name ?? 'Templatr' }}</h3>
+                        <p class="text-xs text-gray-600 mt-0.5">Creator on Templatr</p>
                     </div>
 
                     <!-- Price -->
                     <div class="text-center mb-6">
                         @if($product->sale_price)
                         <div>
-                            <span class="text-3xl font-bold text-[#FFC300]">{{ CurrencyHelper::format($product->sale_price) }}</span>
-                            <span class="text-lg text-gray-400 line-through ml-2">{{ CurrencyHelper::format($product->price) }}</span>
+                            <span class="text-3xl font-bold text-gray-900">{{ CurrencyHelper::format($product->sale_price) }}</span>
+                            <span class="text-lg text-gray-500 line-through ml-2">{{ CurrencyHelper::format($product->price) }}</span>
                         </div>
                         @else
-                        <span class="text-3xl font-bold">{{ CurrencyHelper::format($product->price) }}</span>
+                        <span class="text-3xl font-bold text-gray-900">{{ CurrencyHelper::format($product->price) }}</span>
                         @endif
                         <p class="text-xs text-gray-500 mt-1">One-time payment • Lifetime access</p>
                     </div>
@@ -367,33 +416,7 @@
         <h2 class="text-2xl font-bold mb-8">Related <span class="text-[#FFC300]">Items</span></h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             @foreach($relatedProducts as $related)
-            <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-lg transition-all duration-300">
-                <a href="{{ route('products.show', $related) }}">
-                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        @if($related->thumbnail)
-                        <img src="{{ $related->thumbnail_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
-                        @elseif($related->preview_image)
-                        <img src="{{ $related->preview_image_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}" loading="lazy">
-                        @else
-                        <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
-                            <img src="/templatr-logo.svg" class="w-14 h-auto" alt="Templatr" loading="lazy">
-                        </div>
-                        @endif
-                    </div>
-                </a>
-                <div class="p-4">
-                    <a href="{{ route('products.show', $related) }}">
-                        <h3 class="font-semibold text-sm line-clamp-1 group-hover:text-[#FFC300] transition-colors">{{ $related->title }}</h3>
-                    </a>
-                    <div class="flex items-center justify-between mt-2">
-                        <span class="font-bold text-sm">{{ CurrencyHelper::format($related->sale_price ?? $related->price) }}</span>
-                        <div class="flex items-center">
-                            <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <span class="text-xs text-gray-600 ml-1">{{ number_format($related->average_rating, 1) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <x-product-card :product="$related" />
             @endforeach
         </div>
     </div>

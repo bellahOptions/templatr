@@ -2,18 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $featuredProducts = Product::published()->featured()->with(['category', 'author'])->latest()->take(8)->get();
-        $newProducts = Product::published()->with(['category', 'author'])->latest()->take(12)->get();
-        $categories = Category::orderBy('order')->get();
-        $topAuthors = \App\Models\User::authors()->withCount('products')->having('products_count', '>', 0)->orderBy('products_count', 'desc')->take(6)->get();
+        $featuredProducts = Product::published()
+            ->featured()
+            ->withStats()
+            ->with(['category', 'author'])
+            ->latest()
+            ->take(8)
+            ->get();
 
-        return view('home', compact('featuredProducts', 'newProducts', 'categories', 'topAuthors'));
+        $newProducts = Product::published()
+            ->withStats()
+            ->with(['category', 'author'])
+            ->latest()
+            ->take(12)
+            ->get();
+
+        $categories = Category::withCount([
+            'products' => fn ($query) => $query->where('is_published', true),
+        ])->orderBy('order')->get();
+
+        $topAuthors = User::authors()
+            ->has('products')
+            ->withCount('products')
+            ->orderBy('products_count', 'desc')
+            ->take(6)
+            ->get();
+
+        $stats = Cache::remember('home.stats', now()->addHours(6), fn (): array => [
+            'products' => Product::published()->count(),
+            'creators' => User::authors()->count(),
+            'downloads' => (int) Product::sum('download_count'),
+        ]);
+
+        return view('home', compact(
+            'featuredProducts',
+            'newProducts',
+            'categories',
+            'topAuthors',
+            'stats'
+        ));
     }
 }

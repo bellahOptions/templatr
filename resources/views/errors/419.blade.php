@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>419 - Session Expired | Templatr</title>
+    <title>419 - Session Expired | Templatr by Bellah Options</title>
     <link rel="icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
@@ -41,7 +41,7 @@
             </a>
             <a href="{{ url('/login') }}" class="btn btn-secondary">Sign In Again</a>
         </div>
-        <p class="footer-text">&copy; {{ date('Y') }} Templatr. Premium Creative &amp; Web Resources.</p>
+        <p class="footer-text">&copy; {{ date('Y') }} Templatr by Bellah Options. Premium Creative &amp; Web Resources.</p>
     </div>
 </body>
 </html>

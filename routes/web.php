@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin2faController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CategoryBrowseController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile2faController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TermsController;
 use App\Http\Controllers\User2faLoginController;
 use App\Http\Controllers\UserDashboardController;
@@ -76,6 +78,13 @@ Route::middleware('guest')->group(function () {
 
 // Public static pages
 Route::get('/terms', [TermsController::class, 'show'])->name('terms.show');
+
+// SEO / AEO discovery endpoints
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/llms.txt', [SeoController::class, 'llmsTxt'])->name('llms');
+
+// Category landing pages (crawlable, keyword-targeted)
+Route::get('/category/{category}', [CategoryBrowseController::class, 'show'])->name('category.show');
 
 // Product routes
 Route::middleware(RedirectAdminToPanel::class)->group(function () {

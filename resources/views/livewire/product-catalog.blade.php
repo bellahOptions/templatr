@@ -64,16 +64,18 @@
                     </button>
                 </div>
 
-                {{-- Categories --}}
+                {{-- Categories — hidden on category landing pages, where the path already scopes the list --}}
+                @if($lockedCategory === '')
                 <div class="mb-6">
-                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categories</h4>
+                    <h4 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Categories</h4>
                     <div class="space-y-1">
-                        <button wire:click="setCategory('')" @click="filtersOpen = false" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $category === '' ? 'bg-[#FFC300]/10 text-[#CC9900] font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">All Categories</button>
+                        <button wire:click="setCategory('')" @click="filtersOpen = false" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $activeCategory === '' ? 'bg-[#FFC300]/15 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">All Categories</button>
                         @foreach($categories as $cat)
-                        <button wire:click="setCategory('{{ $cat->slug }}')" @click="filtersOpen = false" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $category === $cat->slug ? 'bg-[#FFC300]/10 text-[#CC9900] font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">{{ $cat->name }}</button>
+                        <button wire:click="setCategory('{{ $cat->slug }}')" @click="filtersOpen = false" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $activeCategory === $cat->slug ? 'bg-[#FFC300]/15 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">{{ $cat->name }}</button>
                         @endforeach
                     </div>
                 </div>
+                @endif
 
                 {{-- File Type --}}
                 <div class="mb-6">
@@ -118,16 +120,18 @@
                     @endif
                 </div>
 
-                {{-- Categories --}}
+                {{-- Categories — hidden on category landing pages, where the path already scopes the list --}}
+                @if($lockedCategory === '')
                 <div class="mb-6">
-                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Categories</h4>
+                    <h4 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Categories</h4>
                     <div class="space-y-1">
-                        <button wire:click="setCategory('')" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $category === '' ? 'bg-[#FFC300]/10 text-[#CC9900] font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">All Categories</button>
+                        <button wire:click="setCategory('')" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $activeCategory === '' ? 'bg-[#FFC300]/15 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">All Categories</button>
                         @foreach($categories as $cat)
-                        <button wire:click="setCategory('{{ $cat->slug }}')" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $category === $cat->slug ? 'bg-[#FFC300]/10 text-[#CC9900] font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">{{ $cat->name }}</button>
+                        <button wire:click="setCategory('{{ $cat->slug }}')" class="block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors {{ $activeCategory === $cat->slug ? 'bg-[#FFC300]/15 text-gray-900 font-semibold' : 'text-gray-600 hover:bg-gray-50 hover:text-black' }}">{{ $cat->name }}</button>
                         @endforeach
                     </div>
                 </div>
+                @endif
 
                 {{-- File Type --}}
                 <div class="mb-6">
@@ -191,69 +195,7 @@
                     wire:target="setCategory,setType,applyPriceFilter,clearFilters,sort,search"
                 >
                     @foreach($products as $product)
-                    <div
-                        wire:key="product-{{ $product->id }}"
-                        class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-300"
-                    >
-                        <a href="{{ route('products.show', $product) }}" wire:navigate>
-                            <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                                @php
-                                    $cardMedia = match(true) {
-                                        (bool) $product->thumbnail && $product->thumbnail_is_video   => 'thumb-video',
-                                        (bool) $product->thumbnail                                   => 'thumb-image',
-                                        (bool) $product->preview_image && $product->preview_is_video => 'preview-video',
-                                        (bool) $product->preview_image                               => 'preview-image',
-                                        default                                                       => 'placeholder',
-                                    };
-                                @endphp
-                                @switch($cardMedia)
-                                    @case('thumb-video')
-                                        <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                        @break
-                                    @case('thumb-image')
-                                        <img src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
-                                        @break
-                                    @case('preview-video')
-                                        <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                        @break
-                                    @case('preview-image')
-                                        <img src="{{ $product->preview_image_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $product->title }}" loading="lazy">
-                                        @break
-                                    @default
-                                        <div class="absolute inset-0 flex items-center justify-center opacity-30 grayscale">
-                                            <img src="/templatr-logo.svg" class="w-20 h-auto" alt="Templatr" loading="lazy">
-                                        </div>
-                                @endswitch
-                                @if($product->sale_price)
-                                    <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
-                                @endif
-                                <span class="absolute top-3 right-3 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm font-medium">{{ ucfirst($product->file_type) }}</span>
-                            </div>
-                        </a>
-                        <div class="p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-[11px] text-gray-500 font-medium">{{ $product->category->name }}</span>
-                                <div class="flex items-center">
-                                    <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                    <span class="text-xs text-gray-500 ml-1">{{ number_format($product->average_rating, 1) }}</span>
-                                </div>
-                            </div>
-                            <a href="{{ route('products.show', $product) }}" wire:navigate>
-                                <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
-                            </a>
-                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                <span class="text-[11px] text-gray-500 truncate max-w-[100px]">{{ $product->author->name ?? '—' }}</span>
-                                <div class="text-right">
-                                    @if($product->sale_price)
-                                        <span class="text-[11px] text-gray-400 line-through">{{ $product->formatted_original_price }}</span>
-                                    @endif
-                                    <span class="font-bold text-sm">{{ $product->formatted_price }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <x-product-card :product="$product" wire:key="product-{{ $product->id }}" />
                     @endforeach
                 </div>
 

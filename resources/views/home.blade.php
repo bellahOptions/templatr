@@ -2,37 +2,75 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'Templatr - Premium Creative & Web Resources')
-@section('meta_description', 'Download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial license included. Nigeria\'s #1 creative marketplace.')
-@section('og_title', 'Templatr - Premium Creative & Web Resources')
-@section('og_description', 'Download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial license included. Nigeria\'s #1 creative marketplace.')
+@section('meta_description', 'Templatr by Bellah Options — download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial licence included. Nigeria\'s #1 creative marketplace.')
+@section('og_description', 'Templatr by Bellah Options — download premium design templates, graphics, fonts, audio, plugins and more. Instant delivery, commercial licence included. Nigeria\'s #1 creative marketplace.')
 @section('canonical', url('/'))
 
 @push('structured_data')
 <script type="application/ld+json">
 {
     "@@context": "https://schema.org",
-    "@@type": "Organization",
-    "name": "Templatr",
-    "url": "{{ url('/') }}",
-    "logo": "{{ asset('templatr.svg') }}",
-    "sameAs": []
+    "@@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@@type": "Question",
+            "name": "What can I buy on Templatr?",
+            "acceptedAnswer": {
+                "@@type": "Answer",
+                "text": "Templatr sells premium digital creative and web resources: WordPress themes and plugins, HTML and website templates, graphic templates, mockups, fonts, audio, video and 3D assets."
+            }
+        },
+        {
+            "@@type": "Question",
+            "name": "How much do items cost?",
+            "acceptedAnswer": {
+                "@@type": "Answer",
+                "text": "Prices start from {{ \App\Helpers\CurrencyHelper::formatInt(3000) }} per item. Every purchase includes a commercial licence and lifetime updates — there is no subscription and no per-project fee."
+            }
+        },
+        {
+            "@@type": "Question",
+            "name": "How is my purchase delivered?",
+            "acceptedAnswer": {
+                "@@type": "Answer",
+                "text": "Delivery is instant and fully digital. As soon as payment is confirmed you can download the files from your Templatr dashboard — nothing is shipped and there is no waiting period."
+            }
+        },
+        {
+            "@@type": "Question",
+            "name": "Can I use the assets in client and commercial projects?",
+            "acceptedAnswer": {
+                "@@type": "Answer",
+                "text": "Yes. Each download comes with a commercial licence, so you can use the asset in unlimited personal and client projects. Reselling or redistributing the original files is not permitted."
+            }
+        },
+        {
+            "@@type": "Question",
+            "name": "Which payment methods are accepted?",
+            "acceptedAnswer": {
+                "@@type": "Answer",
+                "text": "Templatr accepts card, bank transfer and USSD payments in Nigerian Naira through Paystack and Flutterwave."
+            }
+        }
+    ]
 }
 </script>
 <script type="application/ld+json">
 {
     "@@context": "https://schema.org",
-    "@@type": "WebSite",
-    "name": "Templatr",
-    "url": "{{ url('/') }}",
-    "potentialAction": {
-        "@@type": "SearchAction",
-        "target": {
-            "@@type": "EntryPoint",
-            "urlTemplate": "{{ url('/products') }}?search={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-    }
+    "@@type": "ItemList",
+    "name": "Featured items on Templatr",
+    "url": "{{ route('home') }}",
+    "itemListElement": [
+        @foreach($featuredProducts as $index => $item)
+        {
+            "@@type": "ListItem",
+            "position": {{ $index + 1 }},
+            "url": "{{ route('products.show', $item) }}",
+            "name": "{{ addslashes($item->title) }}"
+        }{{ $loop->last ? '' : ',' }}
+        @endforeach
+    ]
 }
 </script>
 @endpush
@@ -46,15 +84,15 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center reveal">
             <div class="p-4">
-                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ \App\Models\Product::count() }}+</div>
+                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ number_format($stats['products']) }}+</div>
                 <div class="text-gray-400 text-sm mt-1">Premium Items</div>
             </div>
             <div class="p-4">
-                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ \App\Models\User::count() }}+</div>
-                <div class="text-gray-400 text-sm mt-1">Happy Customers</div>
+                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ number_format($stats['creators']) }}+</div>
+                <div class="text-gray-400 text-sm mt-1">Verified Creators</div>
             </div>
             <div class="p-4">
-                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ number_format(\App\Models\Product::sum('download_count')) }}+</div>
+                <div class="text-3xl md:text-4xl font-bold text-[#FFC300]">{{ number_format($stats['downloads']) }}+</div>
                 <div class="text-gray-400 text-sm mt-1">Total Downloads</div>
             </div>
         </div>
@@ -277,74 +315,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             @foreach($featuredProducts as $index => $product)
-            <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
-                <a href="{{ route('products.show', $product) }}">
-                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        @php
-                            $cardMedia = match(true) {
-                                (bool)$product->thumbnail && $product->thumbnail_is_video  => 'thumb-video',
-                                (bool)$product->thumbnail                                  => 'thumb-image',
-                                (bool)$product->preview_image && $product->preview_is_video => 'preview-video',
-                                (bool)$product->preview_image                              => 'preview-image',
-                                default                                                    => 'placeholder',
-                            };
-                        @endphp
-                        @switch($cardMedia)
-                            @case('thumb-video')
-                                <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                @break
-                            @case('thumb-image')
-                                <img src="{{ $product->thumbnail_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                                @break
-                            @case('preview-video')
-                                <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                @break
-                            @case('preview-image')
-                                <img src="{{ $product->preview_image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                                @break
-                            @default
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                    </svg>
-                                </div>
-                        @endswitch
-                        @if($product->sale_price)
-                        <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">SALE</div>
-                        @endif
-                        <span class="absolute top-3 right-3 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm font-medium">{{ ucfirst($product->file_type) }}</span>
-                    </div>
-                </a>
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category?->name ?? 'Uncategorized' }}</span>
-                        <div class="flex items-center" x-data>
-                            <span class="text-xs text-yellow-400">
-                                @for($i = 1; $i <= 5; $i++)
-                                    @if($i <= round($product->average_rating))
-                                        &#9733;
-                                    @else
-                                        &#9734;
-                                    @endif
-                                @endfor
-                            </span>
-                            <span class="text-xs text-gray-500 ml-1">{{ number_format($product->average_rating, 1) }}</span>
-                        </div>
-                    </div>
-                    <a href="{{ route('products.show', $product) }}">
-                        <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
-                    </a>
-                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                        <span class="text-[11px] text-gray-500">Animashaun</span>
-                        <div class="text-right">
-                            @if($product->sale_price)
-                                <span class="text-[11px] text-gray-400 line-through">{{ CurrencyHelper::format($product->price) }}</span>
-                            @endif
-                            <span class="font-bold text-sm">{{ CurrencyHelper::format($product->sale_price ?? $product->price) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <x-product-card :product="$product" class="reveal stagger-{{ min($index + 1, 6) }}" />
             @endforeach
         </div>
     </div>
@@ -366,64 +337,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             @foreach($newProducts as $index => $product)
-            <div class="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-[#FFC300] hover:shadow-xl transition-all duration-500 reveal stagger-{{ min($index + 1, 6) }}">
-                <a href="{{ route('products.show', $product) }}">
-                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                        @php
-                            $cardMedia = match(true) {
-                                (bool)$product->thumbnail && $product->thumbnail_is_video  => 'thumb-video',
-                                (bool)$product->thumbnail                                  => 'thumb-image',
-                                (bool)$product->preview_image && $product->preview_is_video => 'preview-video',
-                                (bool)$product->preview_image                              => 'preview-image',
-                                default                                                    => 'placeholder',
-                            };
-                        @endphp
-                        @switch($cardMedia)
-                            @case('thumb-video')
-                                <video src="{{ $product->thumbnail_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                @break
-                            @case('thumb-image')
-                                <img src="{{ $product->thumbnail_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                                @break
-                            @case('preview-video')
-                                <video src="{{ $product->preview_image_url }}" class="w-full h-full object-cover" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
-                                @break
-                            @case('preview-image')
-                                <img src="{{ $product->preview_image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                                @break
-                            @default
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                    </svg>
-                                </div>
-                        @endswitch
-                        <span class="absolute top-3 left-3 bg-[#FFC300] text-black text-xs font-bold px-2.5 py-1 rounded-lg">NEW</span>
-                        <span class="absolute bottom-3 left-3 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-lg backdrop-blur-sm font-medium">{{ ucfirst($product->file_type) }}</span>
-                    </div>
-                </a>
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[11px] text-gray-500 font-medium">{{ $product->category?->name ?? 'Uncategorized' }}</span>
-                        <div class="flex items-center">
-                            <svg class="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <span class="text-xs text-gray-500 ml-1">{{ number_format($product->average_rating, 1) }}</span>
-                        </div>
-                    </div>
-                    <a href="{{ route('products.show', $product) }}">
-                        <h3 class="font-semibold text-gray-900 group-hover:text-[#FFC300] transition-colors line-clamp-1 text-sm">{{ $product->title }}</h3>
-                    </a>
-                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                        <span class="text-[11px] text-gray-500">Animashaun</span>
-                        <div class="text-right">
-                            @if($product->sale_price)
-                                <span class="text-[11px] text-gray-400 line-through">{{ CurrencyHelper::format($product->price) }}</span>
-                            @endif
-                            <span class="font-bold text-sm">{{ CurrencyHelper::format($product->sale_price ?? $product->price) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <x-product-card :product="$product" badge="new" class="reveal stagger-{{ min($index + 1, 6) }}" />
             @endforeach
         </div>
         <div class="text-center mt-10 reveal">
@@ -470,6 +384,54 @@
     </div>
 </section>
 
+<!-- FAQ — mirrors the FAQPage structured data above and gives answer engines quotable copy -->
+<section id="faq" class="bg-white py-16 md:py-20">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 reveal">
+            <h2 class="text-3xl md:text-4xl font-bold">Frequently asked <span class="text-[#FFC300]">questions</span></h2>
+            <p class="mt-4 text-gray-600 max-w-xl mx-auto">Everything you need to know before you buy</p>
+        </div>
+
+        <div class="space-y-3" x-data="{ open: 0 }">
+            @php
+                $faqs = [
+                    ['q' => 'What can I buy on Templatr?', 'a' => 'Templatr sells premium digital creative and web resources: WordPress themes and plugins, HTML and website templates, graphic templates, mockups, fonts, audio, video and 3D assets.'],
+                    ['q' => 'How much do items cost?', 'a' => 'Prices start from ' . \App\Helpers\CurrencyHelper::formatInt(3000) . ' per item. Every purchase includes a commercial licence and lifetime updates — there is no subscription and no per-project fee.'],
+                    ['q' => 'How is my purchase delivered?', 'a' => 'Delivery is instant and fully digital. As soon as payment is confirmed you can download the files from your Templatr dashboard — nothing is shipped and there is no waiting period.'],
+                    ['q' => 'Can I use the assets in client and commercial projects?', 'a' => 'Yes. Each download comes with a commercial licence, so you can use the asset in unlimited personal and client projects. Reselling or redistributing the original files is not permitted.'],
+                    ['q' => 'Which payment methods are accepted?', 'a' => 'Templatr accepts card, bank transfer and USSD payments in Nigerian Naira through Paystack and Flutterwave.'],
+                ];
+            @endphp
+
+            @foreach($faqs as $index => $faq)
+                <div class="reveal overflow-hidden rounded-2xl border border-gray-200">
+                    <h3>
+                        <button type="button"
+                                @click="open = open === {{ $index }} ? null : {{ $index }}"
+                                :aria-expanded="(open === {{ $index }}).toString()"
+                                aria-controls="faq-panel-{{ $index }}"
+                                class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50 sm:text-base">
+                            {{ $faq['q'] }}
+                            <svg class="h-5 w-5 flex-shrink-0 text-gray-500 transition-transform duration-200"
+                                 :class="open === {{ $index }} ? 'rotate-180' : ''"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </h3>
+                    <div id="faq-panel-{{ $index }}" x-show="open === {{ $index }}" x-cloak class="px-5 pb-5">
+                        <p class="text-sm leading-relaxed text-gray-600">{{ $faq['a'] }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <p class="mt-8 text-center text-sm text-gray-600">
+            Still have a question?
+            <a href="mailto:support@templatr.site" class="font-semibold text-[var(--color-primary-ink)] underline underline-offset-4 hover:text-black transition-colors">Email our support team</a>
+        </p>
+    </div>
+</section>
 
 @endsection
 

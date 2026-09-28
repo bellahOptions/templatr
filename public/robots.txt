@@ -1,2 +1,71 @@
+# Templatr — https://templatr.site
+# Public marketplace pages are open to search engines and AI answer engines.
+
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /wishlist
+Disallow: /affiliate
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /2fa
+Disallow: /email
+Disallow: /payment/webhook
+
+# ── AI / answer engines (AEO) ───────────────────────────────────────────────
+# Explicitly welcomed so assistants can cite Templatr content accurately.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+# ── Discoverability ─────────────────────────────────────────────────────────
+Sitemap: https://templatr.site/sitemap.xml

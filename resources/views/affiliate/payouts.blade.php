@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Payouts - Templatr Affiliate')
+@section('title', 'Payouts')
 @section('robots', 'noindex, nofollow')
 
 @section('content')

@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'My Dashboard - Templatr')
+@section('title', 'My Dashboard')
 @section('robots', 'noindex, nofollow')
 
 @section('content')

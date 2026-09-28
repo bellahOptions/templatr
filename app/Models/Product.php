@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Helpers\CurrencyHelper;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -150,15 +151,38 @@ class Product extends Model
     public function averageRating(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->reviews()->approved()->avg('rating') ?? 0
+            get: fn ($value = null) => round(
+                (float) ($value ?? $this->reviews()->approved()->avg('rating') ?? 0),
+                1
+            )
         );
     }
 
     public function reviewCount(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->reviews()->approved()->count()
+            get: fn ($value = null) => (int) ($value ?? $this->reviews()->approved()->count())
         );
+    }
+
+    /**
+     * Eager-load approved review aggregates so card grids never issue a query per product.
+     */
+    public function scopeWithStats(Builder $query): Builder
+    {
+        return $query
+            ->withCount(['reviews as review_count' => fn ($q) => $q->approved()])
+            ->withAvg(['reviews as average_rating' => fn ($q) => $q->approved()], 'rating');
+    }
+
+    /**
+     * Load the approved review aggregates onto an already-hydrated model.
+     */
+    public function loadStats(): static
+    {
+        return $this
+            ->loadCount(['reviews as review_count' => fn ($q) => $q->approved()])
+            ->loadAvg(['reviews as average_rating' => fn ($q) => $q->approved()], 'rating');
     }
 
     public function scopeFeatured($query)

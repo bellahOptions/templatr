@@ -33,9 +33,12 @@ class ProductController extends Controller
         }
 
         $product->increment('view_count');
+        $product->loadStats();
+
         $relatedProducts = Product::published()
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->withStats()
             ->with(['category', 'author'])
             ->latest()
             ->take(4)

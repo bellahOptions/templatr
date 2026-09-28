@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Affiliate Dashboard - Templatr')
+@section('title', 'Affiliate Dashboard')
 @section('robots', 'noindex, nofollow')
 
 @section('content')

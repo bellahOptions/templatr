@@ -5,22 +5,113 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Templatr - Premium Creative & Web Resources')</title>
-    <meta name="description" content="@yield('meta_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    @php
+        use App\Helpers\BrandHelper;
+
+        /*
+         * One place controls the brand suffix, so it can never be doubled up or forgotten.
+         *
+         * yieldContent() hands back *already escaped* markup: Blade's value form of
+         * @section('x', 'A & B') runs the value through e(). We therefore escape the brand
+         * constant too and print the result unescaped, which keeps pages like
+         * "Fonts & Plugins" as a single &amp; instead of &amp;amp;.
+         */
+        $sectionTitle = trim($__env->yieldContent('title'));
+        $metaTitle = $sectionTitle !== ''
+            ? $sectionTitle.' | '.e(BrandHelper::FULL)
+            : e(BrandHelper::DEFAULT_TITLE);
+
+        $sectionOgTitle = trim($__env->yieldContent('og_title'));
+        $ogTitle = $sectionOgTitle !== ''
+            ? (str_contains($sectionOgTitle, BrandHelper::NAME)
+                ? $sectionOgTitle
+                : $sectionOgTitle.' | '.e(BrandHelper::FULL))
+            : $metaTitle;
+    @endphp
+    <title>{!! $metaTitle !!}</title>
+    <meta name="description" content="@yield('meta_description', BrandHelper::DEFAULT_DESCRIPTION)">
     <link rel="canonical" href="@yield('canonical', url()->current())">
-    <meta name="robots" content="@yield('robots', 'index, follow')">
-    <meta property="og:site_name" content="Templatr">
+    <meta name="robots" content="@yield('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
+    <meta name="author" content="{{ BrandHelper::PARENT }}">
+    <meta name="publisher" content="{{ BrandHelper::PARENT }}">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ url('/sitemap.xml') }}">
+    <link rel="alternate" type="text/plain" title="llms.txt" href="{{ url('/llms.txt') }}">
+    <meta property="og:site_name" content="{{ BrandHelper::FULL }}">
+    <meta property="og:locale" content="en_NG">
     <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:title" content="@yield('og_title', 'Templatr - Premium Creative & Web Resources')">
-    <meta property="og:description" content="@yield('og_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    <meta property="og:title" content="{!! $ogTitle !!}">
+    <meta property="og:description" content="@yield('og_description', BrandHelper::DEFAULT_DESCRIPTION)">
     <meta property="og:url" content="@yield('og_url', url()->current())">
     <meta property="og:image" content="@yield('og_image', asset('og-image.jpg'))">
+    <meta property="og:image:secure_url" content="@yield('og_image', asset('og-image.jpg'))">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="@yield('og_image_alt', BrandHelper::FULL.' — premium creative and web resources marketplace')">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('og_title', 'Templatr - Premium Creative & Web Resources')">
-    <meta name="twitter:description" content="@yield('og_description', 'Browse thousands of premium design templates, graphics, fonts, audio, and creative assets. Download instantly with a commercial license.')">
+    <meta name="twitter:site" content="@templatr">
+    <meta name="twitter:title" content="{!! $ogTitle !!}">
+    <meta name="twitter:description" content="@yield('og_description', BrandHelper::DEFAULT_DESCRIPTION)">
     <meta name="twitter:image" content="@yield('og_image', asset('og-image.jpg'))">
+    <meta name="twitter:image:alt" content="@yield('og_image_alt', BrandHelper::FULL.' — premium creative and web resources marketplace')">
+
+    {{-- Site-wide entity graph: helps search engines and AI answer engines resolve who we are --}}
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@graph": [
+            {
+                "@@type": "Organization",
+                "@@id": "{{ url('/') }}#organization",
+                "name": "{{ BrandHelper::NAME }}",
+                "alternateName": ["{{ BrandHelper::FULL }}", "Templatr.site", "Templatr NG"],
+                "legalName": "{{ BrandHelper::PARENT }}",
+                "url": "{{ url('/') }}",
+                "logo": {
+                    "@@type": "ImageObject",
+                    "url": "{{ asset('templatr.svg') }}"
+                },
+                "description": "{{ BrandHelper::FULL }} is a marketplace for premium digital creative and web resources — templates, themes, plugins, graphics, fonts, audio and video assets — sold with a commercial licence and instant download.",
+                "slogan": "{{ BrandHelper::TAGLINE }}",
+                "parentOrganization": { "@@id": "{{ BrandHelper::PARENT_URL }}/#organization" },
+                "brand": { "@@type": "Brand", "name": "{{ BrandHelper::NAME }}" },
+                "email": "support@templatr.site",
+                "contactPoint": [{
+                    "@@type": "ContactPoint",
+                    "contactType": "customer support",
+                    "email": "support@templatr.site",
+                    "availableLanguage": ["en"]
+                }],
+                "currenciesAccepted": "NGN",
+                "paymentAccepted": "Card, Bank Transfer, USSD"
+            },
+            {
+                "@@type": "Organization",
+                "@@id": "{{ BrandHelper::PARENT_URL }}/#organization",
+                "name": "{{ BrandHelper::PARENT }}",
+                "url": "{{ BrandHelper::PARENT_URL }}",
+                "subOrganization": { "@@id": "{{ url('/') }}#organization" }
+            },
+            {
+                "@@type": "WebSite",
+                "@@id": "{{ url('/') }}#website",
+                "name": "{{ BrandHelper::FULL }}",
+                "alternateName": "{{ BrandHelper::NAME }}",
+                "url": "{{ url('/') }}",
+                "inLanguage": "en",
+                "publisher": { "@@id": "{{ url('/') }}#organization" },
+                "potentialAction": {
+                    "@@type": "SearchAction",
+                    "target": {
+                        "@@type": "EntryPoint",
+                        "urlTemplate": "{{ url('/products') }}?search={search_term_string}"
+                    },
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        ]
+    }
+    </script>
     @stack('structured_data')
     <link rel="icon" href="{{ asset('favicon.ico')}}" />
     <link rel="apple-touch-icon" sizes="57x57" href="{{ asset('/apple-icon-57x57.png')}}">
@@ -49,12 +140,32 @@
         :root {
             --color-primary: #FFC300;
             --color-primary-dark: #E6B000;
+            /* Accessible (WCAG AA 4.5:1) gold for text on white surfaces */
+            --color-primary-ink: #8A6A00;
             --color-black: #000000;
             --color-white: #ffffff;
         }
 
         [x-cloak] {
             display: none !important;
+        }
+
+        /* Consistent, visible keyboard focus everywhere */
+        :focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
     @stack('styles')
@@ -70,55 +181,24 @@
 </head>
 
 <body class="font-sans antialiased bg-white text-gray-900 overflow-x-hidden" style="font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;">
-    {{-- Preloader --}}
-    <div id="preloader" class="preloader">
-        <div class="text-center">
-            <img src="/templatr.svg" alt="Templatr" class="preloader-logo mx-auto mb-6">
-            <div class="flex justify-center space-x-2">
-                <div class="w-3 h-3 bg-[#FFC300] rounded-full animate-bounce stagger-1"></div>
-                <div class="w-3 h-3 bg-[#FFC300] rounded-full animate-bounce stagger-2"></div>
-                <div class="w-3 h-3 bg-[#FFC300] rounded-full animate-bounce stagger-3"></div>
-            </div>
-            <div class="preloader-bar"></div>
-        </div>
-    </div>
-
-    <script>
-        (() => {
-            const minimumDisplayTime = 700;
-            const startedAt = Date.now();
-            let hidden = false;
-
-            const hidePreloader = () => {
-                if (hidden) {
-                    return;
-                }
-
-                hidden = true;
-                window.clearTimeout(maxTimeout);
-
-                document.querySelectorAll('#preloader').forEach((preloader) => {
-                    preloader.classList.add('hidden');
-                    preloader.setAttribute('aria-hidden', 'true');
-                });
-            };
-
-            const hideWhenReady = () => {
-                const elapsed = Date.now() - startedAt;
-                window.setTimeout(hidePreloader, Math.max(0, minimumDisplayTime - elapsed));
-            };
-
-            const maxTimeout = window.setTimeout(hidePreloader, 2000);
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', hideWhenReady, { once: true });
-            } else {
-                hideWhenReady();
-            }
-        })();
-    </script>
+    {{-- Skip link: first tab stop, lets keyboard users bypass the navigation --}}
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[999] focus:rounded-xl focus:bg-[#FFC300] focus:px-4 focus:py-2.5 focus:text-sm focus:font-bold focus:text-black focus:shadow-lg">
+        Skip to main content
+    </a>
 
     <!-- Livewire Popup Modal -->
+    @php
+        // Queried once per request and reused by the nav, mobile menu and footer.
+        $navCategories = \App\Models\Category::withCount([
+            'products' => fn ($q) => $q->where('is_published', true),
+        ])->orderBy('order')->get()->map(fn ($category) => [
+            'name' => $category->name,
+            'slug' => $category->slug,
+            'products_count' => (int) $category->products_count,
+        ])->all();
+    @endphp
+
     @livewire('popup-modal')
 
     <!-- Advertisement Popup Modal (admin-controlled via position=popup) -->
@@ -139,7 +219,9 @@
                         class="{{ request()->routeIs('products.*') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] transition-colors text-sm font-medium">Browse</a>
                     <div class="relative group">
                         <button
-                            class="{{ request()->routeIs('products.index') && request()->has('category') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] transition-colors text-sm font-medium flex items-center">
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            class="{{ request()->routeIs('category.*') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] transition-colors text-sm font-medium flex items-center">
                             Categories
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -147,15 +229,12 @@
                             </svg>
                         </button>
                         <div
-                            class="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100 overflow-hidden">
+                            class="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50 border border-gray-100 overflow-hidden">
                             <div class="py-2">
-                                @php
-                                    $navCategories = \App\Models\Category::orderBy('order')->get();
-                                @endphp
                                 @foreach($navCategories as $cat)
-                                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
+                                    <a href="{{ route('category.show', ['category' => $cat['slug']]) }}"
                                         class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">
-                                        {{ $cat->name }}
+                                        {{ $cat['name'] }}
                                     </a>
                                 @endforeach
                             </div>
@@ -172,8 +251,8 @@
                 <!-- Right Side -->
                 <div class="hidden md:flex items-center space-x-4">
                     <!-- Search Toggle -->
-                    <button @click="searchOpen = !searchOpen"
-                        class="text-gray-300 hover:text-[#FFC300] transition-colors p-1">
+                    <button @click="searchOpen = !searchOpen" :aria-expanded="searchOpen.toString()" aria-controls="site-search" aria-label="Search the marketplace"
+                        class="rounded-lg p-2 text-gray-300 transition-colors hover:bg-white/5 hover:text-[#FFC300]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -203,6 +282,9 @@
                     @auth
                         <div class="relative group">
                             <button
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-label="Account menu"
                                 class="flex items-center space-x-2 text-gray-300 hover:text-[#FFC300] transition-colors">
                                 <div class="w-8 h-8 bg-[#FFC300] rounded-full flex items-center justify-center">
                                     <span
@@ -211,7 +293,7 @@
                                 <span class="text-sm font-medium hidden lg:block">{{ auth()->user()->name }}</span>
                             </button>
                             <div
-                                class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100 overflow-hidden">
+                                class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50 border border-gray-100 overflow-hidden">
                                 <div class="py-2">
                                     <a href="{{ route('dashboard') }}"
                                         class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#FFC300]/10 hover:text-black transition-colors">Dashboard</a>
@@ -265,7 +347,7 @@
                             @endif
                         </a>
                     @endauth
-                    <button @click="mobileOpen = !mobileOpen" class="text-gray-300 hover:text-white p-1">
+                    <button @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen.toString()" aria-controls="mobile-menu" aria-label="Toggle navigation menu" class="rounded-lg p-2 text-gray-300 hover:bg-white/5 hover:text-white">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path :class="{ 'hidden': mobileOpen, 'block': !mobileOpen }" class="block"
                                 stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -280,14 +362,14 @@
         </div>
 
         <!-- Search Bar Dropdown -->
-        <div x-show="searchOpen" x-cloak class="bg-black border-t border-gray-800">
+        <div x-show="searchOpen" x-cloak id="site-search" class="bg-black border-t border-gray-800">
             <div class="max-w-2xl mx-auto px-4 py-4">
                 @livewire('smart-search')
             </div>
         </div>
 
         <!-- Mobile Menu -->
-        <div x-show="mobileOpen" class="md:hidden bg-black border-t border-gray-800" x-cloak>
+        <div x-show="mobileOpen" id="mobile-menu" class="md:hidden bg-black border-t border-gray-800" x-cloak>
             <div class="px-4 py-4 space-y-1 max-h-[80vh] overflow-y-auto">
                 <div class="pb-3 mb-3 border-b border-gray-800">
                     @livewire('smart-search')
@@ -306,9 +388,12 @@
                 @endauth
                 <a href="{{ route('products.index') }}"
                     class="block {{ request()->routeIs('products.*') ? 'text-[#FFC300]' : 'text-gray-300' }} hover:text-[#FFC300] py-2.5 text-sm font-medium">Browse All Items</a>
-                @foreach(\App\Models\Category::orderBy('order')->get() as $cat)
-                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
-                        class="block text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">{{ $cat->name }}</a>
+                @foreach($navCategories as $cat)
+                    <a href="{{ route('category.show', ['category' => $cat['slug']]) }}"
+                        class="flex items-center justify-between gap-3 text-gray-300 hover:text-[#FFC300] py-2.5 text-sm">
+                        <span>{{ $cat['name'] }}</span>
+                        <span class="text-xs text-gray-500">{{ $cat['products_count'] }}</span>
+                    </a>
                 @endforeach
                 @auth
                     <hr class="border-gray-800 my-3">
@@ -344,25 +429,22 @@
     </nav>
 
     <!-- Category Navigation Header Bar -->
-    <div class="bg-[#FFC300] border-b border-gray-200 hidden md:block">
+    <nav aria-label="Categories" class="bg-[#FFC300] border-b border-gray-200 hidden md:block">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center space-x-1 overflow-x-auto scrollbar-hide py-2">
                 <a href="{{ route('products.index') }}"
                     class="px-4 py-1.5 text-xs font-semibold rounded-full bg-black text-white hover:bg-gray-800 transition-colors whitespace-nowrap">
                     All Items
                 </a>
-                @php
-                    $headerCategories = \App\Models\Category::orderBy('order')->get();
-                @endphp
-                @foreach($headerCategories as $cat)
-                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
-                        class="px-4 py-1.5 text-xs font-medium text-gray-600 rounded-full hover:bg-[#FFC300]/10 hover:text-black hover:font-semibold transition-all whitespace-nowrap {{ request('category') === $cat->slug ? 'bg-[#FFC300]/20 text-black font-semibold' : '' }}">
-                        {{ $cat->name }}
+                @foreach($navCategories as $cat)
+                    <a href="{{ route('category.show', ['category' => $cat['slug']]) }}"
+                        class="px-4 py-1.5 text-xs font-medium text-gray-800 rounded-full hover:bg-black/10 hover:text-black transition-all whitespace-nowrap {{ request()->routeIs('category.show') && request()->route('category')?->slug === $cat['slug'] ? 'bg-black text-white font-semibold' : '' }}">
+                        {{ $cat['name'] }}
                     </a>
                 @endforeach
             </div>
         </div>
-    </div>
+    </nav>
 
     <!-- Flash Messages -->
     @if(session('success') || session('error') || session('info') || session('warning'))
@@ -440,7 +522,7 @@
     @endif
 
     <!-- Main Content -->
-    <main>
+    <main id="main-content">
         @yield('content')
     </main>
     <!-- Marquee Ad Ticker (admin-controlled via position=marquee) -->
@@ -454,40 +536,56 @@
                         <img src="/templatr.svg" alt="Templatr" class="h-8 sm:h-10 w-auto max-w-[180px]">
                     </a>
 
-                    <p class="text-gray-400 text-sm leading-relaxed max-w-md">Premium creative and web resources
-                        marketplace — affordable prices starting from as low as <strong>₦3,000</strong>.</p>
-                    <div class="flex space-x-4 mt-6">
-                        <a href="#"
-                            class="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                            </svg>
-                        </a>
-                        <a href="#"
-                            class="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                            </svg>
-                        </a>
-                        <a href="#"
-                            class="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.51 11.51 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                            </svg>
-                        </a>
-                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed max-w-md">
+                        <strong class="text-white">{{ BrandHelper::FULL }}</strong> — a premium creative and web
+                        resources marketplace with affordable prices starting from as low as <strong>₦3,000</strong>.
+                        Operated by
+                        <a href="{{ BrandHelper::PARENT_URL }}" rel="noopener"
+                           class="text-[#FFC300] underline underline-offset-4 hover:text-white transition-colors">{{ BrandHelper::PARENT }}</a>.
+                    </p>
+                    <ul class="flex space-x-3 mt-6">
+                        <li>
+                            <a href="#" aria-label="Templatr on X (Twitter)"
+                                class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                                </svg>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" aria-label="Templatr on Facebook"
+                                class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+                                </svg>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" aria-label="Templatr on GitHub"
+                                class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-[#FFC300] hover:text-black transition-all">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.51 11.51 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <p class="text-gray-400 text-sm mt-6">
+                        Questions? <a href="mailto:support@templatr.site"
+                            class="text-[#FFC300] underline underline-offset-4 hover:text-white transition-colors">support@templatr.site</a>
+                    </p>
                 </div>
                 <div>
                     <h3 class="text-sm font-semibold uppercase tracking-wider mb-4">Explore</h3>
                     <ul class="space-y-3">
                         <li><a href="{{ route('products.index') }}"
                                 class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">All Items</a></li>
-                        @foreach(\App\Models\Category::orderBy('order')->take(4)->get() as $cat)
-                            <li><a href="{{ route('products.index', ['category' => $cat->slug]) }}"
-                                    class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">{{ $cat->name }}</a>
+                        @foreach($navCategories as $cat)
+                            <li><a href="{{ route('category.show', ['category' => $cat['slug']]) }}"
+                                    class="text-gray-400 hover:text-[#FFC300] text-sm transition-colors">{{ $cat['name'] }}</a>
                             </li>
                         @endforeach
                     </ul>
@@ -525,9 +623,9 @@
             </div>
             <div
                 class="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-gray-500 text-sm">
-                <p>&copy; {{ date('Y') }} Templatr. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} {{ BrandHelper::FULL }}. All rights reserved.</p>
 
-                <p>Premium Creative & Web Resources Marketplace.</p>
+                <p>{{ BrandHelper::TAGLINE }} Marketplace by {{ BrandHelper::PARENT }}.</p>
             </div>
         </div>
     </footer>

@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Terms of Service - Templatr')
-@section('meta_description', 'Read the Templatr Terms of Service. Understand your rights and obligations when purchasing and using our digital creative assets.')
-@section('og_title', 'Terms of Service - Templatr')
+@section('title', 'Terms of Service')
+@section('meta_description', 'Read the Templatr by Bellah Options Terms of Service. Understand your rights and obligations when purchasing and using our digital creative assets.')
+@section('og_title', 'Terms of Service')
 @section('canonical', route('terms.show'))
 
 @section('content')

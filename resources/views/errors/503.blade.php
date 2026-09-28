@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Maintenance Mode - Templatr')
+@section('title', 'Maintenance Mode')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center py-20 px-4">

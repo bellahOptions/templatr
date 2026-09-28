@@ -13,7 +13,8 @@
             <span class="text-[#FFC300]">{{ CurrencyHelper::formatInt(3000) }}</span>
         </h1>
         <p class="mt-6 text-base sm:text-lg md:text-xl text-gray-400 leading-relaxed max-w-xl animate-fade-in-up stagger-2">
-            Unlock thousands of premium WordPress themes, plugins, design templates, and digital assets crafted by world-class creators.
+            <strong class="text-gray-200">Templatr by Bellah Options</strong> — unlock thousands of premium WordPress
+            themes, plugins, design templates, and digital assets crafted by world-class creators.
         </p>
         <div class="mt-8 flex flex-wrap items-center gap-4 animate-fade-in-up stagger-3">
             <a href="{{ route('products.index') }}" class="bg-[#FFC300] text-black px-8 py-4 rounded-xl text-base font-bold hover:bg-[#FFD633] transition-all transform hover:scale-105 shadow-lg shadow-[#FFC300]/25 w-full sm:w-auto text-center animate-pulse-glow">

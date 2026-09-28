@@ -2,7 +2,7 @@
 
 @php use App\Helpers\CurrencyHelper; @endphp
 
-@section('title', 'My Wishlist - Templatr')
+@section('title', 'My Wishlist')
 @section('robots', 'noindex, nofollow')
 
 @section('content')

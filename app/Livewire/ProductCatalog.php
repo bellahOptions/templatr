@@ -22,6 +22,12 @@ class ProductCatalog extends Component
 
     public int $perPage = 12;
 
+    /**
+     * Set when the catalogue is mounted on a category landing page.
+     * The category then comes from the URL path and cannot be changed here.
+     */
+    public string $lockedCategory = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'category' => ['except' => ''],
@@ -30,6 +36,14 @@ class ProductCatalog extends Component
         'minPrice' => ['except' => '', 'as' => 'min_price'],
         'maxPrice' => ['except' => '', 'as' => 'max_price'],
     ];
+
+    public function mount(string $category = ''): void
+    {
+        if ($category !== '') {
+            $this->category = $category;
+            $this->lockedCategory = $category;
+        }
+    }
 
     public function updatingSearch(): void
     {
@@ -60,6 +74,15 @@ class ProductCatalog extends Component
     {
         $this->category = $this->category === $slug ? '' : $slug;
         $this->perPage = 12;
+    }
+
+    /**
+     * The category currently filtering the catalogue — either locked from the
+     * route (category landing page) or chosen through the filters UI.
+     */
+    public function activeCategory(): string
+    {
+        return $this->lockedCategory !== '' ? $this->lockedCategory : $this->category;
     }
 
     public function setType(string $fileType): void
@@ -97,8 +120,9 @@ class ProductCatalog extends Component
             });
         }
 
-        if ($this->category !== '') {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $this->category));
+        if ($this->activeCategory() !== '') {
+            $category = $this->activeCategory();
+            $query->whereHas('category', fn ($q) => $q->where('slug', $category));
         }
 
         if ($this->type !== '') {
@@ -140,10 +164,12 @@ class ProductCatalog extends Component
         }
 
         $total = (clone $query)->count();
-        $products = $query->with(['category', 'author'])->take($this->perPage)->get();
+        $products = $query->withStats()->with(['category', 'author'])->take($this->perPage)->get();
         $hasMore = $products->count() < $total;
 
-        $categories = Category::orderBy('order')->get();
+        $categories = Category::withCount([
+            'products' => fn ($q) => $q->where('is_published', true),
+        ])->orderBy('order')->get();
         $types = [
             'graphic' => 'Graphics',
             'template' => 'Templates',
@@ -153,7 +179,8 @@ class ProductCatalog extends Component
             'plugin' => 'Plugins',
             '3d' => '3D Assets',
         ];
+        $activeCategory = $this->activeCategory();
 
-        return view('livewire.product-catalog', compact('products', 'total', 'hasMore', 'categories', 'types'));
+        return view('livewire.product-catalog', compact('products', 'total', 'hasMore', 'categories', 'types', 'activeCategory'));
     }
 }

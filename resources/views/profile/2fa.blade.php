@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Two-Factor Authentication - Templatr')
+@section('title', 'Two-Factor Authentication')
 
 @section('content')
 <section class="py-12">

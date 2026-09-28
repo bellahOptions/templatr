@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create Account - Templatr')
+@section('title', 'Create Account')
 @section('robots', 'noindex, nofollow')
 
 @section('content')

@@ -10,15 +10,22 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create admin user only
-        User::create([
-            'name' => 'Aare Abefe',
-            'email' => 'ahmed@bellahoptions.com',
-            'password' => Hash::make('#Panaman247'),
-            'role' => 'admin',
-            'bio' => 'Platform administrator',
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'ahmed@bellahoptions.com'],
+            [
+                'name' => 'Aare Abefe',
+                'password' => Hash::make('#Panaman247'),
+                'role' => 'admin',
+                'bio' => 'Platform administrator',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        $this->command->info('Admin user created: Aare Abefe (ahmed@bellahoptions.com)');
+        $this->command->info('Admin user ready: '.$admin->name.' ('.$admin->email.')');
+
+        // Demo catalogue is for local/staging only — never seed it into production.
+        if (! app()->isProduction()) {
+            $this->call(DemoCatalogSeeder::class);
+        }
     }
 }
