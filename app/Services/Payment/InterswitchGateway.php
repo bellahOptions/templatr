@@ -8,16 +8,19 @@ use Illuminate\Support\Facades\Log;
 class InterswitchGateway implements PaymentGateway
 {
     protected string $clientId;
+
     protected string $clientSecret;
+
     protected string $merchantCode;
+
     protected bool $isLive;
 
     public function __construct()
     {
-        $this->clientId = config('services.interswitch.client_id', env('INTERSWITCH_CLIENT_ID', ''));
-        $this->clientSecret = config('services.interswitch.client_secret', env('INTERSWITCH_CLIENT_SECRET', ''));
-        $this->merchantCode = config('services.interswitch.merchant_code', env('INTERSWITCH_MERCHANT_CODE', ''));
-        $this->isLive = env('INTERSWITCH_LIVE', false);
+        $this->clientId = (string) config('services.interswitch.client_id', '');
+        $this->clientSecret = (string) config('services.interswitch.client_secret', '');
+        $this->merchantCode = (string) config('services.interswitch.merchant_code', '');
+        $this->isLive = (bool) config('services.interswitch.live', false);
     }
 
     public function getMerchantCode(): string
@@ -38,8 +41,8 @@ class InterswitchGateway implements PaymentGateway
     public function initializePayment(array $data): array
     {
         try {
-            $baseUrl = $this->isLive 
-                ? 'https://webpay.interswitchng.com' 
+            $baseUrl = $this->isLive
+                ? 'https://webpay.interswitchng.com'
                 : 'https://sandbox.interswitchng.com';
 
             $paymentData = [
@@ -50,8 +53,8 @@ class InterswitchGateway implements PaymentGateway
                 'redirect_url' => $data['callback_url'],
                 'customer_email' => $data['email'],
                 'customer_name' => $data['name'] ?? 'Customer',
-                'description' => 'Templatr Purchase - Order #' . ($data['order_id'] ?? ''),
-                'pay_item_id' => env('INTERSWITCH_PAY_ITEM_ID', '101'),
+                'description' => 'Templatr Purchase - Order #'.($data['order_id'] ?? ''),
+                'pay_item_id' => config('services.interswitch.pay_item_id', '101'),
             ];
 
             $response = Http::withHeaders([
@@ -71,9 +74,11 @@ class InterswitchGateway implements PaymentGateway
             }
 
             Log::error('Interswitch initialization failed', ['response' => $response->json()]);
+
             return ['success' => false, 'message' => 'Payment initialization failed'];
         } catch (\Exception $e) {
-            Log::error('Interswitch exception: ' . $e->getMessage());
+            Log::error('Interswitch exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Payment gateway error. Please try again.'];
         }
     }
@@ -81,8 +86,8 @@ class InterswitchGateway implements PaymentGateway
     public function verifyPayment(string $reference): array
     {
         try {
-            $baseUrl = $this->isLive 
-                ? 'https://webpay.interswitchng.com' 
+            $baseUrl = $this->isLive
+                ? 'https://webpay.interswitchng.com'
                 : 'https://sandbox.interswitchng.com';
 
             $response = Http::withHeaders([
@@ -94,6 +99,7 @@ class InterswitchGateway implements PaymentGateway
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return [
                     'success' => ($data['status'] ?? '') === 'SUCCESS',
                     'amount' => $data['amount'] / 100,
@@ -104,7 +110,8 @@ class InterswitchGateway implements PaymentGateway
 
             return ['success' => false, 'message' => 'Verification failed'];
         } catch (\Exception $e) {
-            Log::error('Interswitch verification exception: ' . $e->getMessage());
+            Log::error('Interswitch verification exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Verification error'];
         }
     }
@@ -112,6 +119,6 @@ class InterswitchGateway implements PaymentGateway
     protected function generateAuthToken(array $data): string
     {
         // Simple token generation - in production, use proper Interswitch auth
-        return base64_encode($this->clientId . ':' . $this->clientSecret);
+        return base64_encode($this->clientId.':'.$this->clientSecret);
     }
 }

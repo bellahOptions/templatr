@@ -15,14 +15,15 @@ class PaymentManager
 
     protected function registerGateways(): void
     {
-        // Only register gateways that have their keys configured
-        if (env('PAYSTACK_SECRET_KEY')) {
+        // Only register gateways that have their keys configured. Credentials are
+        // read from config so `php artisan config:cache` does not blank them.
+        if (config('services.paystack.secret')) {
             $this->gateways['paystack'] = App::make(PaystackGateway::class);
         }
-        if (env('FLUTTERWAVE_SECRET_KEY')) {
+        if (config('services.flutterwave.secret')) {
             $this->gateways['flutterwave'] = App::make(FlutterwaveGateway::class);
         }
-        if (env('INTERSWITCH_CLIENT_ID') && env('INTERSWITCH_CLIENT_SECRET')) {
+        if (config('services.interswitch.client_id') && config('services.interswitch.client_secret')) {
             $this->gateways['interswitch'] = App::make(InterswitchGateway::class);
         }
     }
@@ -34,7 +35,7 @@ class PaymentManager
         }
 
         // Return first available gateway
-        if (!empty($this->gateways)) {
+        if (! empty($this->gateways)) {
             return reset($this->gateways);
         }
 
@@ -47,19 +48,21 @@ class PaymentManager
         foreach ($this->gateways as $name => $gateway) {
             $available[$name] = $gateway;
         }
+
         return $available;
     }
 
     public function hasGateways(): bool
     {
-        return !empty($this->gateways);
+        return ! empty($this->gateways);
     }
 
     public function getDefaultGateway(): ?string
     {
-        if (!empty($this->gateways)) {
+        if (! empty($this->gateways)) {
             return array_key_first($this->gateways);
         }
+
         return null;
     }
 }

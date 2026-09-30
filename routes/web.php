@@ -112,6 +112,12 @@ Route::middleware(RedirectAdminToPanel::class)->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/checkout/callback/{gateway}', [CheckoutController::class, 'callback'])->name('checkout.callback');
     Route::get('/orders/confirmation/{order}', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
+
+    // Token-authenticated guest download. The token is emailed to the buyer and
+    // only its SHA-256 hash is stored, so this link is safe to keep unauthenticated.
+    Route::get('/downloads/{product}', [ProductController::class, 'download'])
+        ->middleware('throttle:60,1')
+        ->name('products.download.guest');
 });
 
 // Authenticated user routes (require verified email)

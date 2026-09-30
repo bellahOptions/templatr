@@ -132,7 +132,7 @@ class CheckoutController extends Controller
                     'author_earnings' => $price * 0.7,
                 ]);
                 if (! $user) {
-                    $this->downloadSecurity->generateDownloadToken($orderItem, 72);
+                    $this->rememberDownloadToken($orderItem);
                 }
             }
 
@@ -252,6 +252,20 @@ class CheckoutController extends Controller
         }
     }
 
+    /**
+     * Issue a guest download token and keep the plain value in the buyer's own
+     * session so the confirmation page can build their one-time download links.
+     * Only the SHA-256 hash is persisted, never the token itself.
+     */
+    protected function rememberDownloadToken(OrderItem $orderItem, int $expiresInHours = 72): string
+    {
+        $token = $this->downloadSecurity->generateDownloadToken($orderItem, $expiresInHours);
+
+        session()->put('download_token_'.$orderItem->id, $token);
+
+        return $token;
+    }
+
     protected function completeOrder($products, float $totalAmount, string $paymentMethod, array $guestData = [], ?string $paymentReference = null): ?Order
     {
         try {
@@ -288,7 +302,7 @@ class CheckoutController extends Controller
 
                 // Generate download token for guest orders (72-hour expiry)
                 if (! Auth::check()) {
-                    $this->downloadSecurity->generateDownloadToken($orderItem, 72);
+                    $this->rememberDownloadToken($orderItem);
                 }
 
                 // Credit author's balance

@@ -153,9 +153,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </button>
                             </form>
                             @else
-                            <a href="{{ route('products.download', ['product' => $item->product, 'token' => session('download_token_' . $item->id)]) }}"
+                            <a href="{{ route('products.download.guest', ['product' => $item->product, 'token' => session('download_token_' . $item->id)]) }}"
                                class="text-xs text-[#FFC300] hover:text-black font-semibold">
-                                Download (1 download only)
+                                Download ({{ $item->remaining_downloads }} left)
                             </a>
                             @endif
                         </div>
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>
                     <div class="text-sm text-amber-800">
                         <p class="font-semibold">Guest Download Notice</p>
-                        <p class="mt-1">You can download each item <strong>only once</strong>. Please save your files carefully. A download link was also sent to <strong>{{ $order->guest_email }}</strong>.</p>
+                        <p class="mt-1">You can download each item <strong>up to {{ \App\Models\OrderItem::MAX_DOWNLOADS }} times</strong> from this page. Please save your files carefully — your guest download links are tied to this session, so download them now.</p>
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>
                     <div class="text-sm text-blue-800">
                         <p class="font-semibold">Download Info</p>
-                        <p class="mt-1">You can download each item up to <strong>2 times</strong>. You can always return to your <a href="{{ route('orders.index') }}" class="text-blue-600 underline font-semibold">order history</a> to download your items again.</p>
+                        <p class="mt-1">You can download each item up to <strong>{{ \App\Models\OrderItem::MAX_DOWNLOADS }} times</strong>. You can always return to your <a href="{{ route('orders.index') }}" class="text-blue-600 underline font-semibold">order history</a> to download your items again.</p>
                     </div>
                 </div>
             </div>

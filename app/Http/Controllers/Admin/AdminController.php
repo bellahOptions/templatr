@@ -127,7 +127,7 @@ class AdminController extends Controller
      */
     protected function fetchFlutterwaveBalance(): array
     {
-        $secretKey = env('FLW_SECRET_KEY');
+        $secretKey = config('services.flutterwave.secret');
 
         if (! $secretKey) {
             return [
@@ -170,7 +170,7 @@ class AdminController extends Controller
      */
     protected function fetchPaystackBalance(): array
     {
-        $secretKey = env('PAYSTACK_SECRET_KEY');
+        $secretKey = config('services.paystack.secret');
 
         if (! $secretKey) {
             return [

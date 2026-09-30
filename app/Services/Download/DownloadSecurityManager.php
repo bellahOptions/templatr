@@ -15,15 +15,17 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DownloadSecurityManager
 {
-    protected PaymentManager $paymentManager;
-
-    public function __construct(PaymentManager $paymentManager)
-    {
-        $this->paymentManager = $paymentManager;
-    }
+    public function __construct(
+        protected PaymentManager $paymentManager,
+    ) {}
 
     /**
      * Verify and authorize a download request with multiple security layers.
+     *
+     * Every layer is ordered cheapest-first so an unauthorized or throttled
+     * request does no database or network work. On shared cPanel hosting that
+     * ordering is what keeps 50 concurrent buyers inside the account's CPU and
+     * entry-process limits.
      *
      * @throws HttpException
      */
@@ -32,26 +34,57 @@ class DownloadSecurityManager
         $authorization = new DownloadAuthorization;
         $authorization->product = $product;
 
-        // ── Layer 1: Rate limiting by IP ──
         $ip = request()->ip();
-        $rateLimitKey = "download_rate_limit:{$ip}";
-        $attempts = Cache::get($rateLimitKey, 0);
+        $user = Auth::user();
 
-        if ($attempts >= 10) {
+        // ── Layer 1: Per-account concurrency guard ──
+        // A single buyer opening dozens of parallel connections is what actually
+        // exhausts a shared account, not 50 distinct buyers downloading at once.
+        $concurrencyKey = 'download_concurrency:'.($user ? 'user:'.$user->id : 'ip:'.$ip);
+        $concurrencyLimit = (int) config('watermark.max_concurrent_per_user', 4);
+        $slotToken = $this->acquireDownloadSlot($concurrencyKey, $concurrencyLimit);
+
+        if ($slotToken === null) {
+            Log::warning("Download concurrency limit reached for {$concurrencyKey}");
+            throw new HttpException(429, 'You already have several downloads running. Please wait for them to finish or try again shortly.');
+        }
+
+        $authorization->slotToken = $slotToken;
+        $authorization->concurrencyKey = $concurrencyKey;
+
+        try {
+            return $this->authorizeWithSlot($product, $authorization, $user, $ip);
+        } catch (\Throwable $e) {
+            // Any failure releases the concurrency slot immediately; a successful
+            // download holds it until the response has been sent.
+            $this->releaseDownloadSlot($authorization);
+            throw $e;
+        }
+    }
+
+    /**
+     * @throws HttpException
+     */
+    protected function authorizeWithSlot(Product $product, DownloadAuthorization $authorization, mixed $user, ?string $ip): DownloadAuthorization
+    {
+        // ── Layer 2: IP throttle for unauthenticated probing ──
+        $rateLimitKey = 'download_rate_limit:'.$ip;
+        $attempts = (int) Cache::get($rateLimitKey, 0);
+        $maxAttempts = (int) config('watermark.rate_limit_attempts', 30);
+
+        if ($attempts >= $maxAttempts) {
             Log::warning("Download rate limit exceeded for IP: {$ip}");
             throw new HttpException(429, 'Too many download attempts. Please wait and try again.');
         }
-        Cache::put($rateLimitKey, $attempts + 1, now()->addMinutes(15));
 
-        // ── Layer 2: Check if the product exists and is published ──
+        Cache::put($rateLimitKey, $attempts + 1, now()->addMinutes((int) config('watermark.rate_limit_minutes', 15)));
+
+        // ── Layer 3: Product is published ──
         if (! $product->is_published) {
             throw new HttpException(404, 'Product not found.');
         }
 
-        // ── Layer 4: Authentication check ──
-        $user = Auth::user();
-
-        // ── Admin bypass: skip all remaining checks ──
+        // ── Layer 4: Admin bypass ──
         if ($user?->isAdmin()) {
             $authorization->isAuthorized = true;
             $authorization->orderItem = null;
@@ -60,7 +93,7 @@ class DownloadSecurityManager
             return $authorization;
         }
 
-        // ── Layer 3: Check file exists ──
+        // ── Layer 5: File is present ──
         if (! $product->file_path) {
             Log::error("Download failed: No file set for product #{$product->id}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
@@ -71,30 +104,8 @@ class DownloadSecurityManager
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
 
-        // ── Layer 5: Find the order item ──
-        $orderItem = null;
-
-        if ($user) {
-            // Authenticated user: find their paid order item
-            $orderItem = OrderItem::where('product_id', $product->id)
-                ->whereHas('order', function ($q) use ($user) {
-                    $q->where('user_id', $user->id)
-                        ->where('payment_status', 'paid');
-                })
-                ->first();
-        } else {
-            // Guest user: check via download token in request
-            $token = request()->query('token');
-            if ($token) {
-                $orderItem = OrderItem::where('product_id', $product->id)
-                    ->where('download_token', $token)
-                    ->whereHas('order', function ($q) {
-                        $q->whereNull('user_id')
-                            ->where('payment_status', 'paid');
-                    })
-                    ->first();
-            }
-        }
+        // ── Layer 6: Locate the paid order item ──
+        $orderItem = $this->resolveOrderItem($product, $user);
 
         if (! $orderItem) {
             Log::warning("Unauthorized download attempt for product #{$product->id} by ".($user ? "user #{$user->id}" : "guest IP {$ip}"));
@@ -106,25 +117,21 @@ class DownloadSecurityManager
             throw new HttpException(403, 'You have not purchased this item. Please purchase it first to download.');
         }
 
-        // ── Layer 6: Verify payment with the gateway (double-check) ──
-        if ($orderItem->order->payment_method !== 'direct' && $orderItem->order->payment_reference) {
-            $paymentVerified = $this->verifyPaymentWithGateway($orderItem->order);
-            if (! $paymentVerified) {
-                Log::warning("Payment re-verification failed for order #{$orderItem->order->id} (reference: {$orderItem->order->payment_reference}). Allowing download — investigate if fraudulent.");
-            }
-        }
-
-        // ── Layer 7: Check download limits ──
-        if (! $orderItem->isDownloadable()) {
-            throw new HttpException(403, 'Download limit reached. You have used all 4 allowed downloads for this item.');
-        }
-
-        // ── Layer 8: Check download token expiration ──
+        // ── Layer 7: Token expiration (guests) ──
         if ($orderItem->download_token_expires_at && now()->greaterThan($orderItem->download_token_expires_at)) {
             throw new HttpException(410, 'Your download link has expired. Please contact support for a new link.');
         }
 
-        // ── All checks passed ──
+        // ── Layer 8: Download limit ──
+        if (! $orderItem->isDownloadable()) {
+            throw new HttpException(403, 'Download limit reached. You have used all '.OrderItem::MAX_DOWNLOADS.' allowed downloads for this item.');
+        }
+
+        // ── Layer 9: Cached gateway re-verification ──
+        // Cached so a repeat download costs zero HTTP round-trips to Paystack or
+        // Flutterwave — the dominant latency and CPU cost on a shared host.
+        $this->verifyPaymentWithGateway($orderItem->order);
+
         $authorization->isAuthorized = true;
         $authorization->orderItem = $orderItem;
 
@@ -132,7 +139,154 @@ class DownloadSecurityManager
     }
 
     /**
+     * Find the buyer's paid order item, supporting signed-in users and guests.
+     */
+    protected function resolveOrderItem(Product $product, mixed $user): ?OrderItem
+    {
+        if ($user) {
+            return OrderItem::query()
+                ->select(['id', 'order_id', 'product_id', 'download_count', 'download_token_expires_at'])
+                ->with('order')
+                ->where('product_id', $product->id)
+                ->whereHas('order', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->where('payment_status', 'paid');
+                })
+                ->first();
+        }
+
+        // Guests authenticate with a token whose SHA-256 hash is stored on the
+        // order item. The plain token is only ever visible in the emailed link.
+        $token = (string) request()->query('token', '');
+
+        if ($token === '') {
+            return null;
+        }
+
+        return OrderItem::query()
+            ->select(['id', 'order_id', 'product_id', 'download_count', 'download_token_expires_at'])
+            ->with('order')
+            ->where('product_id', $product->id)
+            ->where('download_token', hash('sha256', $token))
+            ->whereHas('order', function ($q) {
+                $q->whereNull('user_id')->where('payment_status', 'paid');
+            })
+            ->first();
+    }
+
+    /**
+     * Reserve one of the account's concurrent download slots.
+     *
+     * Returns a release token, or null when the limit is already saturated.
+     */
+    protected function acquireDownloadSlot(string $key, int $limit): ?string
+    {
+        if ($limit <= 0) {
+            return 'unlimited';
+        }
+
+        $token = Str::random(16);
+        $ttl = now()->addSeconds((int) config('watermark.concurrency_lock_seconds', 300));
+
+        // Fast path: no lock contention.
+        if (Cache::add($key, [$token => now()->getTimestamp()], $ttl)) {
+            return $token;
+        }
+
+        // Windows file cache has no atomic read-modify-write, so retry under a
+        // short-lived mutex. On Linux (the production target) flock makes this
+        // first attempt win for the overwhelming majority of requests.
+        $mutex = Cache::lock($key.':mutex', 5);
+
+        try {
+            $mutex->block(3, function () use ($key, $limit, $token, $ttl): void {
+                $slots = $this->pruneSlots($this->slotPayload($key));
+
+                if (count($slots) >= $limit) {
+                    throw new HttpException(429, 'Too many concurrent downloads on this account. Please wait for one to finish.');
+                }
+
+                $slots[$token] = now()->getTimestamp();
+                Cache::put($key, $slots, $ttl);
+            });
+        } catch (HttpException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            // If the lock backend is unavailable, allow the download rather than
+            // blocking a paying customer.
+            Log::warning('Download slot lock unavailable: '.$e->getMessage());
+
+            return $token;
+        }
+
+        return $token;
+    }
+
+    public function releaseDownloadSlot(DownloadAuthorization $authorization): void
+    {
+        if (! $authorization->slotToken || ! $authorization->concurrencyKey) {
+            return;
+        }
+
+        if ($authorization->slotToken === 'unlimited') {
+            return;
+        }
+
+        $key = $authorization->concurrencyKey;
+
+        try {
+            $slots = $this->slotPayload($key);
+
+            if ($slots === null) {
+                return;
+            }
+
+            unset($slots[$authorization->slotToken]);
+            $slots = $this->pruneSlots($slots);
+
+            if ($slots === []) {
+                Cache::forget($key);
+            } else {
+                Cache::put($key, $slots, now()->addSeconds((int) config('watermark.concurrency_lock_seconds', 300)));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to release download slot: '.$e->getMessage());
+        }
+
+        $authorization->slotToken = null;
+    }
+
+    /**
+     * @return array<string, int>|null
+     */
+    protected function slotPayload(string $key): ?array
+    {
+        $value = Cache::get($key);
+
+        return is_array($value) ? $value : null;
+    }
+
+    /**
+     * Drop slots whose holder died without releasing (browser closed mid-stream).
+     *
+     * @param  array<string, int>|null  $slots
+     * @return array<string, int>
+     */
+    protected function pruneSlots(?array $slots): array
+    {
+        if ($slots === null) {
+            return [];
+        }
+
+        $cutoff = now()->subSeconds((int) config('watermark.concurrency_lock_seconds', 300))->getTimestamp();
+
+        return array_filter($slots, fn (int $startedAt) => $startedAt >= $cutoff);
+    }
+
+    /**
      * Generate a secure download token for a guest order item.
+     *
+     * Only the hash is persisted; the plain token is returned once for the
+     * download link that is emailed to the buyer.
      */
     public function generateDownloadToken(OrderItem $orderItem, int $expiresInHours = 72): string
     {
@@ -164,12 +318,11 @@ class DownloadSecurityManager
         ]);
 
         // Increment product download count
-        $orderItem->product->increment('download_count');
+        $orderItem->product()->increment('download_count');
 
         // Log the download
         Log::info("Download recorded: product #{$orderItem->product_id}, order item #{$orderItem->id}, ".
-            'user: '.($orderItem->order->user_id ? "user #{$orderItem->order->user_id}" : 'guest'),
-            [
+            'user: '.($orderItem->order->user_id ? "user #{$orderItem->order->user_id}" : 'guest'), [
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'download_count' => $orderItem->download_count,
@@ -178,40 +331,62 @@ class DownloadSecurityManager
     }
 
     /**
-     * Verify payment status with the payment gateway provider.
+     * Verify payment status with the payment gateway provider, cached.
+     *
+     * A paid order is only re-checked with the provider once per cache window.
+     * The check is advisory: our own webhook-verified status remains the source
+     * of truth, so a gateway outage never blocks a legitimate download.
      */
     protected function verifyPaymentWithGateway(Order $order): bool
     {
+        if ($order->payment_method === 'direct' || ! $order->payment_reference) {
+            return $order->payment_status === 'paid';
+        }
+
+        $cacheKey = 'gateway_verify:order:'.$order->id;
+        $cached = Cache::get($cacheKey);
+
+        if ($cached !== null) {
+            return (bool) $cached;
+        }
+
+        $verified = $order->payment_status === 'paid';
+
         try {
             $gateway = $this->paymentManager->gateway($order->payment_method);
             $verification = $gateway->verifyPayment($order->payment_reference);
+            $verified = (bool) ($verification['success'] ?? $verified);
 
-            return $verification['success'] ?? false;
+            if (! $verified) {
+                Log::warning("Payment re-verification failed for order #{$order->id} (reference: {$order->payment_reference}). Allowing download — investigate if fraudulent.");
+            }
         } catch (\Exception $e) {
-            // If gateway verification fails, fall back to our own status
+            // Gateway unreachable: trust our own webhook-verified status.
             Log::warning("Gateway payment verification failed for order #{$order->id}: ".$e->getMessage());
-
-            return $order->payment_status === 'paid';
         }
+
+        Cache::put(
+            $cacheKey,
+            $verified,
+            now()->addSeconds((int) config('watermark.gateway_recheck_seconds', 86400))
+        );
+
+        return $verified;
     }
 
     /**
-     * Get secure download URL (signed or temporary).
+     * Build the tokenised guest download URL for an order item.
+     *
+     * Issues a fresh token and returns the URL carrying the plain value. This is
+     * what should be embedded in the order-receipt email, which is the only way a
+     * guest can retrieve their download after the confirmation session ends.
      */
-    public function getSecureDownloadUrl(OrderItem $orderItem): string
+    public function createGuestDownloadUrl(OrderItem $orderItem, int $expiresInHours = 72): string
     {
-        $product = $orderItem->product;
+        $token = $this->generateDownloadToken($orderItem, $expiresInHours);
 
-        if ($orderItem->order->user_id) {
-            // Authenticated user: route with CSRF
-            return route('products.download', ['product' => $product->slug]);
-        }
-
-        // Guest: use signed temporary URL with token
-        $token = $this->generateDownloadToken($orderItem);
-
-        return route('products.download', [
-            'product' => $product->slug,
+        return route('products.download.guest', [
+            'product' => $orderItem->product->slug,
             'token' => $token,
         ]);
     }

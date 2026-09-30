@@ -25,7 +25,7 @@ class PaymentWebhookController extends Controller
 
     protected function handlePaystack(Request $request, string $rawPayload): Response
     {
-        $secretKey = config('services.paystack.secret', env('PAYSTACK_SECRET_KEY', ''));
+        $secretKey = (string) config('services.paystack.secret', '');
         $signature = $request->header('X-Paystack-Signature', '');
         $expectedSignature = hash_hmac('sha512', $rawPayload, $secretKey);
 
@@ -51,7 +51,7 @@ class PaymentWebhookController extends Controller
 
     protected function handleFlutterwave(Request $request, string $rawPayload): Response
     {
-        $secretHash = env('FLW_SECRET_HASH', '');
+        $secretHash = (string) config('services.flutterwave.secret_hash', '');
         $signature = $request->header('verif-hash', '');
 
         if (empty($secretHash) || ! hash_equals($secretHash, $signature)) {

@@ -8,16 +8,19 @@ use Illuminate\Support\Facades\Log;
 class FlutterwaveGateway implements PaymentGateway
 {
     protected string $secretKey;
+
     protected string $publicKey;
+
     protected string $encryptionKey;
+
     protected bool $isLive;
 
     public function __construct()
     {
-        $this->secretKey = config('services.flutterwave.secret', env('FLUTTERWAVE_SECRET_KEY', ''));
-        $this->publicKey = config('services.flutterwave.public', env('FLUTTERWAVE_PUBLIC_KEY', ''));
-        $this->encryptionKey = config('services.flutterwave.encryption', env('FLUTTERWAVE_ENCRYPTION_KEY', ''));
-        $this->isLive = env('FLUTTERWAVE_LIVE', false);
+        $this->secretKey = (string) config('services.flutterwave.secret', '');
+        $this->publicKey = (string) config('services.flutterwave.public', '');
+        $this->encryptionKey = (string) config('services.flutterwave.encryption', '');
+        $this->isLive = (bool) config('services.flutterwave.live', false);
     }
 
     public function getPublicKey(): string
@@ -56,7 +59,7 @@ class FlutterwaveGateway implements PaymentGateway
                     ],
                     'meta' => [
                         'order_id' => $data['order_id'] ?? '',
-                    ]
+                    ],
                 ]);
 
             if ($response->successful() && $response->json('status') === 'success') {
@@ -68,9 +71,11 @@ class FlutterwaveGateway implements PaymentGateway
             }
 
             Log::error('Flutterwave initialization failed', ['response' => $response->json()]);
+
             return ['success' => false, 'message' => $response->json('message', 'Payment initialization failed')];
         } catch (\Exception $e) {
-            Log::error('Flutterwave exception: ' . $e->getMessage());
+            Log::error('Flutterwave exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Payment gateway error. Please try again.'];
         }
     }
@@ -83,6 +88,7 @@ class FlutterwaveGateway implements PaymentGateway
 
             if ($response->successful() && $response->json('status') === 'success') {
                 $data = $response->json('data');
+
                 return [
                     'success' => $data['status'] === 'successful',
                     'amount' => $data['amount'],
@@ -95,7 +101,8 @@ class FlutterwaveGateway implements PaymentGateway
 
             return ['success' => false, 'message' => 'Verification failed'];
         } catch (\Exception $e) {
-            Log::error('Flutterwave verification exception: ' . $e->getMessage());
+            Log::error('Flutterwave verification exception: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Verification error'];
         }
     }

@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
+    /**
+     * Downloads allowed per purchased item before the buyer must contact support.
+     */
+    public const MAX_DOWNLOADS = 4;
+
     protected $fillable = [
         'order_id', 'product_id', 'price', 'author_earnings',
         'download_count', 'first_downloaded_at', 'last_downloaded_at',
@@ -35,7 +40,7 @@ class OrderItem extends Model
      */
     public function isDownloadable(): bool
     {
-        if ($this->download_count >= 4) {
+        if ($this->download_count >= self::MAX_DOWNLOADS) {
             return false;
         }
 
@@ -51,6 +56,6 @@ class OrderItem extends Model
      */
     public function getRemainingDownloadsAttribute(): int
     {
-        return max(0, 4 - $this->download_count);
+        return max(0, self::MAX_DOWNLOADS - $this->download_count);
     }
 }

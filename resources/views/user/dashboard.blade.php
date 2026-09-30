@@ -148,6 +148,7 @@
                         <h2 class="font-bold">Your Downloads</h2>
                         <span class="text-xs text-gray-500">{{ $downloadableItems->count() }} available</span>
                     </div>
+                    <p class="px-6 pt-3 text-[11px] text-gray-500">Every download is stamped {{ config('watermark.label') }}.</p>
                     <div class="divide-y divide-gray-100">
                         @forelse($downloadableItems as $item)
                         <div class="flex items-center justify-between px-6 py-4">
@@ -170,7 +171,7 @@
                         @empty
                         <p class="text-gray-500 text-sm text-center py-8">
                             @if($expiredItems->isNotEmpty())
-                                All your downloads have expired (max 2 per item).
+                                All your downloads have expired (max {{ \App\Models\OrderItem::MAX_DOWNLOADS }} per item).
                             @else
                                 No purchased items yet. <a href="{{ route('products.index') }}" class="text-[#FFC300] font-semibold">Browse marketplace</a>
                             @endif

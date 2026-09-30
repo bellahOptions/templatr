@@ -330,6 +330,9 @@
                                 <p class="text-xs text-center {{ $downloadInfo['is_downloadable'] ? 'text-green-600' : 'text-red-500' }}">
                                     {{ $downloadInfo['is_downloadable'] ? '✓ Purchased (' . $downloadInfo['remaining_downloads'] . ' download(s) left)' : '✗ Download limit reached (max ' . $downloadInfo['max_downloads'] . ')' }}
                                 </p>
+                                <p class="text-[11px] text-gray-500 text-center mt-2">
+                                    Your file is stamped <span class="font-semibold">{{ $downloadInfo['watermark'] }}</span> so copies stay traceable. The asset itself is unchanged and fully usable.
+                                </p>
                             @else
                                 <p class="text-xs text-green-600 text-center">✓ Purchased</p>
                             @endif

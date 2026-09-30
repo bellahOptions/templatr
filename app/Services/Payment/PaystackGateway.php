@@ -17,10 +17,10 @@ class PaystackGateway implements PaymentGateway
 
     public function __construct()
     {
-        $this->secretKey = config('services.paystack.secret', env('PAYSTACK_SECRET_KEY', ''));
-        $this->publicKey = config('services.paystack.public', env('PAYSTACK_PUBLIC_KEY', ''));
-        $this->isLive = env('PAYSTACK_LIVE', false);
-        $this->splitCode = env('PAYSTACK_SPLIT_CODE', '');
+        $this->secretKey = (string) config('services.paystack.secret', '');
+        $this->publicKey = (string) config('services.paystack.public', '');
+        $this->isLive = (bool) config('services.paystack.live', false);
+        $this->splitCode = (string) config('services.paystack.split_code', '');
     }
 
     public function getPublicKey(): string

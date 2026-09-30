@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Download\DownloadSecurityManager;
+use App\Services\Download\WatermarkManager;
 use App\Services\Payment\PaymentManager;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -15,11 +16,15 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PaymentManager::class, function ($app) {
-            return new PaymentManager();
+            return new PaymentManager;
         });
 
         $this->app->singleton(DownloadSecurityManager::class, function ($app) {
             return new DownloadSecurityManager($app->make(PaymentManager::class));
+        });
+
+        $this->app->singleton(WatermarkManager::class, function ($app) {
+            return WatermarkManager::fromConfig();
         });
     }
 
