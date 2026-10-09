@@ -17,7 +17,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id', 'user_id', 'title', 'slug', 'description',
-        'price', 'sale_price', 'thumbnail', 'preview_image', 'file_path',
+        'price', 'sale_price', 'thumbnail', 'preview_image', 'file_path', 'storage_disk',
         'file_type', 'file_size', 'original_file_name', 'download_count', 'view_count',
         'is_featured', 'is_published', 'tags', 'demo_url', 'version',
         'requirements', 'features', 'compatible_browsers', 'includes', 'columns', 'layouts',

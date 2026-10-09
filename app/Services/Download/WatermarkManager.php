@@ -31,7 +31,10 @@ class WatermarkManager
         protected string $label,
         protected string $site,
         protected string $brand,
-    ) {}
+        protected ?\App\Services\Storage\ProductFileStorage $fileStorage = null,
+    ) {
+        $this->fileStorage ??= app(\App\Services\Storage\ProductFileStorage::class);
+    }
 
     public static function fromConfig(): self
     {
@@ -40,6 +43,7 @@ class WatermarkManager
             (string) config('watermark.label', 'Purchased from www.templatr.site'),
             (string) config('watermark.site', 'www.templatr.site'),
             (string) config('watermark.brand', 'Templatr'),
+            app(\App\Services\Storage\ProductFileStorage::class),
         );
     }
 
@@ -49,6 +53,22 @@ class WatermarkManager
     public function label(): string
     {
         return $this->label;
+    }
+
+    /**
+     * What to do when an artifact cannot be produced.
+     *
+     * `original` (default) keeps the historical behaviour of delivering the
+     * source file so a buyer is never blocked by a rendering failure. `reject`
+     * fails the download instead, for stores that require every delivered copy
+     * to carry the purchase notice. It must be chosen explicitly — a silent
+     * fall back to the unbranded original is never the only option.
+     */
+    public function failurePolicy(): string
+    {
+        $policy = (string) config('watermark.on_failure', 'original');
+
+        return in_array($policy, ['original', 'reject'], true) ? $policy : 'original';
     }
 
     /**
@@ -65,13 +85,13 @@ class WatermarkManager
         }
 
         if (! config('watermark.enabled', true)) {
-            return new WatermarkResult($source, $fileName, false, 'disabled');
+            return $this->fallback($source, $fileName, 'disabled', $product);
         }
 
         $size = (int) @filesize($source);
 
         if ($size <= 0 || $size > (int) config('watermark.max_bytes', 134217728)) {
-            return new WatermarkResult($source, $fileName, false, 'too-large');
+            return $this->fallback($source, $fileName, 'too-large', $product);
         }
 
         $cacheKey = $this->artifactKey($product, $orderItem);
@@ -90,13 +110,33 @@ class WatermarkManager
                 return new WatermarkResult($disk->path($fresh), $fileName, true, 'rendered', $fresh);
             }
         } catch (Throwable $e) {
-            Log::warning('Watermark rendering failed, serving original file.', [
+            Log::warning('Watermark rendering failed.', [
                 'product_id' => $product->id,
                 'error' => $e->getMessage(),
             ]);
         }
 
-        return new WatermarkResult($source, $fileName, false, 'fallback-original');
+        return $this->fallback($source, $fileName, 'render-failed', $product);
+    }
+
+    /**
+     * Decide the deliverable when no watermarked artifact is available.
+     *
+     * With the `reject` policy the result carries an empty path, and the caller
+     * responds with an error instead of quietly handing over the original.
+     */
+    protected function fallback(string $source, string $fileName, string $reason, Product $product): WatermarkResult
+    {
+        if ($this->failurePolicy() === 'reject') {
+            Log::warning('Download refused: watermarked artifact unavailable and watermark.on_failure=reject.', [
+                'product_id' => $product->id,
+                'reason' => $reason,
+            ]);
+
+            return new WatermarkResult('', $fileName, false, 'rejected:'.$reason);
+        }
+
+        return new WatermarkResult($source, $fileName, false, $reason);
     }
 
     /**
@@ -857,17 +897,7 @@ HTML;
 
     protected function sourcePath(Product $product): ?string
     {
-        if (! $product->file_path) {
-            return null;
-        }
-
-        $disk = Storage::disk('public');
-
-        if (! $disk->exists($product->file_path)) {
-            return null;
-        }
-
-        return $disk->path($product->file_path);
+        return $this->fileStorage->absolutePath($product);
     }
 
     protected function isUsableArtifact(string $relative, string $source): bool

@@ -23,6 +23,9 @@ uses(RefreshDatabase::class);
 | has run. Seeding `_token` explicitly lets the download POST reach the action
 | exactly the way the Blade buttons do.
 |
+| Purchased originals live on the private `private_assets` disk, mirroring
+| production: `public/storage` cannot reach that path.
+|
 */
 
 function csrfToken(): string
@@ -45,7 +48,22 @@ function buyer(): User
 
 function publishedProduct(array $attributes = []): Product
 {
-    return Product::factory()->create($attributes + ['file_path' => null]);
+    return Product::factory()->create($attributes + ['file_path' => null, 'storage_disk' => null]);
+}
+
+/**
+ * Place an original on the private asset disk and attach it to a product.
+ */
+function attachPrivateFile(Product $product, string $relativePath, string $contents): string
+{
+    Storage::disk('private_assets')->put($relativePath, $contents);
+    $product->update([
+        'file_path' => $relativePath,
+        'storage_disk' => 'private_assets',
+        'original_file_name' => basename($relativePath),
+    ]);
+
+    return $relativePath;
 }
 
 /**
@@ -54,7 +72,7 @@ function publishedProduct(array $attributes = []): Product
 function attachArchive(Product $product, array $entries = ['template/index.html' => '<h1>Original template</h1>']): string
 {
     $path = 'products/files/'.$product->id.'/kit.zip';
-    $absolute = Storage::disk('public')->path($path);
+    $absolute = Storage::disk('private_assets')->path($path);
 
     @mkdir(dirname($absolute), 0777, true);
     $zip = new ZipArchive;
@@ -65,7 +83,11 @@ function attachArchive(Product $product, array $entries = ['template/index.html'
     }
 
     $zip->close();
-    $product->update(['file_path' => $path, 'original_file_name' => 'kit.zip']);
+    $product->update([
+        'file_path' => $path,
+        'storage_disk' => 'private_assets',
+        'original_file_name' => 'kit.zip',
+    ]);
 
     return $path;
 }
@@ -76,14 +98,16 @@ function purchase(Product $product, User $user): OrderItem
         'user_id' => $user->id,
         'order_number' => 'ORD-'.strtoupper(Str::random(8)),
         'total_amount' => $product->price,
+        'currency' => 'NGN',
         'status' => 'completed',
-        'payment_method' => 'direct',
+        'payment_method' => 'manual',
         'payment_status' => 'paid',
     ]);
 
     return OrderItem::create([
         'order_id' => $order->id,
         'product_id' => $product->id,
+        'author_id' => $product->user_id,
         'price' => $product->price,
         'author_earnings' => 0,
     ]);
@@ -118,11 +142,20 @@ function noticeFrom(array $entries): ?string
     return collect($entries)->first(fn ($value, $key) => str_contains($key, 'WATERMARK'));
 }
 
+/**
+ * Boot the storage fakes used by every download test.
+ */
+function fakeStorages(): void
+{
+    Storage::fake('private_assets');
+    Storage::fake('public');
+    Storage::fake('local');
+}
+
 // ─── Purchase notice on every download ───────────────────────────────────────
 
 test('a purchased download is branded with the purchase notice', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct(['title' => 'Aurora Dashboard Kit']);
     attachArchive($product, ['template/index.html' => '<h1>Premium template</h1>']);
@@ -152,8 +185,7 @@ test('a purchased download is branded with the purchase notice', function () {
 });
 
 test('a repeat download reuses the cached artifact', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -174,16 +206,15 @@ test('a repeat download reuses the cached artifact', function () {
 });
 
 test('a raster product image is watermarked in place', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     $path = 'products/files/graphic.png';
-    Storage::disk('public')->put(
+    Storage::disk('private_assets')->put(
         $path,
         UploadedFile::fake()->image('graphic.png', 600, 400)->getContent()
     );
-    $product->update(['file_path' => $path, 'original_file_name' => 'graphic.png']);
+    $product->update(['file_path' => $path, 'storage_disk' => 'private_assets', 'original_file_name' => 'graphic.png']);
     $buyer = buyer();
     purchase($product, $buyer);
     $this->actingAs($buyer);
@@ -198,13 +229,12 @@ test('a raster product image is watermarked in place', function () {
 });
 
 test('a format that cannot be stamped is delivered inside a branded archive', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     $path = 'products/files/beats.mp3';
-    Storage::disk('public')->put($path, str_repeat('ID3', 100));
-    $product->update(['file_path' => $path, 'original_file_name' => 'beats.mp3']);
+    Storage::disk('private_assets')->put($path, str_repeat('ID3', 100));
+    $product->update(['file_path' => $path, 'storage_disk' => 'private_assets', 'original_file_name' => 'beats.mp3']);
     $buyer = buyer();
     purchase($product, $buyer);
     $this->actingAs($buyer);
@@ -223,11 +253,67 @@ test('a format that cannot be stamped is delivered inside a branded archive', fu
     expect(noticeFrom($entries))->toContain('Purchased from www.templatr.site');
 });
 
+// ─── Private storage ─────────────────────────────────────────────────────────
+
+test('the original is stored on the private disk, not the public one', function () {
+    fakeStorages();
+
+    $product = publishedProduct();
+    $path = attachArchive($product);
+
+    expect(Storage::disk('private_assets')->exists($path))->toBeTrue()
+        ->and(Storage::disk('public')->exists($path))->toBeFalse()
+        ->and($product->storage_disk)->toBe('private_assets');
+});
+
+test('a direct public storage URL cannot retrieve the original', function () {
+    fakeStorages();
+
+    $product = publishedProduct();
+    $path = attachArchive($product, ['secret/design.psd' => 'PROPRIETARY SOURCE']);
+
+    // The public disk — the only thing `public/storage` exposes — has no copy.
+    $publicUrl = Storage::disk('public')->url($path);
+
+    expect(Storage::disk('public')->exists($path))->toBeFalse()
+        ->and($publicUrl)->toContain('/storage/')
+        // And the bytes are not reachable through it.
+        ->and(Storage::disk('public')->get($path))->toBeNull();
+
+    $this->get(parse_url($publicUrl, PHP_URL_PATH))->assertNotFound();
+});
+
+test('the shipped public symlink cannot reach storage/app/private-assets', function () {
+    // storage/app/private-assets is outside the symlink target (storage/app/public).
+    $symlinkTarget = config('filesystems.links')[public_path('storage')];
+    $privateRoot = Storage::disk('private_assets')->path('');
+
+    expect(str_starts_with($privateRoot, rtrim($symlinkTarget, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR))->toBeFalse()
+        ->and($symlinkTarget)->toBe(storage_path('app/public'));
+});
+
+test('path traversal in a stored file path is refused', function () {
+    fakeStorages();
+
+    $product = publishedProduct();
+    Storage::disk('private_assets')->put('products/files/real.zip', 'REAL');
+    $product->update([
+        'file_path' => '../../.env',
+        'storage_disk' => 'private_assets',
+        'original_file_name' => 'x.zip',
+    ]);
+
+    $buyer = buyer();
+    purchase($product, $buyer);
+    $this->actingAs($buyer);
+
+    downloadPost(route('products.download', $product))->assertSessionHas('error');
+});
+
 // ─── Access control ──────────────────────────────────────────────────────────
 
 test('a buyer who has not purchased cannot download', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -239,8 +325,7 @@ test('a buyer who has not purchased cannot download', function () {
 });
 
 test('a guest without a token cannot download', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -252,8 +337,7 @@ test('a guest without a token cannot download', function () {
 });
 
 test('a guest with the emailed token can download the branded file', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -265,6 +349,7 @@ test('a guest with the emailed token can download the branded file', function ()
         'guest_phone' => '08030000000',
         'order_number' => 'ORD-'.strtoupper(Str::random(8)),
         'total_amount' => $product->price,
+        'currency' => 'NGN',
         'status' => 'completed',
         'payment_method' => 'paystack',
         'payment_reference' => null,
@@ -274,6 +359,7 @@ test('a guest with the emailed token can download the branded file', function ()
     $item = OrderItem::create([
         'order_id' => $order->id,
         'product_id' => $product->id,
+        'author_id' => $product->user_id,
         'price' => $product->price,
         'author_earnings' => 0,
     ]);
@@ -295,8 +381,7 @@ test('a guest with the emailed token can download the branded file', function ()
 });
 
 test('a forged guest token is rejected', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -309,9 +394,61 @@ test('a forged guest token is rejected', function () {
     expect(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty();
 });
 
+test('an expired guest token is rejected', function () {
+    fakeStorages();
+
+    $product = publishedProduct();
+    attachArchive($product);
+
+    $order = Order::create([
+        'user_id' => null,
+        'guest_name' => 'Ada Guest',
+        'guest_email' => 'ada@example.com',
+        'guest_phone' => '08030000000',
+        'order_number' => 'ORD-'.strtoupper(Str::random(8)),
+        'total_amount' => $product->price,
+        'currency' => 'NGN',
+        'status' => 'completed',
+        'payment_method' => 'paystack',
+        'payment_status' => 'paid',
+    ]);
+
+    $item = OrderItem::create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'author_id' => $product->user_id,
+        'price' => $product->price,
+        'author_earnings' => 0,
+    ]);
+
+    $token = app(DownloadSecurityManager::class)->generateDownloadToken($item, 72);
+    $item->forceFill(['download_token_expires_at' => now()->subMinute()])->save();
+
+    $this->get(route('products.download.guest', [
+        'product' => $product->slug,
+        'token' => $token,
+    ]))->assertSessionHas('error');
+
+    expect(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty();
+});
+
+test('an unpaid order cannot download', function () {
+    fakeStorages();
+
+    $product = publishedProduct();
+    attachArchive($product);
+    $buyer = buyer();
+    $item = purchase($product, $buyer);
+    $item->order->forceFill(['payment_status' => 'unpaid'])->save();
+    $this->actingAs($buyer);
+
+    downloadPost(route('products.download', $product))->assertSessionHas('error');
+
+    expect(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty();
+});
+
 test('a download past the per-item limit is refused', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -325,11 +462,54 @@ test('a download past the per-item limit is refused', function () {
     expect(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty();
 });
 
+// ─── Watermark failure policy ────────────────────────────────────────────────
+
+test('a watermark failure under the reject policy does not expose the original', function () {
+    fakeStorages();
+    config()->set('watermark.on_failure', 'reject');
+
+    $product = publishedProduct();
+    $path = 'products/files/asset.psd';
+    attachPrivateFile($product, $path, 'RAW-PSD-BYTES-THAT-CANNOT-BE-STAMPED');
+
+    $buyer = buyer();
+    $item = purchase($product, $buyer);
+    $this->actingAs($buyer);
+
+    $response = downloadPost(route('products.download', $product));
+
+    $response->assertSessionHas('error');
+
+    // The raw original was never delivered and the failure was not credited.
+    expect($response->streamedContent())->not->toContain('RAW-PSD-BYTES-THAT-CANNOT-BE-STAMPED')
+        ->and($item->fresh()->download_count)->toBe(0)
+        ->and(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty();
+});
+
+test('the documented original-fallback policy is explicit and still tracked', function () {
+    fakeStorages();
+    config()->set('watermark.on_failure', 'original');
+
+    $product = publishedProduct();
+    $path = 'products/files/asset.psd';
+    attachPrivateFile($product, $path, 'RAW-PSD-BYTES');
+
+    $buyer = buyer();
+    $item = purchase($product, $buyer);
+    $this->actingAs($buyer);
+
+    $response = downloadPost(route('products.download', $product))->assertOk();
+
+    expect($response->streamedContent())->toBe('RAW-PSD-BYTES')
+        // A filename that a non-editable asset is wrapped in is still branded.
+        ->and($response->headers->get('Content-Disposition'))->toContain('PURCHASED-FROM-www.templatr.site')
+        ->and($item->fresh()->download_count)->toBe(1);
+});
+
 // ─── Concurrency guards ──────────────────────────────────────────────────────
 
 test('an account already streaming its maximum downloads is throttled', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
     config()->set('watermark.max_concurrent_per_user', 1);
 
     $product = publishedProduct();
@@ -351,8 +531,7 @@ test('an account already streaming its maximum downloads is throttled', function
 });
 
 test('a finished download releases its concurrency slot', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -368,8 +547,7 @@ test('a finished download releases its concurrency slot', function () {
 // ─── Maintenance ─────────────────────────────────────────────────────────────
 
 test('the watermark cache can be pruned', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -387,8 +565,7 @@ test('the watermark cache can be pruned', function () {
 });
 
 test('rendering stays off when watermarking is disabled', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
     config()->set('watermark.enabled', false);
 
     $product = publishedProduct();
@@ -402,14 +579,13 @@ test('rendering stays off when watermarking is disabled', function () {
     expect(Storage::disk('local')->allFiles('watermarked'))->toBeEmpty()
         // The filename is still branded even when rendering is switched off.
         ->and($response->headers->get('Content-Disposition'))->toContain('PURCHASED-FROM-www.templatr.site')
-        ->and($response->streamedContent())->toBe(Storage::disk('public')->get($original));
+        ->and($response->streamedContent())->toBe(Storage::disk('private_assets')->get($original));
 });
 
 // ─── Resumable delivery ──────────────────────────────────────────────────────
 
 test('a ranged request is answered with a resumable partial response', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);
@@ -428,8 +604,7 @@ test('a ranged request is answered with a resumable partial response', function 
 });
 
 test('an unsatisfiable range is rejected', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeStorages();
 
     $product = publishedProduct();
     attachArchive($product);

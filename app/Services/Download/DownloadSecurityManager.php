@@ -9,7 +9,6 @@ use App\Services\Payment\PaymentManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -17,6 +16,7 @@ class DownloadSecurityManager
 {
     public function __construct(
         protected PaymentManager $paymentManager,
+        protected \App\Services\Storage\ProductFileStorage $fileStorage,
     ) {}
 
     /**
@@ -99,7 +99,7 @@ class DownloadSecurityManager
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
 
-        if (! Storage::disk('public')->exists($product->file_path)) {
+        if (! $this->fileStorage->exists($product)) {
             Log::error("Download failed: File not found for product #{$product->id} - {$product->file_path}");
             throw new HttpException(500, 'The requested file is unavailable. Please contact support.');
         }
@@ -339,8 +339,15 @@ class DownloadSecurityManager
      */
     protected function verifyPaymentWithGateway(Order $order): bool
     {
-        if ($order->payment_method === 'direct' || ! $order->payment_reference) {
-            return $order->payment_status === 'paid';
+        if ($order->payment_status !== 'paid') {
+            return false;
+        }
+
+        $gatewayName = $order->gatewayName();
+
+        // Offline/manual orders are approved by an administrator, not a provider.
+        if (! $gatewayName || ! $this->paymentManager->isConfigured($gatewayName)) {
+            return true;
         }
 
         $cacheKey = 'gateway_verify:order:'.$order->id;
@@ -350,19 +357,29 @@ class DownloadSecurityManager
             return (bool) $cached;
         }
 
-        $verified = $order->payment_status === 'paid';
+        $verified = true;
 
         try {
-            $gateway = $this->paymentManager->gateway($order->payment_method);
-            $verification = $gateway->verifyPayment($order->payment_reference);
-            $verified = (bool) ($verification['success'] ?? $verified);
+            $gateway = $this->paymentManager->gateway($gatewayName);
+            $verification = $gateway->verifyPayment(
+                (string) $order->payment_reference,
+                $order->gateway_transaction_id,
+            );
+
+            $verified = $this->verificationMatchesOrder($order, $verification);
 
             if (! $verified) {
-                Log::warning("Payment re-verification failed for order #{$order->id} (reference: {$order->payment_reference}). Allowing download — investigate if fraudulent.");
+                Log::warning('Payment re-verification did not match the order', [
+                    'order_id' => $order->id,
+                    'gateway' => $gatewayName,
+                    'provider_status' => $verification['status'] ?? null,
+                ]);
             }
         } catch (\Exception $e) {
-            // Gateway unreachable: trust our own webhook-verified status.
+            // Gateway unreachable: our own webhook-verified status stays the
+            // source of truth, so a provider outage never blocks a paid buyer.
             Log::warning("Gateway payment verification failed for order #{$order->id}: ".$e->getMessage());
+            $verified = true;
         }
 
         Cache::put(
@@ -372,6 +389,39 @@ class DownloadSecurityManager
         );
 
         return $verified;
+    }
+
+    /**
+     * Confirm a provider verification actually corresponds to this order's
+     * reference, amount and currency.
+     *
+     * @param  array<string, mixed>  $verification
+     */
+    protected function verificationMatchesOrder(Order $order, array $verification): bool
+    {
+        if (! ($verification['success'] ?? false)) {
+            return false;
+        }
+
+        $reference = (string) ($verification['reference'] ?? '');
+
+        if ($reference !== '' && $order->payment_reference && ! hash_equals((string) $order->payment_reference, $reference)) {
+            return false;
+        }
+
+        if (isset($verification['amount']) && $verification['amount'] !== null) {
+            if (abs(round((float) $verification['amount'], 2) - round((float) $order->total_amount, 2)) > 0.01) {
+                return false;
+            }
+        }
+
+        $currency = isset($verification['currency']) ? strtoupper((string) $verification['currency']) : null;
+
+        if ($currency !== null && $order->currency && $currency !== strtoupper((string) $order->currency)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

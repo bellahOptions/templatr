@@ -11,7 +11,6 @@ use App\Services\Download\WatermarkManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +21,7 @@ class ProductController extends Controller
     public function __construct(
         protected DownloadSecurityManager $downloadSecurity,
         protected WatermarkManager $watermarkManager,
+        protected \App\Services\Storage\ProductFileStorage $fileStorage,
     ) {}
 
     public function index()
@@ -103,7 +103,7 @@ class ProductController extends Controller
 
             $filePath = $product->file_path;
 
-            if (! $filePath || ! Storage::disk('public')->exists($filePath)) {
+            if (! $filePath || ! $this->fileStorage->exists($product)) {
                 Log::error('Download failed: file missing.', [
                     'product_id' => $product->id,
                     'file_path' => $filePath,
@@ -118,9 +118,10 @@ class ProductController extends Controller
                 Log::error('Download failed: deliverable unavailable.', [
                     'product_id' => $product->id,
                     'watermarked' => $result->watermarked,
+                    'strategy' => $result->strategy,
                 ]);
 
-                return back()->with('error', 'The file could not be found on the server. Please contact support.');
+                return back()->with('error', 'This file could not be prepared for download right now. Please try again shortly or contact support.');
             }
 
             // Recorded only once a deliverable actually exists, so a failed

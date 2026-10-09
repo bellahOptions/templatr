@@ -41,6 +41,19 @@ return [
     'enabled' => (bool) env('WATERMARK_ENABLED', true),
 
     /*
+    | What happens when a watermarked artifact cannot be produced (rendering
+    | failure, unsupported type, or a file larger than `max_bytes`).
+    |
+    |  "original" (default) delivers the unbranded source file, so a buyer is
+    |             never blocked by a rendering failure.
+    |  "reject"   refuses the download instead. Choose this when every copy
+    |             that leaves the store must carry the purchase notice. The
+    |             failure is then surfaced to the buyer and logged, never
+    |             silently downgraded to the original.
+    */
+    'on_failure' => env('WATERMARK_ON_FAILURE', 'original'),
+
+    /*
     | Bumping this value invalidates every cached artifact, e.g. after changing
     | the wording above.
     */

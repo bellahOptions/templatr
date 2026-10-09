@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Storage\ProductFileStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -213,14 +214,29 @@ class ProductImportController extends Controller
                 $sanitizedName = Str::slug(pathinfo($stagingFileName, PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
                 $finalPath = 'products/files/'.$sanitizedName;
 
-                // Copy (not move) so staging file remains available for re-imports
-                Storage::disk('public')->put($finalPath, Storage::disk(self::STAGING_DISK)->get($stagingPath));
+                // Copy (not move) so staging file remains available for re-imports,
+                // into private storage: purchased originals must never be reachable
+                // by direct URL.
+                try {
+                    $stored = app(ProductFileStorage::class)->storeFromDisk(
+                        self::STAGING_DISK,
+                        $stagingPath,
+                        $stagingFileName,
+                        $ext,
+                    );
+                } catch (\Throwable $e) {
+                    $results['rows'][] = $this->rowResult($rowNumber, 'failed', $title, 'Could not store file "'.$stagingFileName.'".');
+                    $results['failed']++;
+
+                    continue;
+                }
 
                 $fileSize = ! empty($data['file_size'])
                     ? (float) $data['file_size']
                     : round(Storage::disk(self::STAGING_DISK)->size($stagingPath) / 1048576, 2);
 
-                $productData['file_path'] = $finalPath;
+                $productData['file_path'] = $stored['path'];
+                $productData['storage_disk'] = $stored['disk'];
                 $productData['original_file_name'] = $stagingFileName;
                 $productData['file_size'] = $fileSize;
             } elseif (! empty($data['file_size'] ?? '')) {

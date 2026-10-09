@@ -83,8 +83,14 @@ class InterswitchGateway implements PaymentGateway
         }
     }
 
-    public function verifyPayment(string $reference): array
+    public function verifyPayment(string $reference, string|int|null $transactionId = null): array
     {
+        if (trim($this->clientId) === '' || trim($this->clientSecret) === '') {
+            Log::error('Interswitch verification aborted: credentials are not configured.');
+
+            return ['success' => false, 'reason' => 'gateway_not_configured'];
+        }
+
         try {
             $baseUrl = $this->isLive
                 ? 'https://webpay.interswitchng.com'
@@ -99,20 +105,24 @@ class InterswitchGateway implements PaymentGateway
 
             if ($response->successful()) {
                 $data = $response->json();
+                $status = (string) ($data['status'] ?? 'FAILED');
 
                 return [
-                    'success' => ($data['status'] ?? '') === 'SUCCESS',
-                    'amount' => $data['amount'] / 100,
-                    'reference' => $data['transaction_reference'],
-                    'status' => $data['status'] ?? 'FAILED',
+                    'success' => $status === 'SUCCESS',
+                    'amount' => isset($data['amount']) ? ((float) $data['amount']) / 100 : null,
+                    'currency' => isset($data['currency']) ? strtoupper((string) $data['currency']) : 'NGN',
+                    'reference' => $data['transaction_reference'] ?? $reference,
+                    'transaction_id' => $data['transaction_reference'] ?? null,
+                    'status' => $status,
+                    'reason' => $status === 'SUCCESS' ? null : 'provider_status_not_success',
                 ];
             }
 
-            return ['success' => false, 'message' => 'Verification failed'];
+            return ['success' => false, 'reason' => 'verification_failed'];
         } catch (\Exception $e) {
             Log::error('Interswitch verification exception: '.$e->getMessage());
 
-            return ['success' => false, 'message' => 'Verification error'];
+            return ['success' => false, 'reason' => 'verification_error'];
         }
     }
 

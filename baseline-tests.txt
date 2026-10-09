@@ -1,0 +1,200 @@
+﻿
+  [90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[90;1m.[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m[31;1m⨯[39;22m
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m rejects upload without csv_file                                            
+[39;1m  Session is missing expected key [errors].
+Failed asserting that false is true.[39;22m
+
+  at [32mtests\Feature\ProductImportTest.php[39m:[32m100[39m
+     96▕     $admin = adminUser();
+     97▕     $this->actingAs($admin)
+     98▕         ->withSession(adminSession())
+     99▕         ->post(route('admin.products.import.store'), [])
+  ➜ 100▕         ->assertSessionHasErrors('csv_file');
+    101▕ });
+    102▕ 
+    103▕ test('rejects csv missing required columns', function () {
+    104▕     $admin = adminUser();
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m rejects csv missing required columns                                       
+[39;1m  Session is missing expected key [errors].
+Failed asserting that false is true.[39;22m
+
+  at [32mtests\Feature\ProductImportTest.php[39m:[32m110[39m
+    106▕ 
+    107▕     $this->actingAs($admin)
+    108▕         ->withSession(adminSession())
+    109▕         ->post(route('admin.products.import.store'), ['csv_file' => $csv])
+  ➜ 110▕         ->assertSessionHasErrors('csv_file');
+    111▕ });
+    112▕ 
+    113▕ // ─── Successful import ────────────────────────────────────────────────────────
+    114▕
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m imports valid csv rows and creates products                                
+[39;1m  Expected response status code [201, 301, 302, 303, 307, 308] but received 419.
+Failed asserting that false is true.[39;22m
+
+  at [32mtests\Feature\ProductImportTest.php[39m:[32m130[39m
+    126▕     $response = $this->actingAs($admin)
+    127▕         ->withSession(adminSession())
+    128▕         ->post(route('admin.products.import.store'), ['csv_file' => $csv]);
+    129▕ 
+  ➜ 130▕     $response->assertRedirect(route('admin.products.import'));
+    131▕ 
+    132▕     $results = $response->getSession()->get('import_results');
+    133▕     expect($results['created'])->toBe(2)
+    134▕         ->and($results['skipped'])->toBe(0)
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m skips rows where title already exists in the da… [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m160[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m skips duplicate titles within the same csv       [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m180[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m fails row with unknown category and no default   [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m202[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m fails row with invalid file_type                 [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m221[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m fails row when staged file is not found          [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m239[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m copies staged file to public storage when file_name matches                
+[39;1m  Expecting null not to be null .[39;22m
+
+  at [32mtests\Feature\ProductImportTest.php[39m:[32m265[39m
+    261▕         ->withSession(adminSession())
+    262▕         ->post(route('admin.products.import.store'), ['csv_file' => $csv]);
+    263▕ 
+    264▕     $product = Product::where('title', 'Staged Product')->first();
+  ➜ 265▕     expect($product)->not->toBeNull()
+    266▕         ->and($product->file_path)->toStartWith('products/files/')
+    267▕         ->and($product->original_file_name)->toBe('product.zip');
+    268▕ 
+    269▕     Storage::disk('public')->assertExists($product->file_path);
+
+  [33m1   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m265[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m path traversal in file_name is blocked           [41;1m BadMethodCallException [49;22m  
+[39;1m  Method Illuminate\Http\Response::getSession does not exist.[39;22m
+
+  at [32mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39m:[32m117[39m
+    113▕      */
+    114▕     public function __call($method, $parameters)
+    115▕     {
+    116▕         if (! static::hasMacro($method)) {
+  ➜ 117▕             throw new BadMethodCallException(sprintf(
+    118▕                 'Method %s::%s does not exist.', static::class, $method
+    119▕             ));
+    120▕         }
+    121▕
+
+  [33m1   [39m[39;1mvendor\laravel\framework\src\Illuminate\Macroable\Traits\Macroable.php[39;22m:[39;1m117[39;22m
+  [33m2   [39m[39;1mtests\Feature\ProductImportTest.php[39;22m:[39;1m296[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ProductImportTest[22m [90m>[39m default author and category are used when csv columns are blank            
+[39;1m  Failed asserting that a row in the table [products] matches the attributes {
+    "title": "Default Fallback Product",
+    "user_id": 2,
+    "category_id": 1
+}.
+
+The table is empty.[39;22m
+
+  at [32mtests\Feature\ProductImportTest.php[39m:[32m322[39m
+    318▕             'default_author_id' => $author->id,
+    319▕             'default_category_id' => $category->id,
+    320▕         ]);
+    321▕ 
+  ➜ 322▕     $this->assertDatabaseHas('products', [
+    323▕         'title' => 'Default Fallback Product',
+    324▕         'user_id' => $author->id,
+    325▕         'category_id' => $category->id,
+    326▕     ]);
+
+
+  [90mTests:[39m    [31;1m11 failed[39;22m[90m,[39m[39m [39m[32;1m21 passed[39;22m[90m (72 assertions)[39m
+  [90mDuration:[39m [39m3.37s[39m
+

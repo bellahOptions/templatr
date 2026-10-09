@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Mail\OrderReceipt;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\User;
-use App\Notifications\NewPurchaseAdminNotification;
 use App\Services\Download\DownloadSecurityManager;
+use App\Services\Order\CheckoutException;
+use App\Services\Order\CheckoutService;
 use App\Services\Order\OrderFulfillmentService;
 use App\Services\Payment\PaymentManager;
-use App\Services\Webhook\WebhookService;
+use App\Services\Payment\PaymentVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -21,43 +21,27 @@ use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
-    protected PaymentManager $paymentManager;
-
-    protected DownloadSecurityManager $downloadSecurity;
-
-    protected WebhookService $webhookService;
-
-    protected OrderFulfillmentService $fulfillmentService;
-
     public function __construct(
-        PaymentManager $paymentManager,
-        DownloadSecurityManager $downloadSecurity,
-        WebhookService $webhookService,
-        OrderFulfillmentService $fulfillmentService
-    ) {
-        $this->paymentManager = $paymentManager;
-        $this->downloadSecurity = $downloadSecurity;
-        $this->webhookService = $webhookService;
-        $this->fulfillmentService = $fulfillmentService;
-    }
+        protected PaymentManager $paymentManager,
+        protected DownloadSecurityManager $downloadSecurity,
+        protected CheckoutService $checkoutService,
+        protected PaymentVerificationService $paymentVerification,
+        protected OrderFulfillmentService $fulfillmentService,
+    ) {}
 
     public function index()
     {
         $cart = session()->get('cart', []);
-
-        if (empty($cart)) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-        }
-
-        $products = Product::whereIn('id', array_keys($cart))->get();
-        $total = 0;
-
-        foreach ($products as $product) {
-            $price = $product->sale_price ?? $product->price;
-            $total += $price;
-        }
-
         $availableGateways = $this->paymentManager->getAvailableGateways();
+
+        try {
+            $resolved = $this->checkoutService->resolveCart($cart, strict: false);
+        } catch (CheckoutException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        }
+
+        $products = $resolved['products'];
+        $total = $resolved['total'];
 
         return view('checkout.index', compact('products', 'total', 'availableGateways'));
     }
@@ -70,14 +54,27 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        $products = Product::whereIn('id', array_keys($cart))->get();
-        $totalAmount = 0;
+        // ── Payment method: an explicit allow-list, never a default ──
+        // Omitting or forging `payment_method` must not produce an order that is
+        // paid or completed. Unknown values are rejected outright.
+        $paymentMethod = (string) $request->input('payment_method', '');
+        $availableGateways = array_keys($this->paymentManager->getAvailableGateways());
 
-        foreach ($products as $product) {
-            $totalAmount += $product->sale_price ?? $product->price;
+        $isOnlineGateway = in_array($paymentMethod, $availableGateways, true) && $this->paymentManager->isConfigured($paymentMethod);
+        $isManual = $paymentMethod === 'manual';
+
+        if (! $isOnlineGateway && ! $isManual) {
+            Log::warning('Checkout rejected: unsupported payment method', [
+                'payment_method' => $paymentMethod,
+                'user_id' => Auth::id(),
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->route('checkout.index')
+                ->with('error', 'Please choose a valid payment method to continue.');
         }
 
-        // Validate guest fields if user is not authenticated
+        // ── Guest details ──
         $guestData = [];
         if (! Auth::check()) {
             $validated = $request->validate([
@@ -97,159 +94,188 @@ class CheckoutController extends Controller
             session()->put('guest_data', $guestData);
         }
 
-        $paymentMethod = $request->payment_method ?? 'direct';
+        // ── Server-side cart resolution and pricing ──
+        try {
+            $resolved = $this->checkoutService->resolveCart($cart, strict: true);
+        } catch (CheckoutException $e) {
+            return redirect()->route('checkout.index')->with('error', $e->getMessage());
+        }
+
+        $products = $resolved['products'];
+        $totalAmount = $resolved['total'];
         $user = Auth::user();
 
-        // If a payment gateway was selected, redirect to gateway
-        if (in_array($paymentMethod, ['paystack', 'flutterwave', 'interswitch'])) {
-            $reference = 'TXN-'.strtoupper(Str::random(16));
-
-            // Create the order in pending state BEFORE redirecting so the
-            // payment webhook can find it even if the user never returns.
-            $orderData = [
-                'user_id' => $user?->id,
-                'order_number' => 'ORD-'.strtoupper(Str::random(10)),
-                'total_amount' => $totalAmount,
-                'status' => 'pending',
-                'payment_method' => $paymentMethod,
-                'payment_reference' => $reference,
-                'payment_status' => 'unpaid',
-            ];
-            if (! empty($guestData)) {
-                $orderData['user_id'] = null;
-                $orderData['guest_name'] = $guestData['guest_name'];
-                $orderData['guest_email'] = $guestData['guest_email'];
-                $orderData['guest_phone'] = $guestData['guest_phone'];
-            }
-            $pendingOrder = Order::create($orderData);
-
-            foreach ($products as $product) {
-                $price = $product->sale_price ?? $product->price;
-                $orderItem = OrderItem::create([
-                    'order_id' => $pendingOrder->id,
-                    'product_id' => $product->id,
-                    'price' => $price,
-                    'author_earnings' => $price * 0.7,
-                ]);
-                if (! $user) {
-                    $this->rememberDownloadToken($orderItem);
-                }
-            }
-
-            session()->put('pending_payment', array_merge([
-                'reference' => $reference,
-                'amount' => $totalAmount,
-                'order_id' => $pendingOrder->id,
-                'products' => $products->pluck('id')->toArray(),
-                'user_id' => $user?->id,
-                'gateway' => $paymentMethod,
-            ], $guestData));
-
-            try {
-                $gateway = $this->paymentManager->gateway($paymentMethod);
-                $email = $user?->email ?? $guestData['guest_email'];
-                $name = $user?->name ?? $guestData['guest_name'];
-                $phone = $guestData['guest_phone'] ?? null;
-
-                $result = $gateway->initializePayment([
-                    'email' => $email,
-                    'name' => $name,
-                    'phone' => $phone,
-                    'amount' => $totalAmount,
-                    'reference' => $reference,
-                    'callback_url' => route('checkout.callback', ['gateway' => $paymentMethod]),
-                    'order_id' => $pendingOrder->id,
-                ]);
-
-                if ($result['success']) {
-                    return redirect($result['authorization_url']);
-                }
-
-                // Gateway rejected — clean up the pending order
-                $pendingOrder->delete();
-                session()->forget('pending_payment');
-
-                return redirect()->route('checkout.index')
-                    ->with('error', 'Payment initialization failed. Please try again.');
-            } catch (\Exception $e) {
-                $pendingOrder->delete();
-                session()->forget('pending_payment');
-
-                return redirect()->route('checkout.index')
-                    ->with('error', 'Payment gateway error. Please try again or use a different payment method.');
-            }
+        if ($isManual) {
+            return $this->startManualOrder($products, $totalAmount, $user?->id, $guestData);
         }
 
-        // Direct payment (no gateway configured)
-        $order = $this->completeOrder($products, $totalAmount, 'direct', $guestData);
-
-        if (! $order) {
-            return redirect()->route('checkout.index')->with('error', 'Order processing failed.');
-        }
-
-        return redirect()->route('orders.confirmation', $order)->with('success', 'Payment successful! Your items are ready for download.');
+        return $this->startGatewayOrder($request, $paymentMethod, $products, $totalAmount, $user?->id, $guestData);
     }
 
+    /**
+     * Offline / bank-transfer checkout.
+     *
+     * The order is created as `awaiting_approval` + `unpaid` and stays that way
+     * until an administrator confirms the funds arrived. No file is downloadable
+     * and no author is credited in the meantime.
+     */
+    protected function startManualOrder($products, float $totalAmount, ?int $userId, array $guestData)
+    {
+        $order = $this->checkoutService->createManualOrder($products, $totalAmount, $userId, $guestData);
+
+        foreach ($order->items as $item) {
+            if (! $userId) {
+                $this->rememberDownloadToken($item);
+            }
+        }
+
+        session()->forget('cart');
+
+        $this->notifyAwaitingApproval($order);
+
+        return redirect()->route('orders.confirmation', $order)
+            ->with('info', 'Your order has been received. Payment must be approved by our team before your files are released.');
+    }
+
+    /**
+     * Online gateway checkout: create the pending order, then hand the buyer to
+     * the provider. Nothing is marked paid here.
+     */
+    protected function startGatewayOrder(Request $request, string $paymentMethod, $products, float $totalAmount, ?int $userId, array $guestData)
+    {
+        $order = $this->checkoutService->createPendingOrder($products, $totalAmount, $paymentMethod, $userId, $guestData);
+
+        session()->put('pending_payment', [
+            'reference' => $order->payment_reference,
+            'amount' => $totalAmount,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'gateway' => $paymentMethod,
+            'user_id' => $userId,
+        ]);
+
+        try {
+            $gateway = $this->paymentManager->gateway($paymentMethod);
+            $email = Auth::user()?->email ?? $guestData['guest_email'];
+            $name = Auth::user()?->name ?? $guestData['guest_name'];
+            $phone = $guestData['guest_phone'] ?? null;
+
+            $result = $gateway->initializePayment([
+                'email' => $email,
+                'name' => $name,
+                'phone' => $phone,
+                'amount' => $totalAmount,
+                'currency' => $order->currencyCode(),
+                'reference' => $order->payment_reference,
+                'callback_url' => route('checkout.callback', ['gateway' => $paymentMethod]),
+                'order_id' => $order->id,
+            ]);
+
+            if (($result['success'] ?? false) && ! empty($result['authorization_url'])) {
+                // Record the provider's transaction id so verification can address
+                // the transaction unambiguously (required by Flutterwave).
+                if (! empty($result['transaction_id'])) {
+                    $order->forceFill(['gateway_transaction_id' => (string) $result['transaction_id']])->save();
+                }
+
+                return redirect()->away($result['authorization_url']);
+            }
+
+            // Gateway rejected — cancel the pending order instead of leaving a
+            // payable-looking row behind.
+            $this->cancelPendingOrder($order, $result['message'] ?? 'Payment initialization failed.');
+
+            session()->forget('pending_payment');
+
+            return redirect()->route('checkout.index')
+                ->with('error', 'Payment initialization failed. Please try again.');
+        } catch (\Throwable $e) {
+            Log::error('Payment gateway error during checkout: '.$e->getMessage(), ['order_id' => $order->id]);
+
+            $this->cancelPendingOrder($order, 'Gateway error: '.$e->getMessage());
+
+            session()->forget('pending_payment');
+
+            return redirect()->route('checkout.index')
+                ->with('error', 'Payment gateway error. Please try again or use a different payment method.');
+        }
+    }
+
+    /**
+     * The browser return leg of an online payment.
+     *
+     * The reference is never taken from the request: it comes from the pending
+     * order recorded in the buyer's own session. The provider is then asked
+     * directly whether the transaction succeeded, and the answer is validated
+     * against the order before anything is marked paid.
+     */
     public function callback(Request $request, string $gateway)
     {
         $pending = session()->get('pending_payment');
 
-        if (! $pending || $pending['gateway'] !== $gateway) {
+        if (! is_array($pending) || ($pending['gateway'] ?? null) !== $gateway) {
             return redirect()->route('cart.index')->with('error', 'Invalid payment session.');
         }
 
+        // A success *redirect* proves nothing; refuse anything the provider did
+        // not confirm. Paystack sends `trxref`/`reference`, Flutterwave sends
+        // `tx_ref`/`transaction_id` — all are informational only.
+        $order = Order::find($pending['order_id'] ?? 0);
+
+        if (! $order) {
+            session()->forget('pending_payment');
+
+            return redirect()->route('cart.index')->with('error', 'We could not find your order. Please contact support.');
+        }
+
+        // Record the provider's own transaction id when the redirect carries one
+        // (Flutterwave needs it to verify) — it is still never trusted as proof.
+        if (! $order->gateway_transaction_id) {
+            $providerTransactionId = $request->input('transaction_id');
+
+            if ($providerTransactionId !== null && ctype_digit((string) $providerTransactionId)) {
+                $order->forceFill(['gateway_transaction_id' => (string) $providerTransactionId])->save();
+            }
+        }
+
         try {
-            $paymentGateway = $this->paymentManager->gateway($gateway);
-            $reference = $request->reference ?? $pending['reference'];
+            if ($order->isPaid()) {
+                session()->forget(['pending_payment', 'cart', 'guest_data']);
+                session()->put('last_order_number', $order->order_number);
 
-            $verification = $paymentGateway->verifyPayment($reference);
+                return redirect()->route('orders.confirmation', $order)
+                    ->with('success', 'Payment successful! Your items are ready for download.');
+            }
 
-            if ($verification['success']) {
-                $order = Order::where('payment_reference', $reference)->first();
+            $result = $this->paymentVerification->settleFromProvider($order, 'callback');
+        } catch (\Throwable $e) {
+            Log::error('Payment callback verification error: '.$e->getMessage(), ['order_id' => $order->id]);
+            $result = null;
+        }
 
-                if ($order) {
-                    // Atomic update: only fulfil if the webhook hasn't already done it.
-                    $marked = Order::where('id', $order->id)
-                        ->where('payment_status', '!=', 'paid')
-                        ->update(['payment_status' => 'paid', 'status' => 'completed']);
-
-                    if ($marked) {
-                        $order->refresh();
-                        $this->fulfillmentService->fulfill($order);
-                    }
-                } else {
-                    // Fallback for orders created before this fix was deployed.
-                    $products = Product::whereIn('id', $pending['products'])->get();
-                    $guestData = [];
-                    if (! empty($pending['guest_name'])) {
-                        $guestData = [
-                            'guest_name' => $pending['guest_name'],
-                            'guest_email' => $pending['guest_email'],
-                            'guest_phone' => $pending['guest_phone'],
-                        ];
-                    }
-                    $order = $this->completeOrder($products, $pending['amount'], $gateway, $guestData, $reference);
-                }
-
-                if ($order) {
-                    session()->forget(['pending_payment', 'cart', 'guest_data']);
-                    session()->put('last_order_number', $order->order_number);
-
-                    return redirect()->route('orders.confirmation', $order)
-                        ->with('success', 'Payment successful! Your items are ready for download.');
+        if ($result?->verified) {
+            foreach ($order->items as $item) {
+                if (! $order->user_id) {
+                    $this->rememberDownloadToken($item);
                 }
             }
 
-            session()->forget('pending_payment');
+            session()->forget(['pending_payment', 'cart', 'guest_data']);
+            session()->put('last_order_number', $order->order_number);
 
-            return redirect()->route('checkout.index')
-                ->with('error', 'Payment verification failed. Please contact support.');
-        } catch (\Exception $e) {
-            session()->forget('pending_payment');
-
-            return redirect()->route('checkout.index')
-                ->with('error', 'Payment verification error. Please contact support.');
+            return redirect()->route('orders.confirmation', $order)
+                ->with('success', 'Payment successful! Your items are ready for download.');
         }
+
+        session()->forget('pending_payment');
+
+        Log::warning('Payment callback could not be verified', [
+            'order_id' => $order->id,
+            'reason' => $result?->reason ?? 'verification_error',
+        ]);
+
+        return redirect()->route('checkout.index')
+            ->with('error', 'We could not verify your payment yet. If you were charged, your order will be confirmed automatically once the payment provider notifies us.');
     }
 
     /**
@@ -257,7 +283,7 @@ class CheckoutController extends Controller
      * session so the confirmation page can build their one-time download links.
      * Only the SHA-256 hash is persisted, never the token itself.
      */
-    protected function rememberDownloadToken(OrderItem $orderItem, int $expiresInHours = 72): string
+    protected function rememberDownloadToken(\App\Models\OrderItem $orderItem, int $expiresInHours = 72): string
     {
         $token = $this->downloadSecurity->generateDownloadToken($orderItem, $expiresInHours);
 
@@ -266,106 +292,42 @@ class CheckoutController extends Controller
         return $token;
     }
 
-    protected function completeOrder($products, float $totalAmount, string $paymentMethod, array $guestData = [], ?string $paymentReference = null): ?Order
+    /**
+     * Mark a pending order cancelled after a failed initialization.
+     *
+     * The row is kept (auditable, and the buyer's confirmation link keeps
+     * working) but it can never be settled afterwards.
+     */
+    protected function cancelPendingOrder(Order $order, string $reason): void
+    {
+        if ($order->isPaid()) {
+            return;
+        }
+
+        $order->forceFill([
+            'status' => OrderStatus::Failed->value,
+            'admin_note' => Str::limit($reason, 500),
+        ])->save();
+    }
+
+    protected function notifyAwaitingApproval(Order $order): void
     {
         try {
-            $orderData = [
-                'user_id' => Auth::id(),
-                'order_number' => 'ORD-'.strtoupper(Str::random(10)),
-                'total_amount' => $totalAmount,
-                'status' => 'completed',
-                'payment_method' => $paymentMethod,
-                'payment_reference' => $paymentReference,
-                'payment_status' => 'paid',
-            ];
-
-            // Add guest data if provided
-            if (! empty($guestData)) {
-                $orderData['user_id'] = null;
-                $orderData['guest_name'] = $guestData['guest_name'];
-                $orderData['guest_email'] = $guestData['guest_email'];
-                $orderData['guest_phone'] = $guestData['guest_phone'];
+            if ($order->customer_email) {
+                Mail::to($order->customer_email)->queue(new OrderReceipt($order));
             }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to queue order receipt email: '.$e->getMessage());
+        }
 
-            $order = Order::create($orderData);
-
-            foreach ($products as $product) {
-                $price = $product->sale_price ?? $product->price;
-                $authorEarnings = $price * 0.7; // 70% to author
-
-                $orderItem = OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'price' => $price,
-                    'author_earnings' => $authorEarnings,
-                ]);
-
-                // Generate download token for guest orders (72-hour expiry)
-                if (! Auth::check()) {
-                    $this->rememberDownloadToken($orderItem);
-                }
-
-                // Credit author's balance
-                $product->author->increment('balance', $authorEarnings);
+        try {
+            $specificEmail = config('services.admin.notification_email');
+            if ($specificEmail && filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
+                Notification::route('mail', $specificEmail)
+                    ->notify(new \App\Notifications\NewPurchaseAdminNotification($order));
             }
-
-            session()->forget('cart');
-            session()->forget('guest_data');
-
-            // Store order number in session for confirmation access (auth + guest)
-            session()->put('last_order_number', $order->order_number);
-
-            // Send order receipt email via queue
-            try {
-                Mail::to($order->customer_email)
-                    ->queue(new OrderReceipt($order));
-            } catch (\Exception $e) {
-                Log::warning('Failed to queue order receipt email: '.$e->getMessage());
-            }
-
-            // Send new purchase notification to admin and the specified email
-            try {
-                $adminUsers = User::where('role', 'admin')->get();
-                foreach ($adminUsers as $admin) {
-                    $admin->notify(new NewPurchaseAdminNotification($order));
-                }
-                $specificEmail = config('services.admin.notification_email');
-                if ($specificEmail && filter_var($specificEmail, FILTER_VALIDATE_EMAIL)) {
-                    Notification::route('mail', $specificEmail)
-                        ->notify(new NewPurchaseAdminNotification($order));
-                }
-            } catch (\Exception $e) {
-                Log::warning('Failed to send new purchase notification: '.$e->getMessage());
-            }
-
-            // Fire webhooks for order.paid event
-            try {
-                $this->webhookService->fire('order.paid', [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'amount' => (float) $totalAmount,
-                    'currency' => 'NGN',
-                    'payment_method' => $paymentMethod,
-                    'customer_email' => $order->customer_email,
-                    'customer_name' => $order->customer_name ?? ($order->user?->name ?? 'Guest'),
-                    'items' => $products->map(function ($p) {
-                        return [
-                            'product_id' => $p->id,
-                            'title' => $p->title,
-                            'price' => (float) ($p->sale_price ?? $p->price),
-                        ];
-                    })->toArray(),
-                    'timestamp' => now()->toIso8601String(),
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Failed to fire webhook: '.$e->getMessage());
-            }
-
-            return $order;
-        } catch (\Exception $e) {
-            Log::error('Order completion failed: '.$e->getMessage());
-
-            return null;
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send new purchase notification: '.$e->getMessage());
         }
     }
 

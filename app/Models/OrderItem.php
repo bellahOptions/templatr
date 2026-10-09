@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -13,7 +14,8 @@ class OrderItem extends Model
     public const MAX_DOWNLOADS = 4;
 
     protected $fillable = [
-        'order_id', 'product_id', 'price', 'author_earnings',
+        'order_id', 'product_id', 'author_id', 'price', 'author_earnings',
+        'platform_commission',
         'download_count', 'first_downloaded_at', 'last_downloaded_at',
         'download_token', 'download_token_expires_at',
     ];
@@ -23,6 +25,9 @@ class OrderItem extends Model
         'last_downloaded_at' => 'datetime',
         'download_token_expires_at' => 'datetime',
         'download_count' => 'integer',
+        'price' => 'decimal:2',
+        'author_earnings' => 'decimal:2',
+        'platform_commission' => 'decimal:2',
     ];
 
     public function order(): BelongsTo
@@ -33,6 +38,19 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * The creator this sale is attributed to, snapshotted at order creation.
+     */
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function earning(): HasMany
+    {
+        return $this->hasMany(CreatorEarning::class);
     }
 
     /**

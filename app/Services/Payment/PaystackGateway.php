@@ -15,12 +15,15 @@ class PaystackGateway implements PaymentGateway
 
     protected string $splitCode;
 
+    protected string $currency;
+
     public function __construct()
     {
         $this->secretKey = (string) config('services.paystack.secret', '');
         $this->publicKey = (string) config('services.paystack.public', '');
         $this->isLive = (bool) config('services.paystack.live', false);
         $this->splitCode = (string) config('services.paystack.split_code', '');
+        $this->currency = strtoupper((string) config('services.paystack.currency', 'NGN'));
     }
 
     public function getPublicKey(): string
@@ -35,6 +38,14 @@ class PaystackGateway implements PaymentGateway
 
     public function initializePayment(array $data): array
     {
+        // Fail closed: without a secret key we cannot create a transaction, and
+        // must never fall through to a "successful" local path.
+        if (trim($this->secretKey) === '') {
+            Log::error('Paystack initialization aborted: PAYSTACK_SECRET_KEY is not configured.');
+
+            return ['success' => false, 'message' => 'Payment provider is not configured.'];
+        }
+
         $this->upsertCustomer($data['email'], $data['name'] ?? null, $data['phone'] ?? null);
 
         try {
@@ -49,7 +60,8 @@ class PaystackGateway implements PaymentGateway
             $response = Http::withToken($this->secretKey)
                 ->post('https://api.paystack.co/transaction/initialize', [
                     'email' => $data['email'],
-                    'amount' => $data['amount'] * 100, // Paystack uses kobo
+                    'amount' => (int) round($data['amount'] * 100), // Paystack uses kobo
+                    'currency' => $this->currency,
                     'reference' => $data['reference'],
                     'callback_url' => $data['callback_url'],
                     'metadata' => [
@@ -64,6 +76,7 @@ class PaystackGateway implements PaymentGateway
                     'success' => true,
                     'authorization_url' => $response->json('data.authorization_url'),
                     'reference' => $response->json('data.reference'),
+                    'transaction_id' => $response->json('data.id'),
                     'access_code' => $response->json('data.access_code'),
                 ];
             }
@@ -96,31 +109,50 @@ class PaystackGateway implements PaymentGateway
         }
     }
 
-    public function verifyPayment(string $reference): array
+    public function verifyPayment(string $reference, string|int|null $transactionId = null): array
     {
+        if (trim($this->secretKey) === '') {
+            Log::error('Paystack verification aborted: PAYSTACK_SECRET_KEY is not configured.');
+
+            return ['success' => false, 'reason' => 'gateway_not_configured'];
+        }
+
+        if (trim($reference) === '') {
+            return ['success' => false, 'reason' => 'missing_reference'];
+        }
+
         try {
             $response = Http::withToken($this->secretKey)
-                ->get("https://api.paystack.co/transaction/verify/{$reference}");
+                ->get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference));
 
-            if ($response->successful() && $response->json('status')) {
-                $data = $response->json('data');
-
-                return [
-                    'success' => $data['status'] === 'success',
-                    'amount' => $data['amount'] / 100,
-                    'reference' => $data['reference'],
-                    'status' => $data['status'],
-                    'paid_at' => $data['paid_at'] ?? null,
-                    'channel' => $data['channel'] ?? '',
-                    'card_details' => $data['authorization'] ?? null,
-                ];
+            if (! $response->successful() || ! $response->json('status')) {
+                return ['success' => false, 'reason' => 'verification_failed'];
             }
 
-            return ['success' => false, 'message' => 'Verification failed'];
+            $data = $response->json('data');
+
+            $providerReference = (string) ($data['reference'] ?? '');
+            $currency = isset($data['currency']) ? strtoupper((string) $data['currency']) : null;
+            $amount = isset($data['amount']) ? ((float) $data['amount']) / 100 : null;
+
+            return [
+                // The provider is the only authority on success, but the caller
+                // still cross-checks reference, amount and currency.
+                'success' => ($data['status'] ?? null) === 'success',
+                'amount' => $amount,
+                'currency' => $currency,
+                'reference' => $providerReference,
+                'transaction_id' => $data['id'] ?? null,
+                'status' => $data['status'] ?? 'unknown',
+                'paid_at' => $data['paid_at'] ?? null,
+                'channel' => $data['channel'] ?? '',
+                'card_details' => $data['authorization'] ?? null,
+                'reason' => ($data['status'] ?? null) === 'success' ? null : 'provider_status_not_success',
+            ];
         } catch (\Exception $e) {
             Log::error('Paystack verification exception: '.$e->getMessage());
 
-            return ['success' => false, 'message' => 'Verification error'];
+            return ['success' => false, 'reason' => 'verification_error'];
         }
     }
 }

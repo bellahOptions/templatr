@@ -47,6 +47,22 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Purchased originals live here and are never reachable by URL.
+         *
+         * `storage/app/private-assets` is outside `storage/app/public`, so the
+         * `public/storage` symlink cannot expose it. Files are only ever read
+         * through the authenticated, entitlement-checked download route.
+         */
+        'private_assets' => [
+            'driver' => 'local',
+            'root' => storage_path(env('PRIVATE_ASSETS_PATH', 'app/private-assets')),
+            'serve' => false,
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -76,5 +92,24 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Product Originals
+    |--------------------------------------------------------------------------
+    |
+    | Where newly uploaded purchased files are stored. Must be a private disk
+    | (never `public`), because anything on the `public` disk is reachable by
+    | direct URL through the `public/storage` symlink.
+    |
+    */
+
+    'product_originals_disk' => env('PRODUCT_ORIGINALS_DISK', 'private_assets'),
+
+    /*
+    | Abandoned chunk directories and staged uploads older than this many hours
+    | are cleaned up when the next upload completes.
+    */
+    'staging_ttl_hours' => (int) env('UPLOAD_STAGING_TTL_HOURS', 24),
 
 ];

@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\Order\CheckoutService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    public function __construct(protected CheckoutService $checkoutService) {}
+
     public function index()
     {
         $cart = session()->get('cart', []);
         $products = collect();
+        $total = 0;
 
         if (! empty($cart)) {
             $products = Product::whereIn('id', array_keys($cart))->get();
@@ -19,8 +23,6 @@ class CartController extends Controller
                 $price = $product->sale_price ?? $product->price;
                 $total += $price;
             }
-        } else {
-            $total = 0;
         }
 
         return view('cart.index', compact('products', 'cart', 'total'));
@@ -28,6 +30,17 @@ class CartController extends Controller
 
     public function add(Request $request, Product $product)
     {
+        // Only products a buyer could actually complete a purchase for may enter
+        // the cart. An unpublished or unpriced product is refused here as well as
+        // at checkout, so the cart never advertises something that cannot be sold.
+        if (! $product->is_published) {
+            return $this->refuse($request, 'This product is not available for purchase.');
+        }
+
+        if ($this->checkoutService->priceFor($product) <= 0) {
+            return $this->refuse($request, 'This product is not available for purchase.');
+        }
+
         $cart = session()->get('cart', []);
 
         if (isset($cart[$product->id])) {
@@ -52,6 +65,15 @@ class CartController extends Controller
         }
 
         return back()->with('success', 'Item added to cart!');
+    }
+
+    protected function refuse(Request $request, string $message)
+    {
+        if ($request->ajax()) {
+            return response()->json(['success' => false, 'message' => $message, 'cart_count' => count(session()->get('cart', []))], 422);
+        }
+
+        return back()->with('error', $message);
     }
 
     public function remove(Product $product)

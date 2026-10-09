@@ -17,20 +17,67 @@ class PaymentManager
     {
         // Only register gateways that have their keys configured. Credentials are
         // read from config so `php artisan config:cache` does not blank them.
-        if (config('services.paystack.secret')) {
+        if ($this->isConfigured('paystack')) {
             $this->gateways['paystack'] = App::make(PaystackGateway::class);
         }
-        if (config('services.flutterwave.secret')) {
+        if ($this->isConfigured('flutterwave')) {
             $this->gateways['flutterwave'] = App::make(FlutterwaveGateway::class);
         }
-        if (config('services.interswitch.client_id') && config('services.interswitch.client_secret')) {
+        if ($this->isConfigured('interswitch')) {
             $this->gateways['interswitch'] = App::make(InterswitchGateway::class);
         }
     }
 
+    /**
+     * Whether the named provider has the credentials required to charge and
+     * verify a transaction. A provider missing its secret must never be used.
+     */
+    public function isConfigured(string $name): bool
+    {
+        return match ($name) {
+            'paystack' => $this->nonEmpty(config('services.paystack.secret')),
+            'flutterwave' => $this->nonEmpty(config('services.flutterwave.secret')),
+            'interswitch' => $this->nonEmpty(config('services.interswitch.client_id'))
+                && $this->nonEmpty(config('services.interswitch.client_secret')),
+            default => false,
+        };
+    }
+
+    /**
+     * The gateway's shared secret used to authenticate inbound webhooks.
+     *
+     * Paystack signs payloads with the secret key; Flutterwave sends a plain
+     * secret hash. An empty value means the webhook cannot be trusted and the
+     * caller must fail closed.
+     */
+    public function webhookSecret(string $name): string
+    {
+        return match ($name) {
+            'paystack' => (string) config('services.paystack.secret', ''),
+            'flutterwave' => (string) config('services.flutterwave.secret_hash', ''),
+            default => '',
+        };
+    }
+
+    public function hasGateway(string $name): bool
+    {
+        return array_key_exists($name, $this->gateways);
+    }
+
+    protected function nonEmpty(mixed $value): bool
+    {
+        return is_string($value) ? trim($value) !== '' : ! empty($value);
+    }
+
     public function gateway(?string $name = null): PaymentGateway
     {
-        if ($name && isset($this->gateways[$name])) {
+        if ($name !== null) {
+            if (! isset($this->gateways[$name])) {
+                // Never silently substitute a different provider for the one the
+                // order was created against.
+                throw new \RuntimeException("Payment gateway [{$name}] is not configured.");
+            }
+
             return $this->gateways[$name];
         }
 

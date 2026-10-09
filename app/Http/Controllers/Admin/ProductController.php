@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Storage\ProductFileStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ProductController extends Controller
 {
+    public function __construct(protected ProductFileStorage $fileStorage) {}
+
     public function index(Request $request)
     {
         $query = Product::with(['category', 'author']);
@@ -89,25 +93,18 @@ class ProductController extends Controller
             $validated['preview_image'] = $this->uploadOptimizedImage($request->file('preview_image'), 'products/previews', 1200, 900);
         }
 
-        // Handle pre-uploaded product file (temp storage)
+        // Handle pre-uploaded product file (staged in the private temp area)
         if ($request->filled('file_temp_id')) {
-            $tempData = session('upload_temp_'.$request->file_temp_id);
+            $tempData = $this->pullStagedUpload((string) $request->file_temp_id);
             if ($tempData) {
                 // Prevent duplicate file upload
                 if (Product::where('original_file_name', $tempData['original_name'])->exists()) {
                     return back()->withErrors(['file_path' => 'A product with this file already exists.'])->withInput();
                 }
 
-                $ext = pathinfo($tempData['original_name'], PATHINFO_EXTENSION);
-                $sanitizedName = Str::slug(pathinfo($tempData['original_name'], PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
-                $finalPath = 'products/files/'.$sanitizedName;
-                Storage::disk('public')->move($tempData['path'], $finalPath);
-                $validated['file_path'] = $finalPath;
-                $validated['original_file_name'] = $tempData['original_name'];
-                if (empty($validated['file_size'])) {
-                    $validated['file_size'] = round($tempData['size'] / 1048576, 2);
+                if (! $this->storeStagedFile($validated, $tempData)) {
+                    return back()->withErrors(['file_path' => 'The uploaded file could not be found. Please upload it again.'])->withInput();
                 }
-                session()->forget('upload_temp_'.$request->file_temp_id);
             }
         } elseif ($request->hasFile('file_path')) {
             $file = $request->file('file_path');
@@ -118,9 +115,10 @@ class ProductController extends Controller
                 return back()->withErrors(['file_path' => 'A product with this file already exists.'])->withInput();
             }
 
-            $originalName = pathinfo($clientName, PATHINFO_FILENAME);
-            $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
-            $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
+            $stored = $this->storeUploadedOriginal($file, $clientName);
+
+            $validated['file_path'] = $stored['path'];
+            $validated['storage_disk'] = $stored['disk'];
             $validated['original_file_name'] = $clientName;
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = round($file->getSize() / 1048576, 2);
@@ -189,8 +187,9 @@ class ProductController extends Controller
 
         // Handle file removal
         if ($request->boolean('remove_file') && $product->file_path) {
-            Storage::disk('public')->delete($product->file_path);
+            $this->deleteOriginal($product);
             $validated['file_path'] = null;
+            $validated['storage_disk'] = null;
         }
 
         // Handle new thumbnail (Cloudinary pre-upload or direct)
@@ -221,29 +220,18 @@ class ProductController extends Controller
 
         // Handle new product file (pre-uploaded temp or direct)
         if ($request->filled('file_temp_id')) {
-            $tempData = session('upload_temp_'.$request->file_temp_id);
+            $tempData = $this->pullStagedUpload((string) $request->file_temp_id);
             if ($tempData) {
-                if ($product->file_path) {
-                    Storage::disk('public')->delete($product->file_path);
-                }
-                $ext = pathinfo($tempData['original_name'], PATHINFO_EXTENSION);
-                $sanitizedName = Str::slug(pathinfo($tempData['original_name'], PATHINFO_FILENAME)).'-'.Str::random(6).'.'.$ext;
-                $finalPath = 'products/files/'.$sanitizedName;
-                Storage::disk('public')->move($tempData['path'], $finalPath);
-                $validated['file_path'] = $finalPath;
-                if (empty($validated['file_size'])) {
-                    $validated['file_size'] = round($tempData['size'] / 1048576, 2);
-                }
-                session()->forget('upload_temp_'.$request->file_temp_id);
+                $this->deleteOriginal($product);
+                $this->storeStagedFile($validated, $tempData);
             }
         } elseif ($request->hasFile('file_path')) {
-            if ($product->file_path) {
-                Storage::disk('public')->delete($product->file_path);
-            }
+            $this->deleteOriginal($product);
             $file = $request->file('file_path');
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $sanitizedName = Str::slug($originalName).'-'.Str::random(6).'.'.$file->getClientOriginalExtension();
-            $validated['file_path'] = $file->storeAs('products/files', $sanitizedName, 'public');
+            $stored = $this->storeUploadedOriginal($file, $file->getClientOriginalName());
+
+            $validated['file_path'] = $stored['path'];
+            $validated['storage_disk'] = $stored['disk'];
             if (empty($validated['file_size'])) {
                 $validated['file_size'] = round($file->getSize() / 1048576, 2);
             }
@@ -263,13 +251,90 @@ class ProductController extends Controller
         if ($product->preview_image) {
             Storage::disk('public')->delete($product->preview_image);
         }
-        if ($product->file_path) {
-            Storage::disk('public')->delete($product->file_path);
-        }
+
+        $this->deleteOriginal($product);
 
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Store an uploaded purchased original on the private disk.
+     *
+     * @return array{path: string, disk: string}
+     */
+    protected function storeUploadedOriginal(UploadedFile $file, string $clientName): array
+    {
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+
+        return $this->fileStorage->storePrivate($file->getRealPath(), $clientName, $extension);
+    }
+
+    /**
+     * Adopt a temp/chunk upload that was staged on the private disk.
+     *
+     * @param  array<string, mixed>  $tempData
+     */
+    protected function storeStagedFile(array &$validated, array $tempData): bool
+    {
+        $sourcePath = $this->fileStorage->safePath($tempData['path'] ?? null);
+        $disk = (string) ($tempData['disk'] ?? $this->fileStorage->privateDiskName());
+        $originalName = (string) ($tempData['original_name'] ?? 'asset');
+
+        if (! $sourcePath || ! Storage::disk($disk)->exists($sourcePath)) {
+            return false;
+        }
+
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION) ?: pathinfo($sourcePath, PATHINFO_EXTENSION) ?: 'bin');
+
+        $stored = $this->fileStorage->adoptIntoPrivate($disk, $sourcePath, $originalName, $extension);
+
+        $validated['file_path'] = $stored['path'];
+        $validated['storage_disk'] = $stored['disk'];
+        $validated['original_file_name'] = $originalName;
+
+        if (empty($validated['file_size']) && isset($tempData['size'])) {
+            $validated['file_size'] = round(((int) $tempData['size']) / 1048576, 2);
+        }
+
+        return true;
+    }
+
+    /**
+     * Read and consume a staged upload record from the current session.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function pullStagedUpload(string $tempId): ?array
+    {
+        $key = 'upload_temp_'.$tempId;
+        $data = session($key);
+
+        if (! is_array($data)) {
+            return null;
+        }
+
+        session()->forget($key);
+
+        return $data;
+    }
+
+    /**
+     * Delete a product's original from whichever disk actually holds it.
+     */
+    protected function deleteOriginal(Product $product): void
+    {
+        if (! $product->file_path) {
+            return;
+        }
+
+        $diskName = $this->fileStorage->diskNameFor($product);
+        $path = $this->fileStorage->safePath($product->file_path);
+
+        if ($diskName && $path) {
+            Storage::disk($diskName)->delete($path);
+        }
     }
 
     /**
